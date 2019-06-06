@@ -27,6 +27,12 @@ go build
 
 ## Side notes
 
+### `quote version`
+
+I decided to use <https://github.com/ahmetb/govvv> in order to ease the
+process of using `-ldflags -Xmain.Version=$(git describe)` and so on. I
+could have done without it.
+
 ### Proto generation
 
 Ideally, the `.proto` and the generated `.pb.go` should be separated from
@@ -52,5 +58,10 @@ is an excellent source of inspiration in that regard)
   (see [golem-post]). I also like using emojis
   (github.com/carloscuesta/gitmoji-cli) but the use of emojis is much more
   debatable 😁
+- `GO111MODULES=off go get github.com/maruel/pre-commit-go/cmd/...` and
+  `pcg install` (caveat: it forces the dev to have no untracked file before
+  committing... good thing from my experience: it forces you to check in
+  the untracked files as soon as possible). Pcg will run go build on every
+  commit so that you don't have a failing commit (easier to `git bisect` 👍)
 
 [golem-post]: https://dev.to/erinbush/being-intentional-with-commits--59a3

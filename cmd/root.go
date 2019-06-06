@@ -10,8 +10,9 @@ import (
 	"github.com/spf13/viper"
 )
 
-var CfgFile string
-var Verbose bool
+var cfgFile string
+var verbose bool
+var version AppVersion
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -26,7 +27,8 @@ var rootCmd = &cobra.Command{
 
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
-func Execute() {
+func Execute(v AppVersion) {
+	version = v
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
@@ -43,19 +45,19 @@ func init() {
 	// Here you will define your flags and configuration settings.
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
-	rootCmd.PersistentFlags().StringVar(&CfgFile, "config", "", "config file (default is $HOME/.quote.yaml)")
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.quote.yaml)")
 
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
 	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-	rootCmd.PersistentFlags().BoolVarP(&Verbose, "verbose", "v", false, "verbose output")
+	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "verbose output")
 }
 
 // initConfig reads in config file and ENV variables if set.
 func initConfig() {
-	if CfgFile != "" {
+	if cfgFile != "" {
 		// Use config file from the flag.
-		viper.SetConfigFile(CfgFile)
+		viper.SetConfigFile(cfgFile)
 	} else {
 		// Find home directory.
 		home, err := homedir.Dir()

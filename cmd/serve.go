@@ -15,10 +15,10 @@ var serveCmd = &cobra.Command{
 	Short: "A brief description of your command",
 	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
-		port := viper.GetInt("port")
-		fmt.Printf("serving on port %v\n", port)
+		port, addr := viper.GetInt("port"), viper.GetString("addr")
+		fmt.Printf("serving on %v:%v\n", port, addr)
 		s := quote.NewServer()
-		if err := s.Run(port); err != nil {
+		if err := s.Run(addr, port); err != nil {
 			log.Fatalf("launching server: %v", err)
 		}
 	},
@@ -28,8 +28,12 @@ func init() {
 	rootCmd.AddCommand(serveCmd)
 	serveCmd.Flags().Int("port", 8040, "Port to run quote server on; alternatively, use PORT var")
 	viper.BindPFlag("port", serveCmd.Flags().Lookup("port"))
-	serveCmd.Flags().String("logLevel", "DEBUG", "Log level: DEBUG, INFO, WARN, ERROR")
-	viper.BindPFlag("logLevel", serveCmd.Flags().Lookup("logLevel"))
+	serveCmd.Flags().String("addr", "", "Address the server will bind to; alternatively, use ADDR var")
+	viper.BindPFlag("addr", serveCmd.Flags().Lookup("addr"))
+
+	// serveCmd.Flags().String("logLevel", "DEBUG", "Log level: DEBUG, INFO, WARN, ERROR")
+	// viper.BindPFlag("logLevel", serveCmd.Flags().Lookup("logLevel"))
+
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command
