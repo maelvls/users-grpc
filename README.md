@@ -27,6 +27,14 @@ go build
 
 ## Side notes
 
+### Vendor or not vendor
+
+At first, I use `go mod vendor` and checked the vendor/ folder in with the
+code. Then, I realized things have evolved and it is not necessary anymore
+(as of june 2019; see [should-i-vendor] as things may evolve).
+
+[should-i-vendor]: https://www.reddit.com/r/golang/comments/9ai79z/correct_usage_of_go_modules_vendor_still_connects/
+
 ### `quote version`
 
 I decided to use <https://github.com/ahmetb/govvv> in order to ease the
@@ -61,7 +69,9 @@ is an excellent source of inspiration in that regard)
 - `GO111MODULES=off go get github.com/maruel/pre-commit-go/cmd/...` and
   `pcg install` (caveat: it forces the dev to have no untracked file before
   committing... good thing from my experience: it forces you to check in
-  the untracked files as soon as possible). Pcg will run go build on every
-  commit so that you don't have a failing commit (easier to `git bisect` 👍)
+  the untracked files as soon as possible, see [pcg-untracked-issue]). Pcg
+  will run go build on every commit so that you don't have a failing commit
+  (easier to `git bisect` 👍)
 
+[pcg-untracked-issue]: https://github.com/maruel/pre-commit-go/issues/15
 [golem-post]: https://dev.to/erinbush/being-intentional-with-commits--59a3
