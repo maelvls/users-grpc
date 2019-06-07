@@ -1,9 +1,20 @@
+# Secrets that must be set in drone.io:
+# CODECOV_TOKEN
+# COVERALLS_TOKEN
+# DOCKER_USERNAME (the Docker Hub ID, not the email)
+# DOCKER_PASSWORD
+# GITHUB_TOKEN (scope required: repo/public_repo)
+
 kind: pipeline
 name: default
 
 platform:
   os: linux
   arch: amd64
+
+clone:
+  image: plugins/git
+  tags: true
 
 steps:
   - name: tests
@@ -32,3 +43,13 @@ steps:
       auto_tag: true
       username: { from_secret: DOCKER_USERNAME }
       password: { from_secret: DOCKER_PASSWORD }
+
+  - name: release
+    image: goreleaser/goreleaser:v0.108.0
+    commands:
+      - /bin/goreleaser release -c .goreleaser-drone.yml
+    environment:
+      GITHUB_TOKEN: { from_secret: GITHUB_TOKEN }
+    when:
+      event:
+        - tag
