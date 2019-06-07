@@ -25,12 +25,18 @@ Notes:
 
 ## Install
 
+### Dev
+
 ```sh
 brew install protobuf # only if .proto files are changed
 go generate ./...     # only if .proto files are changed
 go build
 ./quote
 ```
+
+### Docker
+
+    docker build . -f ci/Dockerfile
 
 ## Side notes
 
