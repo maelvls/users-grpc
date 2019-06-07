@@ -47,7 +47,8 @@ steps:
   - name: release
     image: goreleaser/goreleaser:v0.108.0
     commands:
-      - goreleaser release
+      - git fetch --no-tags origin +refs/tags/${DRONE_TAG}:refs/tags/${DRONE_TAG}
+      - goreleaser release --rm-dist
     environment:
       GITHUB_TOKEN: { from_secret: GITHUB_TOKEN }
     when:
