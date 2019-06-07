@@ -9,12 +9,12 @@ import (
 
 // AppVersion is passed to cmd.Execute().
 type AppVersion struct {
-	Version    string
-	BuildDate  string
-	GitCommit  string
-	GitBranch  string
-	GitState   string
-	GitSummary string
+	Version    string // 0b5ed7a
+	BuildDate  string // master
+	GitCommit  string // clean or dirty
+	GitBranch  string // v1.0.0, v1.0.1-5-g585c78f-dirty, fbd157c (git describe --tags --dirty --always)
+	GitState   string // 2016-08-04T18:07:54Z
+	GitSummary string // 2.0.0
 }
 
 var versionCmd = &cobra.Command{
