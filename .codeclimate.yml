@@ -4,13 +4,9 @@ engines:
   golint: { enabled: true }
   govet: { enabled: true }
 exclude_paths:
-  - grifts/**/*
   - "**/*_test.go"
   - "*_test.go"
   - "**_test.go"
-  - logs/*
-  - public/*
-  - templates/*
 ratings:
   paths:
     - "**.go"

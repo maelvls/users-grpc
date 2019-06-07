@@ -75,3 +75,21 @@ is an excellent source of inspiration in that regard)
 
 [pcg-untracked-issue]: https://github.com/maruel/pre-commit-go/issues/15
 [golem-post]: https://dev.to/erinbush/being-intentional-with-commits--59a3
+
+## Examples that I read for inspiration
+
+- [go-micro-services] (lacks tests but excellent geographic-related
+  business case)
+- [route_guide] (example from the official grpc-go)
+- [go-scaffold] (mainly for the BDD tests)
+- [todogo] (just for the general layout)
+
+[go-micro-services]: https://github.com/harlow/go-micro-services
+[route_guide]: https://github.com/grpc/grpc-go/tree/master/examples/route_guide
+[go-scaffold]: https://github.com/orbs-network/go-scaffold
+[todogo]: https://github.com/kgantsov/todogo
+
+## Tools I used
+
+- editors: vim, vscode and goland
+- misc: prototool (for testing the gRPC server)
