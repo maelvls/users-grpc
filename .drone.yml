@@ -1,0 +1,38 @@
+kind: pipeline
+name: default
+
+platform:
+  os: linux
+  arch: amd64
+
+steps:
+  - name: tests
+    image: golang
+    environment:
+      CODECOV_TOKEN:
+        from_secret: CODECOV_TOKEN
+      COVERALLS_TOKEN:
+        from_secret: COVERALLS_TOKEN
+    commands:
+      - apt-get update
+      - apt-get install unzip
+      - go get -v golang.org/x/lint/golint
+      - go get -v golang.org/x/tools/cmd/cover
+      - go get -v github.com/mattn/goveralls
+      - go get -v github.com/modocache/gover
+      - go get -v github.com/nats-io/gnatsd
+      - go get -v github.com/onsi/ginkgo/ginkgo
+      - go get -v github.com/onsi/gomega
+      - go get -v github.com/moleculer-go/cupaloy
+      - go get -v github.com/nats-io/go-nats-streaming
+      - go get -v github.com/tidwall/gjson
+      - go get -v github.com/tidwall/sjson
+      - mkdir /usr/local/go/src/github.com/
+      - mkdir /usr/local/go/src/github.com/moleculer-go
+      - ln -s /drone/src/ /usr/local/go/src/github.com/moleculer-go/moleculer-web
+      - cd /usr/local/go/src/github.com/moleculer-go/moleculer-web
+      - go get -d ./...
+      - ginkgo -r --randomizeAllSpecs --failFast --cover --trace
+      - gover ./ coverage.txt
+      - curl -s https://codecov.io/bash | bash
+      - goveralls -coverprofile=coverage.txt -service=drone.io

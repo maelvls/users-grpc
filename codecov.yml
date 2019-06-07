@@ -1,0 +1,9 @@
+coverage:
+  round: nearest
+  ignore:
+    - "**/*.pb.go"
+  status:
+    project:
+      default:
+        threshold: 0.5
+    patch: false

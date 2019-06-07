@@ -1,5 +1,7 @@
 # Simple gRPC quote service and its nice CLI
 
+[![Build Status](https://cloud.drone.io/api/badges/maelvalais/quote/status.svg)](https://cloud.drone.io/maelvalais/quote)
+
 Notes:
 
 1. I use the `// +build tools` convention which allows me to specify dev
@@ -81,7 +83,7 @@ is an excellent source of inspiration in that regard)
 - [go-micro-services] (lacks tests but excellent geographic-related
   business case)
 - [route_guide] (example from the official grpc-go)
-- [go-scaffold] (mainly for the BDD tests)
+- [go-scaffold] (mainly for the BDD unit + using Ginkgo)
 - [todogo] (just for the general layout)
 
 [go-micro-services]: https://github.com/harlow/go-micro-services
