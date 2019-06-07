@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package quote;
+
+// Quote service creates and search quotes.
+service Quote {
+  rpc Create(CreateReq) returns (CreateRes);
+  rpc Search(SearchReq) returns (SearchRes);
+}
+
+message CreateReq { string quote = 1; }
+message CreateRes { string success = 1; }
+message SearchReq { string query = 1; }
+message SearchRes { repeated string quotes = 1; }
