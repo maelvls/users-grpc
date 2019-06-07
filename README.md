@@ -52,7 +52,7 @@ code. Then, I realized things have evolved and it is not necessary anymore
 
 I decided to use <https://github.com/ahmetb/govvv> in order to ease the
 process of using `-ldflags -Xmain.Version=$(git describe)` and so on. I
-could have done without it.
+could have done it without it 🙄
 
 ### Proto generation
 
