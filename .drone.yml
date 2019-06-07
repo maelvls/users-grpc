@@ -47,7 +47,7 @@ steps:
   - name: release
     image: goreleaser/goreleaser:v0.108.0
     commands:
-      - /bin/goreleaser release -c .goreleaser-drone.yml
+      - goreleaser release
     environment:
       GITHUB_TOKEN: { from_secret: GITHUB_TOKEN }
     when:
