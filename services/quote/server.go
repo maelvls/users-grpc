@@ -5,7 +5,7 @@ import (
 	"net"
 
 	"github.com/google/uuid"
-	pb "github.com/maelvalais/quote/schema/quote"
+	pb "github.com/maelvls/quote/schema/quote"
 	log "github.com/sirupsen/logrus"
 	context "golang.org/x/net/context"
 	"google.golang.org/grpc"

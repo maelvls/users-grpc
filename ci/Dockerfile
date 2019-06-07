@@ -1,8 +1,8 @@
 # This is a multi-stage Dockerfile and requires >= Docker 17.05
 # https://docs.docker.com/engine/userguide/eng-image/multistage-build/
 FROM golang:1.12-alpine as builder
-COPY . /go/src/github.com/maelvalais/quote
-WORKDIR /go/src/github.com/maelvalais/quote
+COPY . /go/src/github.com/maelvls/quote
+WORKDIR /go/src/github.com/maelvls/quote
 
 # Note to myself: remember to use multi-line RUN; otherwise it creates many
 # unnecessary layers.

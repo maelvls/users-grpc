@@ -1,13 +1,13 @@
 # Simple gRPC quote service and its nice CLI
 
 [![Build
-Status](https://cloud.drone.io/api/badges/maelvalais/quote/status.svg)](https://cloud.drone.io/maelvalais/quote)
+Status](https://cloud.drone.io/api/badges/maelvls/quote/status.svg)](https://cloud.drone.io/maelvls/quote)
 [![Coverage
-Status](https://coveralls.io/repos/github/maelvalais/quote/badge.svg?branch=master)](https://coveralls.io/github/maelvalais/quote?branch=master)
-[![codecov](https://codecov.io/gh/maelvalais/quote/branch/master/graph/badge.svg)](https://codecov.io/gh/maelvalais/quote)
-[![GolangCI](https://golangci.com/badges/github.com/maelvalais/quote.svg)](https://golangci.com/r/github.com/maelvalais/quote)
-[![Godoc](https://godoc.org/github.com/maelvalais/quote?status.svg)](http://godoc.org/github.com/maelvalais/quote)
-[![Go Report Card](https://goreportcard.com/badge/github.com/maelvalais/quote)](https://goreportcard.com/report/github.com/maelvalais/quote)
+Status](https://coveralls.io/repos/github/maelvls/quote/badge.svg?branch=master)](https://coveralls.io/github/maelvls/quote?branch=master)
+[![codecov](https://codecov.io/gh/maelvls/quote/branch/master/graph/badge.svg)](https://codecov.io/gh/maelvls/quote)
+[![GolangCI](https://golangci.com/badges/github.com/maelvls/quote.svg)](https://golangci.com/r/github.com/maelvls/quote)
+[![Godoc](https://godoc.org/github.com/maelvls/quote?status.svg)](http://godoc.org/github.com/maelvls/quote)
+[![Go Report Card](https://goreportcard.com/badge/github.com/maelvls/quote)](https://goreportcard.com/report/github.com/maelvls/quote)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-yellow.svg)](https://conventionalcommits.org)
 
@@ -66,7 +66,7 @@ could have done it without it 🙄
 ### Proto generation
 
 Ideally, the `.proto` and the generated `.pb.go` should be separated from
-my service, e.g. `github.com/maelvalais/schema` with semver versionning and
+my service, e.g. `github.com/maelvls/schema` with semver versionning and
 auto-generated `.pb.go` by the CI (see this [SO
 discussion](proto-monorepo)). Or maybe the `.pb.go` should be owned by
 their respective services... Depending on the use of GO111MODULES or `dep`.
@@ -170,4 +170,4 @@ Kubernetes). Here is a checklist for my microservice and its CLI (source:
 
 When I was learning Rust, I did a short 'Go vs Rust': [rust-vs-go]. The gist is that...
 
-[rust-vs-go]: https://github.com/maelvalais/rust-chat
+[rust-vs-go]: https://github.com/maelvls/rust-chat

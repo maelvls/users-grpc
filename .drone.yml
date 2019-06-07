@@ -39,7 +39,7 @@ steps:
     image: plugins/docker
     settings:
       dockerfile: ci/Dockerfile
-      repo: maelvalais/quote
+      repo: maelvls/quote
       auto_tag: true
       username: { from_secret: DOCKER_USERNAME }
       password: { from_secret: DOCKER_PASSWORD }

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 
-	quote "github.com/maelvalais/quote/services/quote"
+	quote "github.com/maelvls/quote/services/quote"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )

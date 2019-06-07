@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/maelvalais/quote/cmd"
+	"github.com/maelvls/quote/cmd"
 )
 
 // These fields are populated by github.com/ahmetb/govvv. These variables
