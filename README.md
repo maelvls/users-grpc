@@ -1,6 +1,9 @@
 # Simple gRPC quote service and its nice CLI
 
-[![Build Status](https://cloud.drone.io/api/badges/maelvalais/quote/status.svg)](https://cloud.drone.io/maelvalais/quote)
+[![Build
+Status](https://cloud.drone.io/api/badges/maelvalais/quote/status.svg)](https://cloud.drone.io/maelvalais/quote)
+[![Coverage Status](https://coveralls.io/repos/github/maelvalais/quote/badge.svg?branch=master)](https://coveralls.io/github/maelvalais/quote?branch=master)
+[![GolangCI](https://golangci.com/badges/github.com/maelvalais/quote.svg)](https://golangci.com)
 
 Notes:
 
