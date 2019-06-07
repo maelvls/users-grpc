@@ -1,6 +1,6 @@
 # This is a multi-stage Dockerfile and requires >= Docker 17.05
 # https://docs.docker.com/engine/userguide/eng-image/multistage-build/
-FROM golang:1.12 as builder
+FROM golang:1.12-alpine as builder
 COPY . /go/src/github.com/maelvalais/quote
 WORKDIR /go/src/github.com/maelvalais/quote
 RUN go get github.com/ahmetb/govvv
