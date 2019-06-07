@@ -2,8 +2,10 @@
 
 [![Build
 Status](https://cloud.drone.io/api/badges/maelvalais/quote/status.svg)](https://cloud.drone.io/maelvalais/quote)
-[![Coverage Status](https://coveralls.io/repos/github/maelvalais/quote/badge.svg?branch=master)](https://coveralls.io/github/maelvalais/quote?branch=master)
-[![GolangCI](https://golangci.com/badges/github.com/maelvalais/quote.svg)](https://golangci.com)
+[![Coverage
+Status](https://coveralls.io/repos/github/maelvalais/quote/badge.svg?branch=master)](https://coveralls.io/github/maelvalais/quote?branch=master)
+[![codecov](https://codecov.io/gh/maelvalais/quote/branch/master/graph/badge.svg)](https://codecov.io/gh/maelvalais/quote)
+[![GolangCI](https://golangci.com/badges/github.com/maelvalais/quote.svg)](https://golangci.com/r/github.com/maelvalais/quote)
 
 Notes:
 
