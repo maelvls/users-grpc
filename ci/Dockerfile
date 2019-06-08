@@ -17,8 +17,7 @@ WORKDIR /bin/
 RUN apk add --no-cache bash ca-certificates
 COPY --from=builder /go/bin/client /go/bin/server ./
 
-# Bind the app to 0.0.0.0 so it can be seen from outside the container
-ENV ADDR=0.0.0.0 \
-    PORT=8000
+ENV PORT=8000 \
+    LOG_FORMAT=text
 EXPOSE 8000
 CMD ["server"]

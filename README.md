@@ -16,7 +16,42 @@
 
 ## Install
 
-### Dev
+Docker images are created on each tag. The 'latest' tag represents the
+latest commit on master. I use multi-stages dockerfile so that the
+resulting image is less that 20MB (using Alpine/musl-libc). `latest` tag
+should only be used for dev purposes as it points to the image of the
+latest commit. I use moving tags like `1` or `1.0`. To run the server on
+port 8123 locally:
+
+```sh
+$ docker run -e LOG_FORMAT=text -e PORT=8123 -p 80:8123/tcp --rm -it maelvls/quote:0
+INFO[0000] serving on port 8123 (version 0.0.1)
+```
+
+To run the client CLI:
+
+```sh
+$ docker run --rm -it maelvls/quote:0 client --address=172.17.0.1:8123 ls
+...
+```
+
+> This 172.17.0.1 address is required because communicating between
+> containers through the host requires to use the IP of the docker0
+> interface instead of the loopback.
+
+Binaries are available on the Github Releases page. Releasing binaries was
+not necessary (except maybe for the CLI client) but I love the idea of Go
+(so easy to cross-compile + one single statically-linked binary) so I
+wanted to try it. Goreleaser is a fantastic tool for that purpose! That's
+where Go shines: tooling. It is exceptional (except for
+[gopls](https://github.com/golang/go/wiki/gopls) but it's getting better
+and better). Most importantly, tooling is fast at execution and also at
+compilation (contrary to Rust where compilation takes much more time --
+LLVM + way richer and complex language -- see my comparison [rust-vs-go]).
+
+[rust-vs-go]: https://github.com/maelvls/rust-chat
+
+## Develop
 
 ```sh
 brew install protobuf # only if .proto files are changed
@@ -25,8 +60,10 @@ go build
 ./quote
 ```
 
-    go run server/server.go
-    LOG_FORMAT=json go run server/server.go 2>&1 | jq
+```sh
+go run server/server.go
+LOG_FORMAT=json go run server/server.go 2>&1 | jq
+```
 
 ### Docker
 
@@ -119,7 +156,16 @@ is an excellent source of inspiration in that regard)
 - [route_guide] (example from the official grpc-go)
 - [go-scaffold] (mainly for the BDD unit + using Ginkgo)
 - [todogo] (just for the general layout)
+- [Medium: _Simple API backed by PostgresQL, Golang and
+  gRPC_][medium-grpc-pg] for grpc middleware (opentracing interceptor,
+  prometheus metrics, gRPC-specific logging with logrus, tags
+  retry/failover, circuit-breaking -- alghouth these last two might be
+  better handled by a service proxy such as Linkerd3)
+- the Go standard library was also extremely useful for learning how to
+  write idiomatic code. The `net` one is a gold mine (on top of that I love
+  all the networking bits).
 
+[medium-grpc-pg]: https://medium.com/@vptech/complexity-is-the-bane-of-every-software-engineer-e2878d0ad45a
 [go-micro-services]: https://github.com/harlow/go-micro-services
 [route_guide]: https://github.com/grpc/grpc-go/tree/master/examples/route_guide
 [go-scaffold]: https://github.com/orbs-network/go-scaffold
@@ -141,35 +187,122 @@ Cloud-native is taking advantage when your workload is on the cloud ([cncf-defin
 [gitlab-native-talk]: https://youtu.be/jc5cY3LoOOI?t=204
 [cncf-definition]: https://github.com/cncf/toc/blob/master/DEFINITION.md
 
-## 12factor
+## 12 factor app
 
-[12factor] is a manifest originally proposed by Heroku and largely adopted among
-the community. It presents the 12 main ideas that should be thought of when
-building an application that is meant to be run on a cloud provider (e.g.,
-platforms like Now.sh or Heroku or any other cloud-oriented platform such as
-Kubernetes). Here is a checklist for my microservice and its CLI (source:
-[12factor-list]):
+<details>
+<summary>12 factor cheat sheet </summary>
 
-| ✓   | Factors                                                                           | Status                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        | Remarks                                                                                                   |
-| --- | --------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
-| 1   | CodeBase                                                                          | One codebase tracked in revision control, many deploys. One Code base one repo is handling all the environment ex: production, staging, integration, local                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |                                                                                                           |
-| 2   | Dependencies(Explicitly declare and isolate dependencies)                         | All the dependencies are declaraed outside the CodeBase. Pip installable library is used and virtualenv for isolation of dependencies.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |                                                                                                           |
-| 3   | Config(Store config in the environment)                                           | strict separation of config from code. Config varies substantially across deploys, code does not. Store config in environment variables. Will store env variables in env file not tracked and used by the code, used to declare environment variables only.                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |                                                                                                           |
-| 4   | Backing services(Treat backing services as attached resources)                    | A backing service is any service the app consumes over the network as part of its normal operation. Examples include MySQL, RabbitMQ both are attached resources, accessed via a URL or other locator/credentials stored in the config(ENV_VAR). Attached resources must be change without any code changes.(DEPENDENCY ON 3)                                                                                                                                                                                                                                                                                                                                                                                                 | (Dependency on 3)                                                                                         |
-| 5   | Build, release, run(Strictly separate build and run stages)                       | We have to maintain three stages to release a project: Build stage(Convert a project to build module using the executable commit from version system it fetches vendors dependencies and compiles binaries and assets.) Release stage (takes the build produced by the build stage and combines it with the deploy’s current config). Run stage(Runs the app in the execution environment, by launching some set of the app’s processes against a selected release using the gunicorn, worker or the supervisor). Have to use some deployement tools so that every release should have a release ID and having the capability to rollback to a particular release ID.Docker-based containerized deploy strategy would be used |                                                                                                           |
-| 6   | Processes(Execute the app as one or more stateless processes)                     | App should be stateless and any data that needs to persist should be managed through a stateful backing service like mysql and rabbitMq.The Memory space or filesystem of the process can be used as a brief, single-transaction cache, So that it can be run through multiple processes. And gunicorn maintaining the one or more stateless processes                                                                                                                                                                                                                                                                                                                                                                        |                                                                                                           |
-| 7   | Port binding(Export services via port binding)                                    | The web app exports HTTP as a service by binding to a port, and listening to requests coming in on that port. Example: the developer visits a service URL like http://localhost:5000/ to access the service exported by their app. Running the flask app through gunicorn and bind it to IP and PORT which you want to use.                                                                                                                                                                                                                                                                                                                                                                                                   |                                                                                                           |
-| 8   | Concurrency(Scale out via the process model)                                      | Architect app to handle diverse workloads by assigning each type of work to a process type. For example, HTTP requests may be handled by a web process, and long-running background tasks handled by a worker process. Application must also be able to span multiple processes running on multiple physical machines.                                                                                                                                                                                                                                                                                                                                                                                                        |                                                                                                           |
-| 9   | Disposability(Maximize robustness with fast startup and graceful shutdown)        | Processes should strive to minimize startup time. Ideally, a process takes a few seconds from the time the launch command is executed until the process is up and ready to receive requests or jobs. Short startup time provides more agility for the release process and scaling up; and it aids robustness, because the process manager can more easily move processes to new physical machines when warranted. and a graceful shutdown. Flask server should be shutdown with supervisor stop as it makes the process to shutdown gracefully                                                                                                                                                                                |                                                                                                           |
-| 10  | Dev/prod parity(Keep development, staging, and production as similar as possible) | Make the time gap small: a developer may write code and have it deployed hours or even just minutes later.Make the personnel gap small: developers who wrote code are closely involved in deploying it and watching its behavior in production.Make the tools gap small: keep development and production as similar as possible.                                                                                                                                                                                                                                                                                                                                                                                              | deploy time: hours, code authors and deployers: same, Dev and production environment: as same as possible |
-| 11  | Logs(Treat logs as event streams)                                                 | App should not attempt to write to or manage logfiles. Instead, each running process writes its event stream, unbuffered, to stdout.In staging or production deploys, each process’ stream will be captured by the execution environment, collated together with all other streams from the app, and routed to one or more final destinations for viewing and long-term archival. Should Follow ELK.                                                                                                                                                                                                                                                                                                                          |                                                                                                           |
-| 12  | Admin processes(Run admin/management tasks as one-off processes)                  | Any admin or management tasks for a 12-factor app should be run as one-off processes within a deploy’s execution environment. This process runs against a release using the same codebase and configs as any process in that release and uses the same dependency isolation techniques as the long-running processes.                                                                                                                                                                                                                                                                                                                                                                                                         |                                                                                                           |
+> Source: [12factor-list]
+
+| ✓   | Factors                                                                    | Status                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| --- | -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1   | Codebase                                                                   | One codebase tracked in revision control, many deploys. One Code base one repo is handling all the environment. ex: production, staging, integration, local                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| 2   | Dependencies: Explicitly declare and isolate dependencies                  | All the dependencies are declaraed outside the CodeBase. Pip installable library is used and virtualenv for isolation of dependencies.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| 3   | Config: store config in the environment                                    | strict separation of config from code. Config varies substantially across deploys, code does not. Store config in environment variables. Will store env variables in env file not tracked and used by the code, used to declare environment variables only.                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| 4   | Backing services: treat backing services as attached resources             | A backing service is any service the app consumes over the network as part of its normal operation. Examples include MySQL, RabbitMQ both are attached resources, accessed via a URL or other locator/credentials stored in the config(ENV_VAR). Attached resources must be change without any code changes. **Remark**: depends on 3.                                                                                                                                                                                                                                                                                                                                                                                         |
+| 5   | Build, release, run: strictly separate build and run stages                | We have to maintain three stages to release a project: Build stage(Convert a project to build module using the executable commit from version system it fetches vendors dependencies and compiles binaries and assets.) Release stage (takes the build produced by the build stage and combines it with the deploy’s current config). Run stage(Runs the app in the execution environment, by launching some set of the app’s processes against a selected release using the gunicorn, worker or the supervisor). Have to use some deployement tools so that every release should have a release ID and having the capability to rollback to a particular release ID. Docker-based containerized deploy strategy would be used |
+| 6   | Processes: execute the app as one or more stateless processes              | App should be stateless and any data that needs to persist should be managed through a stateful backing service like mysql and rabbitMq.The Memory space or filesystem of the process can be used as a brief, single-transaction cache, So that it can be run through multiple processes. And gunicorn maintaining the one or more stateless processes                                                                                                                                                                                                                                                                                                                                                                         |
+| 7   | Port binding: export services via port binding                             | The web app exports HTTP as a service by binding to a port, and listening to requests coming in on that port. Example: the developer visits a service URL like <http://localhost:5000/> to access the service exported by their app. Running the flask app through gunicorn and bind it to IP and PORT which you want to use.                                                                                                                                                                                                                                                                                                                                                                                                  |
+| 8   | Concurrency: scale out via the process model                               | Architect app to handle diverse workloads by assigning each type of work to a process type. For example, HTTP requests may be handled by a web process, and long-running background tasks handled by a worker process. Application must also be able to span multiple processes running on multiple physical machines.                                                                                                                                                                                                                                                                                                                                                                                                         |
+| 9   | Disposability: maximize robustness with fast startup and graceful shutdown | Processes should strive to minimize startup time. Ideally, a process takes a few seconds from the time the launch command is executed until the process is up and ready to receive requests or jobs. Short startup time provides more agility for the release process and scaling up; and it aids robustness, because the process manager can more easily move processes to new physical machines when warranted. and a graceful shutdown. Flask server should be shutdown with supervisor stop as it makes the process to shutdown gracefully                                                                                                                                                                                 |
+| 10  | Dev/prod parity: keep dev, staging, and prod as similar as possible        | Make the time gap small: a developer may write code and have it deployed hours or even just minutes later. Make the personnel gap small: developers who wrote code are closely involved in deploying it and watching its behavior in production.Make the tools gap small: keep development and production as similar as possible. **Remark:** redeploy every hour, code authors must be the deployers, dev and prod env must be as same as possible                                                                                                                                                                                                                                                                            |
+| 11  | Logs: treat logs as event streams                                          | App should not attempt to write to or manage logfiles. Instead, each running process writes its event stream, unbuffered, to stdout.In staging or production deploys, each process’ stream will be captured by the execution environment, collated together with all other streams from the app, and routed to one or more final destinations for viewing and long-term archival. Should Follow ELK.                                                                                                                                                                                                                                                                                                                           |
+| 12  | Admin processes: run admin/management tasks as one-off processes           | Any admin or management tasks for a 12-factor app should be run as one-off processes within a deploy’s execution environment. This process runs against a release using the same codebase and configs as any process in that release and uses the same dependency isolation techniques as the long-running processes.                                                                                                                                                                                                                                                                                                                                                                                                          |
+
+</details>
+
+[12factor] is a manifest originally proposed by Heroku and largely adopted
+among the cloud-native ommunity. It presents the 12 main ideas that should
+be thought of when building an application that is meant to be run on a
+cloud provider (e.g., platforms like Now.sh or Heroku or any other
+cloud-oriented platform such as Kubernetes).
+
+Here is a checklist for my microservice and its CLI:
+
+1. **Codebase:**
+
+   In this repo, the master represents the branch continously deployed to
+   the staging environment.
+
+   - features are developed using pull requests (as they show in one place
+     the code-review process as well as the tests & coverage status).
+   - once merged, the PR automatically triggers a deployement of the
+     service on the staging environment.
+   - master should always be in a deployable state.
+   - tags are 'immutable and identifiable releases' that trigger a
+     deployment to the production env (might need a bit more process here,
+     like having a `prod` branch and PRs from `master` to `prod`; I found
+     [gitlab-workflow] very interesting on that subject).
+
+   Note: (this is an opinion!) I don't think that another branch like `staging`
+   or `develop` should be introduced unless a pull-request workflow is needed
+   (like for the `production` branch at Gitlab) in which case it becomes
+   necessary. Git-flow is nice but too bloated (not very KISS 😁).
+
+   [gitlab-workflow]: https://about.gitlab.com/handbook/engineering/infrastructure/design/git-workflow/
+   [gitlab-handbook]: https://about.gitlab.com/handbook
+
+2. **Dependencies: Explicitly declare and isolate dependencies:**
+
+   In this project, I use 'go modules' (go 1.11) which uses `go.sum` for
+   'locking' dependencies, promoting reproducible builds. One exception
+   though: `protoc`, the protobuf generator, is not 'version locked' but is
+   only needed when modifying .proto files (I didn't find a workaround on
+   that issue yet).
+
+3. **Config: store config in the environment:**
+
+   The server is confugurable using env vars: `PORT` (defaults to 8000) and
+   `LOG_FORMAT=text|json` (`text` mode by default). The docker images set
+   sensible defaults for these env vars.
+
+4. **Backing services: treat backing services as attached resources:**
+
+   Although I don't have any DB, redis or event store or external API calls
+   in this project. In case of resource changes, everything would be
+   configured using env vars; any change of env var would require to
+   relaunch the service though (which seems to be the correct way of
+   doing).
+
+   Alternatively, I could also use Consul instead of env vars for passing
+   other services ip/port and credentials. My server would query the
+   credentials on startup. It has nice advantages but also means more logic
+   into each microservice and also being tied to a specific 'way', compared
+   to generic and pervasive env vars.
+
+5. **Build, release, run: strictly separate build and run stages:**
+
+   Build and Release (build + config) are separated
+
+   - build = docker image
+   - release = kubernetes Deployment + Service
+
+   We have to maintain three stages to release a project:
+
+   - Build stage (Convert a project to build module using the executable commit
+     from version system it fetches vendors dependencies and compiles binaries
+     and assets.)
+   - Release stage (takes the build produced by the build stage and combines
+     it with the deploy’s current config).
+   - Run stage (Runs the app in the execution environment, by launching some
+     set of the app’s processes against a selected release using the gunicorn,
+     worker or the supervisor). Have to use some deployement tools so that
+     every release should have a release ID and having the capability to
+     rollback to a particular release ID. Docker-based containerized deploy
+     strategy would be used
+
+6. **Processes: execute the app as one or more stateless processes:**
+7. **Port binding: export services via port binding:**
+8. **Concurrency: scale out via the process model:**
+9. **Disposability: maximize robustness with fast startup and graceful shutdown:**
+10. **Dev/prod parity: keep dev, staging, and prod as similar as possible:**
+11. **Logs: treat logs as event streams:**
+12. **Admin processes: run admin/management tasks as one-off processes:**
 
 [12factor]: http://12factor.net
 [12factor-list]: https://gist.github.com/anandtripathi5/118995139602599dab64fddcd147545a
 
-## Go popularity
+## Kubernetes
 
-When I was learning Rust, I did a short 'Go vs Rust': [rust-vs-go]. The gist is that...
-
-[rust-vs-go]: https://github.com/maelvls/rust-chat
+Deployments, ReplicaSets, and DaemonSets
+Helm chart update

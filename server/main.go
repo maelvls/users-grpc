@@ -30,12 +30,12 @@ func main() {
 
 	// Set the log format according to LOG_FORMAT.
 	switch os.Getenv("LOG_FORMAT") {
-	case "":
+	case "", "text":
 		log.SetFormatter(&log.TextFormatter{})
 	case "json":
 		log.SetFormatter(&log.JSONFormatter{})
 	default:
-		log.Fatal(`Expected LOG_FORMAT is 'json'`)
+		log.Fatal(`expected LOG_FORMAT: 'json', 'text'`)
 	}
 
 	log.Printf("serving on port %v (version %s)", port, version)
