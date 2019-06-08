@@ -27,6 +27,9 @@ go build
 ./quote
 ```
 
+    go run server/server.go
+    LOG_FORMAT=json go run server/server.go 2>&1 | jq
+
 ### Docker
 
 ```sh

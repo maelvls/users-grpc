@@ -6,10 +6,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// AppVersion is passed to cmd.Execute().
-type AppVersion struct {
-	BuildDate  string // 2016-08-04T18:07:54Z
-	GitSummary string // v1.0.0, v1.0.1-5-g585c78f-dirty, fbd157c (git describe --tags --dirty --always)
+// Version is passed to cmd.Execute().
+type Version struct {
+	Date    string
+	Version string
+	Commit  string
 }
 
 var versionCmd = &cobra.Command{
@@ -17,7 +18,7 @@ var versionCmd = &cobra.Command{
 	Short: "Print the version of this binary to stdout",
 	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Printf("%s\n", version.GitSummary)
+		fmt.Printf("%s (%s)\n", version.Version, version.Commit)
 	},
 }
 

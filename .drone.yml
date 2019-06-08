@@ -28,8 +28,8 @@ steps:
       - go get -v github.com/mattn/goveralls
       - go get -v github.com/modocache/gover
       - go get -v github.com/onsi/ginkgo/ginkgo
-      - go build
-      - go test -race -coverprofile=coverage.txt -covermode=atomic
+      - go build -v ./...
+      - go test ./... -race -coverprofile=coverage.txt -covermode=atomic
       # - ginkgo -r --randomizeAllSpecs --failFast --cover --trace
       - gover ./ coverage.txt
       - curl -s https://codecov.io/bash | bash

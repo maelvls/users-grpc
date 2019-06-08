@@ -1,84 +1,26 @@
-# .goreleaser.yml
+# https://goreleaser.com/customization/
 builds:
-  # You can have multiple builds defined as a yaml list
-  - # ID of the build.
-    # Defaults to the binary name.
-    # id: "my-build"
-
-    # Path to main.go file or main package.
-    # Default is `.`.
-    # main: ./main.go
-
-    # Binary name.
-    # Can be a path (e.g. `bin/app`) to wrap the binary in a directory.
-    # Default is the name of the project directory.
-    # binary: quote
-
-    # Custom flags templates.
-    # Default is empty.
-    # flags:
-    #   - -tags=dev
-    # #   - -v
-
-    # # Custom asmflags templates.
-    # # Default is empty.
-    # asmflags:
-    #   - -D mysymbol
-    #   - all=-trimpath={{.Env.GOPATH}}
-
-    # # Custom gcflags templates.
-    # # Default is empty.
-    # gcflags:
-    #   - all=-trimpath={{.Env.GOPATH}}
-    #   - ./dontoptimizeme=-N
-
-    # Custom ldflags templates.
-    # Default is `-s -w -X main.version={{.Version}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}} -X main.builtBy=goreleaser`.
-    # govvv build -print
-    ldflags:
-      - -s -w -X main.GitSummary={{.Version}} -X main.BuildDate={{.Date}}"
-
-    # Custom environment variables to be set during the builds.
-    # Default is empty.
-    # env:
-    #   - CGO_ENABLED=0
-
-    # GOOS list to build for.
-    # For more info refer to: https://golang.org/doc/install/source#environment
-    # Defaults are darwin and linux.
-    goos:
-      - freebsd
-      - windows
-      - linux
-      - darwin
-
-    # GOARCH to build for.
-    # For more info refer to: https://golang.org/doc/install/source#environment
-    # Defaults are 386 and amd64.
-    goarch:
-      - amd64
-      - arm
-      - arm64
-
-    # GOARM to build for when GOARCH is arm.
-    # For more info refer to: https://golang.org/doc/install/source#environment
-    # Default is only 6.
-    goarm:
-      - 6
-      - 7
-
-    # List of combinations of GOOS + GOARCH + GOARM to ignore.
-    # Default is empty.
+  - id: client
+    main: ./client/main.go
+    goos: [freebsd, windows, linux, darwin]
+    goarch: [amd64, arm, arm64]
+    goarm: [6, 7]
     ignore:
-      - goos: darwin
-        goarch: 386
-      - goos: linux
-        goarch: arm
-        goarm: 7
-    # Hooks can be used to customize the final binary,
-    # for example, to run generators.
-    # Those fields allow templates.
-    # Default is both hooks empty.
-    # hooks:
-    #   pre: rice embed-go
-    #   post: ./script.sh
+      - { goos: darwin, goarch: 386 }
+      - { goos: linux, goarch: arm, goarm: 7 }
+  - id: server
+    main: ./server/main.go
+    goos: [freebsd, windows, linux, darwin]
+    goarch: [amd64, arm, arm64]
+    goarm: [6, 7]
+    ignore:
+      - { goos: darwin, goarch: 386 }
+      - { goos: linux, goarch: arm, goarm: 7 }
+
+archives:
+  - id: client
+    builds: [client]
+    format: binary
+  - id: server
+    builds: [server]
+    format: binary

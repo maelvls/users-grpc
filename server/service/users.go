@@ -1,4 +1,4 @@
-package quote
+package service
 
 import (
 	"fmt"
@@ -10,6 +10,12 @@ import (
 	context "golang.org/x/net/context"
 	"google.golang.org/grpc"
 )
+
+type User struct {
+	id       string
+	username string
+	name     string
+}
 
 var quotes map[uuid.UUID]string
 
@@ -25,14 +31,14 @@ func NewServer() *Server {
 }
 
 // Run starts the server
-func (s *Server) Run(addr string, port int) error {
+func (s *Server) Run(port int) error {
 	srv := grpc.NewServer()
 	pb.RegisterQuoteServer(srv, s)
 
 	// Maybe we should let the user choose which address he wants to bind
 	// to; in our case, when the host is unspecified (:80 is equivalent to
 	// 0.0.0.0:80) then the local system. See: https://godoc.org/net#Dial
-	lis, err := net.Listen("tcp", fmt.Sprintf("%s:%d", addr, port))
+	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
@@ -58,4 +64,8 @@ func (s *Server) Create(ctx context.Context, req *pb.CreateReq) (*pb.CreateRes, 
 
 	res := new(pb.CreateRes)
 	return res, nil
+}
+
+var exampleData = map[string]interface{}{
+	"a": "",
 }

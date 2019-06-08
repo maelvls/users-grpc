@@ -12,14 +12,13 @@ import (
 
 var cfgFile string
 var verbose bool
-var version AppVersion
+var version Version
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "quote",
 	Short: "A nice CLI for querying quotes from the quote microservice.",
-	Long: `This binary also embeds the microservice itself; you can run it
-	using 'quote serve'`,
+	Long:  ``,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	//	Run: func(cmd *cobra.Command, args []string) { },
@@ -27,7 +26,7 @@ var rootCmd = &cobra.Command{
 
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
-func Execute(v AppVersion) {
+func Execute(v Version) {
 	version = v
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)
