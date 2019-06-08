@@ -1,11 +1,9 @@
 # Simple gRPC quote service and its nice CLI
 
-[![Build
-Status](https://cloud.drone.io/api/badges/maelvls/quote/status.svg)](https://cloud.drone.io/maelvls/quote)
-[![](https://images.microbadger.com/badges/image/maelvls/quote.svg)](https://microbadger.com/images/maelvls/quote)
-[![Coverage
-Status](https://coveralls.io/repos/github/maelvls/quote/badge.svg?branch=master)](https://coveralls.io/github/maelvls/quote?branch=master)
-[https://microbadger.com/images/maelvls/quote]![codecov](https://codecov.io/gh/maelvls/quote/branch/master/graph/badge.svg)](https://codecov.io/gh/maelvls/quote)
+[![Build Status](https://cloud.drone.io/api/badges/maelvls/quote/status.svg)](https://cloud.drone.io/maelvls/quote)
+[![Docker layers](https://images.microbadger.com/badges/image/maelvls/quote.svg)](https://microbadger.com/images/maelvls/quote)
+[![Coverage Status](https://coveralls.io/repos/github/maelvls/quote/badge.svg?branch=master)](https://coveralls.io/github/maelvls/quote?branch=master)
+[![codecov](https://codecov.io/gh/maelvls/quote/branch/master/graph/badge.svg)](https://codecov.io/gh/maelvls/quote)
 [![Go Report Card](https://goreportcard.com/badge/github.com/maelvls/quote)](https://goreportcard.com/report/github.com/maelvls/quote)
 [![GolangCI](https://golangci.com/badges/github.com/maelvls/quote.svg)](https://golangci.com/r/github.com/maelvls/quote)
 [![Godoc](https://godoc.org/github.com/maelvls/quote?status.svg)](http://godoc.org/github.com/maelvls/quote)
