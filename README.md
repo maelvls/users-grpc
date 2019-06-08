@@ -2,18 +2,19 @@
 
 [![Build
 Status](https://cloud.drone.io/api/badges/maelvls/quote/status.svg)](https://cloud.drone.io/maelvls/quote)
+[![](https://images.microbadger.com/badges/image/maelvls/quote.svg)](https://microbadger.com/images/maelvls/quote)
 [![Coverage
 Status](https://coveralls.io/repos/github/maelvls/quote/badge.svg?branch=master)](https://coveralls.io/github/maelvls/quote?branch=master)
-[![codecov](https://codecov.io/gh/maelvls/quote/branch/master/graph/badge.svg)](https://codecov.io/gh/maelvls/quote)
+[https://microbadger.com/images/maelvls/quote]![codecov](https://codecov.io/gh/maelvls/quote/branch/master/graph/badge.svg)](https://codecov.io/gh/maelvls/quote)
+[![Go Report Card](https://goreportcard.com/badge/github.com/maelvls/quote)](https://goreportcard.com/report/github.com/maelvls/quote)
 [![GolangCI](https://golangci.com/badges/github.com/maelvls/quote.svg)](https://golangci.com/r/github.com/maelvls/quote)
 [![Godoc](https://godoc.org/github.com/maelvls/quote?status.svg)](http://godoc.org/github.com/maelvls/quote)
-[![Go Report Card](https://goreportcard.com/badge/github.com/maelvls/quote)](https://goreportcard.com/report/github.com/maelvls/quote)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-yellow.svg)](https://conventionalcommits.org)
 
-> Sorry for the many badges, I have been testing many services in order to
-> select the good ones. 😅 Conventionnal Commits and GolangCI are kind of
-> decorative-only.
+> So many shiny badges, I guess it doesn't mean anything anymore! I have
+> been testing many services in order to select the good ones. Badges is a
+> way of keeping track of them all 😅
+> Conventionnal Commits and GolangCI are kind of decorative-only.
 
 ## Install
 
