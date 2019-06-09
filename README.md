@@ -14,6 +14,26 @@
 > way of keeping track of them all 😅
 > Conventionnal Commits and GolangCI are kind of decorative-only.
 
+- [Simple gRPC quote service and its nice CLI](#simple-grpc-quote-service-and-its-nice-cli)
+  - [Install](#install)
+    - [Kubernetes & Helm](#kubernetes--helm)
+  - [Develop](#develop)
+    - [Docker](#docker)
+  - [Side notes](#side-notes)
+    - [Vendor or not vendor and go 1.11 modules](#vendor-or-not-vendor-and-go-111-modules)
+    - [`quote version`](#quote-version)
+    - [Proto generation](#proto-generation)
+    - [Logs, debug and verbosity](#logs-debug-and-verbosity)
+    - [Static analysis, DevSecOps and CI](#static-analysis-devsecops-and-ci)
+  - [Examples that I read for inspiration](#examples-that-i-read-for-inspiration)
+  - [Tools I used](#tools-i-used)
+  - [Cloud native](#cloud-native)
+  - [12 factor app](#12-factor-app)
+  - [Kubernetes](#kubernetes)
+  - [Memo](#memo)
+    - [Let other services use my service](#let-other-services-use-my-service)
+    - [Now, add some events](#now-add-some-events)
+
 ## Install
 
 Docker images are created on each tag. The 'latest' tag represents the
@@ -87,9 +107,10 @@ bare-alpine stage by doing:
 docker build . -f ci/Dockerfile --tag maelvls/quote --target=builder
 ```
 
-You can test the service is running correctly by using `grpc-health-probe`
-(note that I also ship `grpc-health-probe` in the docker image so that
-liveness and readiness checks are easy to do from kubenertes):
+You can test the service is running correctly by using
+[`grpc-health-probe`][grpc-health-probe] (note that I also ship
+`grpc-health-probe` in the docker image so that liveness and readiness
+checks are easy to do from kubenertes):
 
 ```sh
 $ PORT=8000 go run server/main.go &
@@ -124,6 +145,7 @@ which eases the process of dealing with JSON on the command line:
 prototool grpc --address :8000 --method quote.Quote/Search --data "$(jo query='')"
 ```
 
+[grpc-health-probe]: https://github.com/grpc-ecosystem/grpc-health-probe
 [prototool]: https://github.com/uber/prototool
 [jo]: https://github.com/jpmens/jo
 
@@ -358,22 +380,127 @@ Here is a checklist for my microservice and its CLI:
 
 ## Kubernetes
 
-Deployments, ReplicaSets, and DaemonSets
-Helm chart update
-
 In order to test the deployement of my service, I create a Helm chart (as
 well as a static `kubernetes.yml` -- which is way less flexible) and used
 minikube in order to test it. I implemented the [grpc-healthcheck] so that Kubernetes's readyness and
 liveness checks can work with this service. What I did:
 
-1. health probe working (readiness)
-2. `helm test --cleanup quote-svc` passes
+1. the service logs using json (logrus) for easy integration
+2. health probe working (readiness)
+3. `helm test --cleanup quote-svc` passes
+4. the service can be exposed via an Ingress controller such as Traefik or
+   Nginx.
 
 [grpc-healthcheck]: https://github.com/grpc/grpc/blob/master/doc/health-checking.md
 
-Memo:
+To bootstrap the kubernetes YAML configuration for this service using my
+Helm chart, I used:
 
-- Deployement (for scaling) -> ReplicaSet (services + nb of replicas) -> Pod (containers)
-- StatefulSet (for volumes) -> Pods -> PersistentVolumeClaim
-- Job (one-shot op)
-- DeamonSet (one deamon per node) -> for node-exporter and filebeat
+```sh
+helm template ./ci/helm/quote-svc --name quote-svc --namespace quote-svc --set image.tag=latest > ci/deployment.yml
+```
+
+We can now apply the configuration without using Helm. Note that I changed
+the ClusterIP to NodePort so that no LoadBalancer, Ingress Controller nor
+`kubectl proxy` is needed to access the service.
+
+```sh
+$ kubectl apply -f ci/deployment.yml
+$ kubectl get svc quote-svc
+NAME        TYPE       CLUSTER-IP      EXTERNAL-IP   PORT(S)          AGE
+quote-svc   NodePort   10.110.71.154   <none>        8000:32344/TCP   15m
+```
+
+Now, in order to access it, we must retrieve the minikube cluster IP (i.e.,
+its service IP, the IP used by kubectl for sending commands).
+
+```sh
+$ minikube status
+kubectl: Correctly Configured: pointing to minikube-vm at 192.168.99.105
+```
+
+We then use the address `192.168.99.105:32344`. Let's try with [grpc-health-probe]:
+
+```sh
+% grpc-health-probe -addr=192.168.99.105:32344
+status: SERVING
+```
+
+Yey!! 🎉🎉🎉
+
+## Memo
+
+- Controllers
+
+  - **Deployement** (for scaling) -> ReplicaSet (services + nb of replicas) -> Pod (containers)
+  - **StatefulSet** (for volumes) -> Pods -> PersistentVolumeClaim
+  - **Job** (one-shot op)
+  - **DeamonSet** (one deamon per node) -> for node-exporter and filebeat
+
+- ClusterIP vs NodePort vs Ingress vs LoadBalancer:
+
+  - **ClusterIP** exposes a Service. It is the default for a Service -> no
+    external access (must use an Ingress for that Service)
+  - **NodePort** exposes a Service. It redirects requests for a given port to a Service ->
+    easy external access but not very good way of exposing services. Good
+    for healthchecks; I also use it for the ACME cert challenge with
+    `certmanager`.
+  - **LoadBalancer** also kind of exposes a Service (the load balancer
+    one). It is like ClusterIP but for exposing to the internet.
+  - **Ingress** -> not a service; it maps a Service to an Ingress Controller.
+
+- **Ingress Controller** (Traefik or Nginx or Cloud-specific LBs) applies
+  Ingress (maps a Service to an Ingress Controller)
+
+### Let other services use my service
+
+Great, I built a service. Now, how can other services use it from inside
+the cluster? As stated in the documentation
+([connect-applications-service]),
+
+> Kubernetes supports 2 primary modes of finding a Service - environment
+> variables and DNS. The former works out of the box while the latter
+> requires the CoreDNS cluster addon.
+
+Let's try the env var approach.
+
+```sh
+$ kubectl get pods
+NAME                               READY   STATUS    RESTARTS   AGE
+quote-svc-69d46c866f-t6rx4         1/1     Running   0          23m
+
+$ kubectl exec -it quote-svc-69d46c866f-t6rx4 env | grep -i quote
+HOSTNAME=quote-svc-69d46c866f-t6rx4
+...
+QUOTE_SVC_SERVICE_PORT=8000
+QUOTE_SVC_SERVICE_HOST=10.110.71.154
+```
+
+The service that wants to use quote-svc will also be provided with these
+env variables. Note that because of the dependency on quote-svc, this
+service would probably fail on startup until quotee-svc is up. Requires a
+bit of defensive programming at this point.
+
+[connect-applications-service]: https://kubernetes.io/docs/concepts/services-networking/connect-applications-service/
+
+### Now, add some events
+
+In case this README didn't have enough buzzwords, let's add an event store
+to the stack. Instead of a traditional DB (which only stores the current
+state), an event store keeps tracks of all RPC messages that have been sent
+to him; the current state is then re-computed every time the service needs
+to access it. We call this model 'event sourcing'. It requires fast reading
+speed, which NoSQL DBs such as Mongodb excel at.
+
+Event stores and event sourcing often also implies an event bus such as
+Kafka (or RabbitMQ) so that other services can register to topics; for
+example:
+
+- service `User` receives an event (= message) `add user Claudia Greene`
+- service `User` processes the message and adds the user
+- service `User` sends a new message to the topic 'user-added'
+- service `Metrics` is subscribing to 'user-added'; it receives message
+  that says that a user has been added and adds +1 to its count of new
+  users for the month.
+- service `Email` is also subscribing to the topic 'user-added'. Upon
+  reception, it sends an email to Claudia Greene for welcoming her.
