@@ -371,14 +371,68 @@ Here is a checklist for my microservice and its CLI:
 
     Using the OCI runtime, memory spaces and filesystems are isolated using
     namespaces. This service is not stateless (as I did not have the time
-    for using a DB such as Postgres + ORM such as).
+    for using a DB such as Postgres + go-pg because microservice = small so
+    probably no need for ORM but maybe I need a migration tool).
+
+    Regarding resource limiting, I do not have limits or requests in this
+    service (minikube). In a real-case scenario, resource requests would
+    allow a depending process to be guaranteed to function under correct
+    circumstances.
 
 7.  **Port binding: export services via port binding:**
+
+    `PORT` is available for setting the port. It uses L3 TCP protocol and
+    HTTP/2 + gRPC for L5 to L7.
+
 8.  **Concurrency: scale out via the process model:**
+
+    OCI containers help a lot with that; in a microservice architecture,
+    worker processes (long-term) and web services (short-term) would
+    probably not be grouped in the same microservice as they have different
+    concerns.
+
 9.  **Disposability: maximize robustness with fast startup and graceful shutdown:**
+
+    Fast startup: using Go and no DB, startup takes less that 20ms. Using a
+    DB, it would still be something like 1 second, which definitely counts
+    as a 'short startup'.
+
+    Regarding the 'graceful shutdowns', meh... I did not (yet) study how
+    Kubernetes is handling container kills and such.
+
 10. **Dev/prod parity: keep dev, staging, and prod as similar as possible:**
+
+    Here, the OCI image is the same from the dev environement (local) to
+    the prod environement.
+
+    By the way, the idea that
+
+    > The code author must be the one who deploys
+
+    means that developer should be involved with deployment concerns, and
+    that the best person for the deployment task is the developer himself.
+    That idea works well with the PR being merged into master (i.e., a
+    deploy to the staging env). But who is in charge of tagging (and thus,
+    deploying into production)?
+
 11. **Logs: treat logs as event streams:**
+
+    This microservice prints JSON (or plain text) logs to stdout. I did not
+    log the method calls, but it is possible to do it using gRPC
+    interceptors (just one line of Go).
+
+    Tracing is not addressed in the 12factor recommandations and I think
+    there should exist a '12 factor kube' where metrics and distributed
+    tracing is addressed.
+
+    Service discovery and service mesh (consul, linkerd, istio) isn't
+    addressed either.
+
 12. **Admin processes: run admin/management tasks as one-off processes:**
+
+    Admin tasks, such as debug or database operations, can be handled using
+    `docker exec` inside the running container, which means it shares the
+    same release (build + config).
 
 [12factor]: http://12factor.net
 [12factor-list]: https://gist.github.com/anandtripathi5/118995139602599dab64fddcd147545a
