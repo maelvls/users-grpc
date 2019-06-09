@@ -33,7 +33,7 @@ spec:
           - path: {{ . }}
             backend:
               serviceName: {{ $fullName }}
-              servicePort: http
+              servicePort: grpc
         {{- end }}
   {{- end }}
 {{- end }}
