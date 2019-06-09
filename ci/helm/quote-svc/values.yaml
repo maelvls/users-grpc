@@ -6,7 +6,7 @@ replicaCount: 1
 
 image:
   repository: maelvls/quote
-  tag: "0" # moving tag, I could have created a 'stable' tag for that isntead.
+  tag: "0.0.1"
   pullPolicy: IfNotPresent
 
 nameOverride: ""

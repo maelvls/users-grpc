@@ -20,18 +20,20 @@ Docker images are created on each tag. The 'latest' tag represents the
 latest commit on master. I use multi-stages dockerfile so that the
 resulting image is less that 20MB (using Alpine/musl-libc). `latest` tag
 should only be used for dev purposes as it points to the image of the
-latest commit. I use moving tags like `1` or `1.0`. To run the server on
-port 8123 locally:
+latest commit. I use [moving-tags] `1`, `1.0` and fixed tag `1.0.0` (for
+example). To run the server on port 8123 locally:
 
 ```sh
-$ docker run -e LOG_FORMAT=text -e PORT=8123 -p 80:8123/tcp --rm -it maelvls/quote:0
-INFO[0000] serving on port 8123 (version 0.0.1)
+$ docker run -e LOG_FORMAT=text -e PORT=8123 -p 80:8123/tcp --rm -it maelvls/quote:1
+INFO[0000] serving on port 8123 (version 1.0.0)
 ```
+
+[moving-tags]: http://plugins.drone.io/drone-plugins/drone-docker/#autotag
 
 To run the client CLI:
 
 ```sh
-$ docker run --rm -it maelvls/quote:0 client --address=172.17.0.1:8123 ls
+$ docker run --rm -it maelvls/quote:1 client --address=172.17.0.1:8123 ls
 ...
 ```
 
@@ -51,6 +53,15 @@ LLVM + way richer and complex language -- see my comparison [rust-vs-go]).
 
 [rust-vs-go]: https://github.com/maelvls/rust-chat
 
+### Kubernetes & Helm
+
+```sh
+helm repo add quote https://maelvls.github.io/quote/charts
+helm repo update
+helm install ./ci/helm/quote-svc --name quote-svc --namespace quote-svc
+helm upgrade quote-svc ./ci/helm/quote-svc
+```
+
 ## Develop
 
 ```sh
@@ -61,8 +72,8 @@ go build
 ```
 
 ```sh
-go run server/server.go
-LOG_FORMAT=json go run server/server.go 2>&1 | jq
+go run server/main.go
+LOG_FORMAT=json go run server/main.go 2>&1 | jq
 ```
 
 ### Docker
@@ -71,11 +82,43 @@ LOG_FORMAT=json go run server/server.go 2>&1 | jq
 docker build . -f ci/Dockerfile
 ```
 
+In order to debug docker builds, you can stop the build process before the
+bare-alpine stage by doing:
+
+```sh
+docker build . -f ci/Dockerfile --tag maelvls/quote --target=builder
+```
+
+You can test the service is running correctly by using `grpc-health-probe`
+(note that I also ship `grpc-health-probe` in the docker image so that
+liveness and readiness checks are easy to do from kubenertes):
+
+```sh
+$ PORT=8000 go run server/main.go &
+$ go get github.com/grpc-ecosystem/grpc-health-probe
+$ grpc-health-probe -addr=:8000
+
+status: SERVING
+```
+
+From the docker container itself:
+
+```sh
+$ docker run --rm -d --name=quote-svc maelvls/quote:1
+$ docker exec -i quote-svc grpc-health-probe -addr=:8000
+
+status: SERVING
+
+$ docker kill quote-svc
+```
+
 For building the CLI, I used the cobra cli generator:
 
 ```sh
 go get github.com/spf13/cobra/cobra
 ```
+
+
 
 ## Side notes
 
@@ -164,12 +207,15 @@ is an excellent source of inspiration in that regard)
 - the Go standard library was also extremely useful for learning how to
   write idiomatic code. The `net` one is a gold mine (on top of that I love
   all the networking bits).
+- I learned how to publish helm charts on Github Pages there:
+  [helm-gh-pages-example]. Didn't have time to finish that part though.
 
 [medium-grpc-pg]: https://medium.com/@vptech/complexity-is-the-bane-of-every-software-engineer-e2878d0ad45a
 [go-micro-services]: https://github.com/harlow/go-micro-services
 [route_guide]: https://github.com/grpc/grpc-go/tree/master/examples/route_guide
 [go-scaffold]: https://github.com/orbs-network/go-scaffold
 [todogo]: https://github.com/kgantsov/todogo
+[helm-gh-pages-example]: https://github.com/int128/helm-github-pages
 
 ## Tools I used
 
@@ -265,10 +311,11 @@ Here is a checklist for my microservice and its CLI:
    doing).
 
    Alternatively, I could also use Consul instead of env vars for passing
-   other services ip/port and credentials. My server would query the
-   credentials on startup. It has nice advantages but also means more logic
-   into each microservice and also being tied to a specific 'way', compared
-   to generic and pervasive env vars.
+   other services ip/port and credentials (or even better: Hashicorp
+   Vault). My server would query the credentials on startup. It has nice
+   advantages but also means more logic into each microservice and also
+   being tied to a specific 'way', compared to generic and pervasive env
+   vars.
 
 5. **Build, release, run: strictly separate build and run stages:**
 
@@ -306,3 +353,14 @@ Here is a checklist for my microservice and its CLI:
 
 Deployments, ReplicaSets, and DaemonSets
 Helm chart update
+
+I also implemented the [grpc-healthcheck] so that Kubernetes's readyness
+and liveness checks can work with this service. Using Uber's [prototool],
+we can check that the service is running:
+
+```sh
+prototool grpc --address :8000 --method grpc.health.v1.Health/Check --data "$(jo service=quote)"
+```
+
+[grpc-healthcheck]: https://github.com/grpc/grpc/blob/master/doc/health-checking.md
+[prototool]: https://github.com/uber/prototool

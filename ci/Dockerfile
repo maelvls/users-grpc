@@ -8,14 +8,14 @@ WORKDIR /go/src/github.com/maelvls/quote
 # unnecessary layers. Note 2: in this dockerfile we are in $GOPATH; vgo/go
 # modules are then disabled.
 RUN apk add git \
+    && go get github.com/grpc-ecosystem/grpc-health-probe \
     && go get -v ./...
 RUN go install -v ./client && go install -v ./server
-
 
 FROM alpine
 WORKDIR /bin/
 RUN apk add --no-cache bash ca-certificates
-COPY --from=builder /go/bin/client /go/bin/server ./
+COPY --from=builder /go/bin/client /go/bin/server /go/bin/grpc-health-probe ./
 
 ENV PORT=8000 \
     LOG_FORMAT=text

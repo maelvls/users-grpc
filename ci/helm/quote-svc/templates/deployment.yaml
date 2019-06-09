@@ -23,18 +23,21 @@ spec:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - {name: LOG_FORMAT, value: json}
+            - {name: PORT, value: "8000"}
           ports:
-            - name: http
-              containerPort: 80
+            - name: grpc
+              containerPort: 8000
               protocol: TCP
           livenessProbe:
-            httpGet:
-              path: /
-              port: http
+            exec:
+              command: ["/bin/grpc-health-probe", "-addr=:8000"]
+            initialDelaySeconds: 10
           readinessProbe:
-            httpGet:
-              path: /
-              port: http
+            exec:
+              command: ["/bin/grpc-health-probe", "-addr=:8000"]
+            initialDelaySeconds: 5
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       {{- with .Values.nodeSelector }}
