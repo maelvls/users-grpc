@@ -56,9 +56,7 @@ LLVM + way richer and complex language -- see my comparison [rust-vs-go]).
 ### Kubernetes & Helm
 
 ```sh
-helm repo add quote https://maelvls.github.io/quote/charts
-helm repo update
-helm install ./ci/helm/quote-svc --name quote-svc --namespace quote-svc
+helm install ./ci/helm/quote-svc --name quote-svc --namespace quote-svc --set image.tag=latest
 helm upgrade quote-svc ./ci/helm/quote-svc
 ```
 
@@ -118,7 +116,16 @@ For building the CLI, I used the cobra cli generator:
 go get github.com/spf13/cobra/cobra
 ```
 
+Using Uber's [prototool], we can debug the gRPC server (a bit like when we
+use `httpie` or `curl` for HTTP REST APIs). I couple it with [`jo`][jo]
+which eases the process of dealing with JSON on the command line:
 
+```sh
+prototool grpc --address :8000 --method quote.Quote/Search --data "$(jo query='')"
+```
+
+[prototool]: https://github.com/uber/prototool
+[jo]: https://github.com/jpmens/jo
 
 ## Side notes
 
@@ -354,13 +361,19 @@ Here is a checklist for my microservice and its CLI:
 Deployments, ReplicaSets, and DaemonSets
 Helm chart update
 
-I also implemented the [grpc-healthcheck] so that Kubernetes's readyness
-and liveness checks can work with this service. Using Uber's [prototool],
-we can check that the service is running:
+In order to test the deployement of my service, I create a Helm chart (as
+well as a static `kubernetes.yml` -- which is way less flexible) and used
+minikube in order to test it. I implemented the [grpc-healthcheck] so that Kubernetes's readyness and
+liveness checks can work with this service. What I did:
 
-```sh
-prototool grpc --address :8000 --method grpc.health.v1.Health/Check --data "$(jo service=quote)"
-```
+1. health probe working (readiness)
+2. `helm test --cleanup quote-svc` passes
 
 [grpc-healthcheck]: https://github.com/grpc/grpc/blob/master/doc/health-checking.md
-[prototool]: https://github.com/uber/prototool
+
+Memo:
+
+- Deployement (for scaling) -> ReplicaSet (services + nb of replicas) -> Pod (containers)
+- StatefulSet (for volumes) -> Pods -> PersistentVolumeClaim
+- Job (one-shot op)
+- DeamonSet (one deamon per node) -> for node-exporter and filebeat

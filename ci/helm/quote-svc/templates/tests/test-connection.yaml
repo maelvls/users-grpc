@@ -11,8 +11,8 @@ metadata:
     "helm.sh/hook": test-success
 spec:
   containers:
-    - name: wget
-      image: busybox
-      command: ['wget']
-      args:  ['{{ include "quote-svc.fullname" . }}:{{ .Values.service.port }}']
+    - name: grpc-health-probe
+      image: maelvls/quote
+      command: ['grpc-health-probe']
+      args:  ['-addr={{ include "quote-svc.fullname" . }}:{{ .Values.service.port }}']
   restartPolicy: Never
