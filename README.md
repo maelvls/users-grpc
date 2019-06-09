@@ -86,13 +86,9 @@ helm upgrade quote-svc ./ci/helm/quote-svc
 ```sh
 brew install protobuf # only if .proto files are changed
 go generate ./...     # only if .proto files are changed
-go build
-./quote
-```
-
-```sh
-go run server/main.go
-LOG_FORMAT=json go run server/main.go 2>&1 | jq
+go run server/main.go &
+go run client/main.go
+LOG_FORMAT=json PORT=8234 go run server/main.go 2>&1 | jq
 ```
 
 ### Docker
