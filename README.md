@@ -19,7 +19,8 @@
     - [Kubernetes & Helm](#kubernetes--helm)
   - [Develop](#develop)
     - [Docker](#docker)
-  - [Side notes](#side-notes)
+  - [Stack](#stack)
+  - [Technical notes](#technical-notes)
     - [Vendor or not vendor and go 1.11 modules](#vendor-or-not-vendor-and-go-111-modules)
     - [`quote version`](#quote-version)
     - [Proto generation](#proto-generation)
@@ -149,7 +150,22 @@ prototool grpc --address :8000 --method quote.Quote/Search --data "$(jo query=''
 [prototool]: https://github.com/uber/prototool
 [jo]: https://github.com/jpmens/jo
 
-## Side notes
+## Stack
+
+- **CI/CD**: Drone.io
+- **Coverage**: Coveralls, Codecov
+- **Code Quality**: Go Report Card, GolangCI
+  - **Static analysis**: gocritic, gosec, golint, goimports, deadcode,
+    errcheck, gosimple, govet, ineffassign, staticcheck, structcheck,
+    typecheck, unused, varcheck
+  - **Formatting**: gofmt on the CI and locally with 'format on save'
+- **OCI orchestration**: Kubernetes, OCI runtime = Docker, Minikube for
+  testing
+- **Config management**: Helm
+- Others: `goreleaser` for cross-compiling and uploading binaries to Github
+  Releases, `protoc`, `prototool`
+
+## Technical notes
 
 ### Vendor or not vendor and go 1.11 modules
 
