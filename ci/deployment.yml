@@ -30,7 +30,7 @@ spec:
     spec:
       containers:
         - name: quote-svc
-          image: "maelvls/quote:1"
+          image: "maelvls/quote:1.0.0"
           env:
             - { name: LOG_FORMAT, value: json }
             - { name: PORT, value: "8000" }
