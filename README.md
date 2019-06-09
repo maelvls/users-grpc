@@ -30,7 +30,7 @@
   - [Cloud native](#cloud-native)
   - [12 factor app](#12-factor-app)
   - [Kubernetes](#kubernetes)
-  - [Memo](#memo)
+  - [Memo on Kubernetes](#memo-on-kubernetes)
     - [Let other services use my service](#let-other-services-use-my-service)
     - [Now, add some events](#now-add-some-events)
 
@@ -294,83 +294,88 @@ cloud-oriented platform such as Kubernetes).
 
 Here is a checklist for my microservice and its CLI:
 
-1. **Codebase:**
+1.  **Codebase:**
 
-   In this repo, the master represents the branch continously deployed to
-   the staging environment.
+    In this repo, the master represents the branch continously deployed to
+    the staging environment.
 
-   - features are developed using pull requests (as they show in one place
-     the code-review process as well as the tests & coverage status).
-   - once merged, the PR automatically triggers a deployement of the
-     service on the staging environment.
-   - master should always be in a deployable state.
-   - tags are 'immutable and identifiable releases' that trigger a
-     deployment to the production env (might need a bit more process here,
-     like having a `prod` branch and PRs from `master` to `prod`; I found
-     [gitlab-workflow] very interesting on that subject).
+    - features are developed using pull requests (as they show in one place
+      the code-review process as well as the tests & coverage status).
+    - once merged, the PR automatically triggers a deployement of the
+      service on the staging environment.
+    - master should always be in a deployable state.
+    - tags are 'immutable and identifiable releases' that trigger a
+      deployment to the production env (might need a bit more process here,
+      like having a `prod` branch and PRs from `master` to `prod`; I found
+      [gitlab-workflow] very interesting on that subject).
 
-   Note: (this is an opinion!) I don't think that another branch like `staging`
-   or `develop` should be introduced unless a pull-request workflow is needed
-   (like for the `production` branch at Gitlab) in which case it becomes
-   necessary. Git-flow is nice but too bloated (not very KISS 😁).
+    Note: (this is an opinion!) I don't think that another branch like `staging`
+    or `develop` should be introduced unless a pull-request workflow is needed
+    (like for the `production` branch at Gitlab) in which case it becomes
+    necessary. Git-flow is nice but too bloated (not very KISS 😁).
 
-   [gitlab-workflow]: https://about.gitlab.com/handbook/engineering/infrastructure/design/git-workflow/
-   [gitlab-handbook]: https://about.gitlab.com/handbook
+    [gitlab-workflow]: https://about.gitlab.com/handbook/engineering/infrastructure/design/git-workflow/
+    [gitlab-handbook]: https://about.gitlab.com/handbook
 
-2. **Dependencies: Explicitly declare and isolate dependencies:**
+2.  **Dependencies: Explicitly declare and isolate dependencies:**
 
-   In this project, I use 'go modules' (go 1.11) which uses `go.sum` for
-   'locking' dependencies, promoting reproducible builds. One exception
-   though: `protoc`, the protobuf generator, is not 'version locked' but is
-   only needed when modifying .proto files (I didn't find a workaround on
-   that issue yet).
+    In this project, I use 'go modules' (go 1.11) which uses `go.sum` for
+    'locking' dependencies, promoting reproducible builds. One exception
+    though: `protoc`, the protobuf generator, is not 'version locked' but is
+    only needed when modifying .proto files (I didn't find a workaround on
+    that issue yet).
 
-3. **Config: store config in the environment:**
+3.  **Config: store config in the environment:**
 
-   The server is confugurable using env vars: `PORT` (defaults to 8000) and
-   `LOG_FORMAT=text|json` (`text` mode by default). The docker images set
-   sensible defaults for these env vars.
+    The server is confugurable using env vars: `PORT` (defaults to 8000) and
+    `LOG_FORMAT=text|json` (`text` mode by default). The docker images set
+    sensible defaults for these env vars.
 
-4. **Backing services: treat backing services as attached resources:**
+4.  **Backing services: treat backing services as attached resources:**
 
-   Although I don't have any DB, redis or event store or external API calls
-   in this project. In case of resource changes, everything would be
-   configured using env vars; any change of env var would require to
-   relaunch the service though (which seems to be the correct way of
-   doing).
+    Although I don't have any DB, redis or event store or external API calls
+    in this project. In case of resource changes, everything would be
+    configured using env vars; any change of env var would require to
+    relaunch the service though (which seems to be the correct way of
+    doing).
 
-   Alternatively, I could also use Consul instead of env vars for passing
-   other services ip/port and credentials (or even better: Hashicorp
-   Vault). My server would query the credentials on startup. It has nice
-   advantages but also means more logic into each microservice and also
-   being tied to a specific 'way', compared to generic and pervasive env
-   vars.
+    Alternatively, I could also use Consul instead of env vars for passing
+    other services ip/port and credentials (or even better: Hashicorp
+    Vault). My server would query the credentials on startup. It has nice
+    advantages but also means more logic into each microservice and also
+    being tied to a specific 'way', compared to generic and pervasive env
+    vars.
 
-5. **Build, release, run: strictly separate build and run stages:**
+5.  **Build, release, run: strictly separate build and run stages:**
 
-   Build and Release (build + config) are separated
+    Build and Release (build + config) are separated
 
-   - build = docker image
-   - release = kubernetes Deployment + Service
+    - build = docker image
+    - release = build (docker image) + config (Deployment + Service) on
+      kubernetes. Release ID = the history ID given by:
 
-   We have to maintain three stages to release a project:
+      ```sh
+      kubectl rollout history deployment.v1.apps/quote-svc
+      ```
 
-   - Build stage (Convert a project to build module using the executable commit
-     from version system it fetches vendors dependencies and compiles binaries
-     and assets.)
-   - Release stage (takes the build produced by the build stage and combines
-     it with the deploy’s current config).
-   - Run stage (Runs the app in the execution environment, by launching some
-     set of the app’s processes against a selected release using the gunicorn,
-     worker or the supervisor). Have to use some deployement tools so that
-     every release should have a release ID and having the capability to
-     rollback to a particular release ID. Docker-based containerized deploy
-     strategy would be used
+      And we can rollback using `kubectl rollout undo`.
 
-6. **Processes: execute the app as one or more stateless processes:**
-7. **Port binding: export services via port binding:**
-8. **Concurrency: scale out via the process model:**
-9. **Disposability: maximize robustness with fast startup and graceful shutdown:**
+      Similarly to Kubernetes, Helm provides a nice fallback mechanism: when
+      `helm upgrade quote-svc` fails, it will fall back the last known state
+      of this helm release.
+
+    - run = use Kubernetes as the supervisor, run the container in a Pod
+      thanks to the Deployment config.
+
+6.  **Processes: execute the app as one or more stateless processes:**
+
+    Using the OCI runtime, memory spaces and filesystems are isolated using
+    namespaces. This service is not stateless (as I did not have the time
+    for using a DB such as Postgres + ORM such as).
+
+7.  **Port binding: export services via port binding:**
+8.  **Concurrency: scale out via the process model:**
+9.  **Disposability: maximize robustness with fast startup and graceful shutdown:**
 10. **Dev/prod parity: keep dev, staging, and prod as similar as possible:**
 11. **Logs: treat logs as event streams:**
 12. **Admin processes: run admin/management tasks as one-off processes:**
@@ -428,7 +433,7 @@ status: SERVING
 
 Yey!! 🎉🎉🎉
 
-## Memo
+## Memo on Kubernetes
 
 - Controllers
 
@@ -447,10 +452,13 @@ Yey!! 🎉🎉🎉
     `certmanager`.
   - **LoadBalancer** also kind of exposes a Service (the load balancer
     one). It is like ClusterIP but for exposing to the internet.
-  - **Ingress** -> not a service; it maps a Service to an Ingress Controller.
+  - **Ingress** -> not a service; it maps a Service to an Ingress
+    Controller.
 
 - **Ingress Controller** (Traefik or Nginx or Cloud-specific LBs) applies
   Ingress (maps a Service to an Ingress Controller)
+- **ConfigMap** -> for storing config files like `traefik.toml`
+- **Secret** -> for storing credentials and certificates
 
 ### Let other services use my service
 
