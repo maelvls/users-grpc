@@ -30,7 +30,7 @@
   - [Tools I used](#tools-i-used)
   - [Cloud native](#cloud-native)
   - [12 factor app](#12-factor-app)
-  - [Kubernetes](#kubernetes)
+  - [Kubernetes and Helm](#kubernetes-and-helm)
   - [Memo on Kubernetes](#memo-on-kubernetes)
     - [Let other services use my service](#let-other-services-use-my-service)
     - [Now, add some events](#now-add-some-events)
@@ -449,7 +449,7 @@ Here is a checklist for my microservice and its CLI:
 [12factor]: http://12factor.net
 [12factor-list]: https://gist.github.com/anandtripathi5/118995139602599dab64fddcd147545a
 
-## Kubernetes
+## Kubernetes and Helm
 
 In order to test the deployement of my service, I create a Helm chart (as
 well as a static `kubernetes.yml` -- which is way less flexible) and used
@@ -460,8 +460,31 @@ liveness checks can work with this service. What I did:
 2. health probe working (readiness)
 3. `helm test --cleanup quote-svc` passes
 4. the service can be exposed via an Ingress controller such as Traefik or
-   Nginx.
+   Nginx. For example, using the Helm + GKE + Terraform configuration at
+   [helm-gke-terraform]:
 
+   ```yaml
+   image:
+     tag: 1.0.0
+   ingress:
+     enabled: true
+     hosts: [quote.kube.maelvls.dev]
+     annotations:
+       kubernetes.io/ingress.class: traefik
+       certmanager.k8s.io/cluster-issuer: letsencrypt-prod
+     tls:
+       - hosts: [quote.kube.maelvls.dev]
+         secretName: quote-example-tls
+   ```
+
+   We can then have the service from the internet through Traefik (Ingress
+   Controller)with TLS and dynamic DNS (external-dns):
+
+   ```sh
+   helm install ./helm/quote-svc --name quote-svc --namespace quote-svc --set image.tag=latest --values helm/quote-svc.yaml
+   ```
+
+[helm-gke-terraform]: https://github.com/maelvls/awx-gke-terraform
 [grpc-healthcheck]: https://github.com/grpc/grpc/blob/master/doc/health-checking.md
 
 To bootstrap the kubernetes YAML configuration for this service using my
