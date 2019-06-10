@@ -1,4 +1,4 @@
-# Simple gRPC quote service and its nice CLI
+# Simple gRPC service and its CLI client
 
 [![Build Status](https://cloud.drone.io/api/badges/maelvls/quote/status.svg)](https://cloud.drone.io/maelvls/quote)
 [![Docker layers](https://images.microbadger.com/badges/image/maelvls/quote.svg)](https://microbadger.com/images/maelvls/quote)
@@ -14,7 +14,7 @@
 > way of keeping track of them all 😅
 > Conventionnal Commits and GolangCI are kind of decorative-only.
 
-- [Simple gRPC quote service and its nice CLI](#simple-grpc-quote-service-and-its-nice-cli)
+- [Simple gRPC service and its CLI client](#simple-grpc-service-and-its-cli-client)
   - [Install](#install)
     - [Kubernetes & Helm](#kubernetes--helm)
   - [Develop](#develop)
@@ -22,6 +22,7 @@
   - [Stack](#stack)
   - [Technical notes](#technical-notes)
     - [Vendor or not vendor and go 1.11 modules](#vendor-or-not-vendor-and-go-111-modules)
+    - [Testing](#testing)
     - [`quote version`](#quote-version)
     - [Proto generation](#proto-generation)
     - [Logs, debug and verbosity](#logs-debug-and-verbosity)
@@ -33,6 +34,9 @@
   - [Kubernetes and Helm](#kubernetes-and-helm)
   - [Memo on Kubernetes](#memo-on-kubernetes)
     - [Let other services use my service](#let-other-services-use-my-service)
+      - [Service discovery with env vars](#service-discovery-with-env-vars)
+      - [Service discovery with CoreDNS](#service-discovery-with-coredns)
+      - [Service discovery with Consul or Linkerd3](#service-discovery-with-consul-or-linkerd3)
     - [Now, add some events](#now-add-some-events)
 
 ## Install
@@ -161,6 +165,14 @@ prototool grpc --address :8000 --method quote.Quote/Search --data "$(jo query=''
 - Others: `goreleaser` for cross-compiling and uploading binaries to Github
   Releases, `protoc`, `prototool`
 
+I created this microservice from scratch. If I was to create a new
+microservice like this, I would probably use Lile for generating it (if it
+needs Postres + opentracing + prom metrics + service discovery). For
+example, [Lile-example].
+
+[lile]: https://github.com/lileio/lile
+[lile-example]: https://github.com/arbarlow/account_service
+
 ## Technical notes
 
 ### Vendor or not vendor and go 1.11 modules
@@ -179,6 +191,12 @@ That said, I often use `go mod vendor` which comes very handy (I can browse the
 dependencies sources easily, everything is at hand).
 
 [should-i-vendor]: https://www.reddit.com/r/golang/comments/9ai79z/correct_usage_of_go_modules_vendor_still_connects/
+
+
+### Testing
+
+I used `gotests server/service` (for example) for generating the test
+scaffolding.
 
 ### `quote version`
 
@@ -559,7 +577,9 @@ the cluster? As stated in the documentation
 > variables and DNS. The former works out of the box while the latter
 > requires the CoreDNS cluster addon.
 
-Let's try the env var approach.
+#### Service discovery with env vars
+
+Let's try the env var approach (using minikube):
 
 ```sh
 $ kubectl get pods
@@ -573,10 +593,18 @@ QUOTE_SVC_SERVICE_PORT=8000
 QUOTE_SVC_SERVICE_HOST=10.110.71.154
 ```
 
-The service that wants to use quote-svc will also be provided with these
-env variables. Note that because of the dependency on quote-svc, this
-service would probably fail on startup until quotee-svc is up. Requires a
-bit of defensive programming at this point.
+Let us say we have service A that wants to use quote-svc. Service A will be
+provided with these env variables. Note that because of the dependency on
+quote-svc, this service would probably fail on startup until quote-svc is
+up. Requires some extra logic on startup.
+
+#### Service discovery with CoreDNS
+
+TODO:
+
+#### Service discovery with Consul or Linkerd3
+
+TODO:
 
 [connect-applications-service]: https://kubernetes.io/docs/concepts/services-networking/connect-applications-service/
 

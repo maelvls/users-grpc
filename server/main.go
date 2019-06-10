@@ -1,11 +1,16 @@
 package main
 
 import (
+	"fmt"
+	"net"
 	"os"
 	"strconv"
 
+	grpc_health_v1 "github.com/maelvls/quote/schema/health/v1"
+	"github.com/maelvls/quote/schema/user"
 	"github.com/maelvls/quote/server/service"
 	log "github.com/sirupsen/logrus"
+	"google.golang.org/grpc"
 )
 
 // Set during build, e.g.: go build  -ldflags"-X main.version=$(git describe)".
@@ -18,7 +23,7 @@ var (
 // I'll try to use the go-idiomatic 'happy-path' way.
 func main() {
 
-	// Set the port accoding to PORT.
+	// Set the port according to PORT.
 	port := 8000
 	if str := os.Getenv("PORT"); str != "" {
 		var err error
@@ -38,10 +43,33 @@ func main() {
 		log.Fatal(`expected LOG_FORMAT: 'json', 'text'`)
 	}
 
+	// Set to verbose.
+	if os.Getenv("DEBUG") != "" {
+		log.SetLevel(log.TraceLevel)
+	}
+
 	log.Printf("serving on port %v (version %s)", port, version)
 
-	s := service.NewServer()
-	if err := s.Run(port); err != nil {
+	if err := Run(port); err != nil {
 		log.Fatalf("launching server: %v", err)
 	}
+}
+
+// Run starts the server
+func Run(port int) error {
+	svc := service.NewUserImpl()
+	svc.LoadSampleUsers()
+
+	srv := grpc.NewServer()
+	user.RegisterUserServiceServer(srv, svc)
+	grpc_health_v1.RegisterHealthServer(srv, &service.HealthImpl{})
+
+	// Maybe we should let the user choose which address he wants to bind
+	// to; in our case, when the host is unspecified (:80 is equivalent to
+	// 0.0.0.0:80) then the local system. See: https://godoc.org/net#Dial
+	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
+	if err != nil {
+		log.Fatalf("failed to listen: %v", err)
+	}
+	return srv.Serve(lis)
 }

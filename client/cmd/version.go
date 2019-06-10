@@ -15,8 +15,7 @@ type Version struct {
 
 var versionCmd = &cobra.Command{
 	Use:   "version",
-	Short: "Print the version of this binary to stdout",
-	Long:  ``,
+	Short: "Print the version and git commit to stdout",
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Printf("%s (%s)\n", version.Version, version.Commit)
 	},

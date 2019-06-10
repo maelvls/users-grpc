@@ -5,7 +5,7 @@ import (
 	"os"
 
 	homedir "github.com/mitchellh/go-homedir"
-	log "github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -29,31 +29,25 @@ var rootCmd = &cobra.Command{
 func Execute(v Version) {
 	version = v
 	if err := rootCmd.Execute(); err != nil {
-		fmt.Println(err)
+		logrus.Error(err)
 		os.Exit(1)
 	}
 }
 
 func init() {
 	cobra.OnInitialize(initConfig)
-	log.SetFormatter(&log.TextFormatter{
-		DisableColors: true,
-		FullTimestamp: true,
-	})
-
-	// Here you will define your flags and configuration settings.
-	// Cobra supports persistent flags, which, if defined here,
-	// will be global for your application.
+	logrus.SetFormatter(&logrus.TextFormatter{})
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.quote.yaml)")
-
-	// Cobra also supports local flags, which will only run
-	// when this action is called directly.
-	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "verbose output")
+	rootCmd.PersistentFlags().String("address", "", "'host:port' to bind to; alternatively, use ADDRESS var or set ")
+	_ = viper.BindPFlag("address", rootCmd.Flags().Lookup("address"))
 }
 
 // initConfig reads in config file and ENV variables if set.
 func initConfig() {
+	if verbose {
+		logrus.SetLevel(logrus.TraceLevel)
+	}
 	if cfgFile != "" {
 		// Use config file from the flag.
 		viper.SetConfigFile(cfgFile)
@@ -64,8 +58,6 @@ func initConfig() {
 			fmt.Println(err)
 			os.Exit(1)
 		}
-
-		// Search config in home directory with name ".cobra" (without extension).
 		viper.AddConfigPath(home)
 		viper.SetConfigName(".quote")
 	}
@@ -74,6 +66,6 @@ func initConfig() {
 
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err == nil {
-		fmt.Println("Using config file:", viper.ConfigFileUsed())
+		logrus.Debugf("Using config file: %v", viper.ConfigFileUsed())
 	}
 }
