@@ -33,3 +33,4 @@ coverage.txt
 /.idea/
 users-cli/client
 users-server/server
+dist/

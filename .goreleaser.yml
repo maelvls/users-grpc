@@ -2,7 +2,7 @@
 builds:
   - id: client
     binary: users-cli
-    main: ./client/main.go
+    main: ./users-cli/main.go
     goos: [freebsd, windows, linux, darwin]
     goarch: [amd64, arm, arm64]
     goarm: [6, 7]
@@ -12,7 +12,7 @@ builds:
 
   - id: server
     binary: users-server
-    main: ./server/main.go
+    main: ./users-server/main.go
     goos: [freebsd, windows, linux, darwin]
     goarch: [amd64, arm, arm64]
     goarm: [6, 7]
