@@ -1,11 +1,11 @@
-# Default values for quote-svc.
+# Default values for users-gprc.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
 replicaCount: 1
 
 image:
-  repository: maelvls/quote
+  repository: maelvls/users-gprc
   tag: "1.0.0"
   pullPolicy: IfNotPresent
 
@@ -22,7 +22,7 @@ ingress:
     # kubernetes.io/ingress.class: traefik
     # kubernetes.io/tls-acme: "true"
   hosts: []
-  # Example: quote-svc.kube.maelvls.dev/quote-svc
+  # Example: users-gprc.kube.maelvls.dev/users-gprc
 
   tls: []
   #  - secretName: chart-example-tls

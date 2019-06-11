@@ -6,9 +6,9 @@ import (
 	"os"
 	"strconv"
 
-	grpc_health_v1 "github.com/maelvls/quote/schema/health/v1"
-	"github.com/maelvls/quote/schema/user"
-	"github.com/maelvls/quote/server/service"
+	grpc_health_v1 "github.com/maelvls/users-grpc/schema/health/v1"
+	"github.com/maelvls/users-grpc/schema/user"
+	"github.com/maelvls/users-grpc/users-server/service"
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 )

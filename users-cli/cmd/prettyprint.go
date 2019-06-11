@@ -3,7 +3,7 @@ package cmd
 import (
 	"fmt"
 
-	pb "github.com/maelvls/quote/schema/user"
+	pb "github.com/maelvls/users-grpc/schema/user"
 	"github.com/mgutz/ansi"
 )
 

@@ -6,7 +6,7 @@ import (
 	"os"
 	"time"
 
-	pb "github.com/maelvls/quote/schema/user"
+	pb "github.com/maelvls/users-grpc/schema/user"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
@@ -15,7 +15,7 @@ import (
 func init() {
 	searchCmd := &cobra.Command{
 		Use:   "search (--name=PARTIALNAME | --agefrom=N --ageto=M)",
-		Short: "searchs users from the remote quote service",
+		Short: "searchs users from the remote users-server",
 		Run: func(searchCmd *cobra.Command, args []string) {
 
 			cc, err := grpc.Dial(client.address, grpc.WithInsecure())

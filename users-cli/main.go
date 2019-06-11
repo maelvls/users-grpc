@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/maelvls/quote/client/cmd"
+	"github.com/maelvls/users-grpc/users-cli/cmd"
 )
 
 // Set during build, e.g.: go build  -ldflags"-X main.version=$(git describe)".

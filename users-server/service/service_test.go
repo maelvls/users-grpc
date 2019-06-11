@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	memdb "github.com/hashicorp/go-memdb"
-	pb "github.com/maelvls/quote/schema/user"
+	pb "github.com/maelvls/users-grpc/schema/user"
 	td "github.com/maxatome/go-testdeep"
 )
 

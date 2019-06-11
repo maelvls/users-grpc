@@ -7,8 +7,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/maelvls/quote/schema/user"
-	pb "github.com/maelvls/quote/schema/user"
+	"github.com/maelvls/users-grpc/schema/user"
+	pb "github.com/maelvls/users-grpc/schema/user"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
@@ -17,7 +17,7 @@ import (
 func init() {
 	createCmd := &cobra.Command{
 		Use:   "create --email=EMAIL [--firstname] [--lastname] [--age] [--postaladdress]",
-		Short: "searchs users from the remote quote service",
+		Short: "searchs users from the remote users-gprc service",
 		Args: func(createCmd *cobra.Command, args []string) error {
 			email, err := createCmd.Flags().GetString("email")
 			if email == "" || err != nil {

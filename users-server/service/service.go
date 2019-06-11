@@ -7,7 +7,7 @@ import (
 	"github.com/sirupsen/logrus"
 
 	memdb "github.com/hashicorp/go-memdb"
-	pb "github.com/maelvls/quote/schema/user"
+	pb "github.com/maelvls/users-grpc/schema/user"
 	"github.com/rs/xid"
 	context "golang.org/x/net/context"
 )
@@ -41,8 +41,8 @@ func NewDB() *memdb.MemDB {
 	return db
 }
 
-// UserImpl implements my quote service. If I also wanted to be able to trace my
-// service (e.g. using jaeger), I would also make sure to store
+// UserImpl implements my users-grpc service. If I also wanted to be able
+// to trace my service (e.g. using jaeger), I would also make sure to store
 // opentracing.Tracer there.
 type UserImpl struct {
 	DB *memdb.MemDB
@@ -143,7 +143,7 @@ func (svc *UserImpl) SearchName(ctx context.Context, req *pb.SearchNameReq) (*pb
 		return func(raw interface{}) bool {
 			u, ok := raw.(*pb.User)
 			if !ok {
-				logrus.Errorf("filterByFirstOrLastName: could not unpack a quote.User, instead got: %#+v", raw)
+				logrus.Errorf("filterByFirstOrLastName: could not unpack a User, instead got: %#+v", raw)
 				return true // Skip this element
 			}
 
@@ -194,8 +194,7 @@ func (svc *UserImpl) GetByEmail(ctx context.Context, req *pb.GetByEmailReq) (*pb
 
 	u, ok := raw.(*pb.User)
 	if !ok {
-		logrus.Errorf("could not unpack a quote.User, instead got: %#+v", raw)
-		return nil, fmt.Errorf("could not unpack a quote.User, instead got: %#+v", raw)
+		return nil, fmt.Errorf("could not unpack a User, instead got: %#+v", raw)
 	}
 
 	resp := &pb.GetByEmailResp{User: u, Status: &pb.Status{Code: pb.Status_SUCCESS}}

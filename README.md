@@ -1,12 +1,12 @@
-# Simple gRPC service and its CLI client
+# Simple gRPC user service and its CLI client
 
-[![Build Status](https://cloud.drone.io/api/badges/maelvls/quote/status.svg)](https://cloud.drone.io/maelvls/quote)
-[![Docker layers](https://images.microbadger.com/badges/image/maelvls/quote.svg)](https://microbadger.com/images/maelvls/quote)
-[![Coverage Status](https://coveralls.io/repos/github/maelvls/quote/badge.svg?branch=master)](https://coveralls.io/github/maelvls/quote?branch=master)
-[![codecov](https://codecov.io/gh/maelvls/quote/branch/master/graph/badge.svg)](https://codecov.io/gh/maelvls/quote)
-[![Go Report Card](https://goreportcard.com/badge/github.com/maelvls/quote)](https://goreportcard.com/report/github.com/maelvls/quote)
-[![GolangCI](https://golangci.com/badges/github.com/maelvls/quote.svg)](https://golangci.com/r/github.com/maelvls/quote)
-[![Godoc](https://godoc.org/github.com/maelvls/quote?status.svg)](http://godoc.org/github.com/maelvls/quote)
+[![Build Status](https://cloud.drone.io/api/badges/maelvls/users-gprc/status.svg)](https://cloud.drone.io/maelvls/users-gprc)
+[![Docker layers](https://images.microbadger.com/badges/image/maelvls/users-gprc.svg)](https://microbadger.com/images/maelvls/users-gprc)
+[![Coverage Status](https://coveralls.io/repos/github/maelvls/users-gprc/badge.svg?branch=master)](https://coveralls.io/github/maelvls/users-gprc?branch=master)
+[![codecov](https://codecov.io/gh/maelvls/users-gprc/branch/master/graph/badge.svg)](https://codecov.io/gh/maelvls/users-gprc)
+[![Go Report Card](https://goreportcard.com/badge/github.com/maelvls/users-grpc)](https://goreportcard.com/report/github.com/maelvls/users-grpc)
+[![GolangCI](https://golangci.com/badges/github.com/maelvls/users-grpc.svg)](https://golangci.com/r/github.com/maelvls/users-grpc)
+[![Godoc](https://godoc.org/github.com/maelvls/users-grpc?status.svg)](http://godoc.org/github.com/maelvls/users-grpc)
 [![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-yellow.svg)](https://conventionalcommits.org)
 
 > So many shiny badges, I guess it doesn't mean anything anymore! I have
@@ -14,7 +14,9 @@
 > way of keeping track of them all 😅
 > Conventionnal Commits and GolangCI are kind of decorative-only.
 
-- [Simple gRPC service and its CLI client](#simple-grpc-service-and-its-cli-client)
+[![asciicast](https://asciinema.org/a/251067.svg)](https://asciinema.org/a/251067)
+
+- [Simple gRPC user service and its CLI client](#simple-grpc-user-service-and-its-cli-client)
   - [Stack](#stack)
   - [Use](#use)
   - [Install](#install)
@@ -27,7 +29,7 @@
   - [Technical notes](#technical-notes)
     - [Vendor or not vendor and go 1.11 modules](#vendor-or-not-vendor-and-go-111-modules)
     - [Testing](#testing)
-    - [`quote version`](#quote-version)
+    - [`users-cli version`](#users-cli-version)
     - [Proto generation](#proto-generation)
     - [Logs, debug and verbosity](#logs-debug-and-verbosity)
     - [Static analysis, DevSecOps and CI](#static-analysis-devsecops-and-ci)
@@ -80,10 +82,12 @@ go run client/main.go create --email=mael.valais@gmail.com --firstname="Maël" -
 
 ## Use
 
-First, run the server (in order to get `client` and `server`, ):
+Refer to 'install' below for getting `users-cli` and `users-server`.
+
+First, let `users-server` run somewhere:
 
 ```sh
-go run server/main.go
+users-server
 ```
 
 Then, we can query it using the CLI client. The possible actions are
@@ -97,20 +101,12 @@ Then, we can query it using the CLI client. The possible actions are
 Examples:
 
 ```sh
-$ go run client/main.go create --email=mael.valais@gmail.com --firstname="Maël" --lastname="Valais" --postaladdress="Toulouse"
+$ users-cli create --email=mael.valais@gmail.com --firstname="Maël" --lastname="Valais" --postaladdress="Toulouse"
 
-$ go run client/main.go get mael.valais@gmail.com
+$ users-cli get mael.valais@gmail.com
 Maël Valais <mael.valais@gmail.com> (0 years old, address: Toulouse)
 
-$ go run client/main.go search --agefrom=30 --ageto=42
-Benjamin Frazier <benjamin.frazier@email.net> (31 years old, address: 289 Cyrus Avenue, Templeton, Maine, 5964)
-Stone Briggs <stone.briggs@email.info> (31 years old, address: 531 Atkins Avenue, Neahkahnie, Tennessee, 3981)
-Alford Cole <alford.cole@email.net> (33 years old, address: 763 Halleck Street, Elbert, Nevada, 3291)
-Brock Stanley <brock.stanley@email.me> (35 years old, address: 748 Aster Court, Elwood, Guam, 7446)
-Ina Perkins <ina.perkins@email.me> (35 years old, address: 899 Miami Court, Temperanceville, Virginia, 2821)
-Hardin Patton <hardin.patton@email.com> (42 years old, address: 241 Russell Street, Robinson, Oregon, 9576)
-
-$ go run client/main.go list
+$ users-cli list
 Acevedo Quinn <acevedo.quinn@email.us> (22 years old, address: 403 Lawn Court, Walland, Federated States Of Micronesia, 8260)
 Alford Cole <alford.cole@email.net> (33 years old, address: 763 Halleck Street, Elbert, Nevada, 3291)
 Angeline Stokes <angeline.stokes@email.biz> (48 years old, address: 526 Java Street, Hailesboro, Pennsylvania, 1648)
@@ -123,39 +119,47 @@ Valencia Dorsey <valencia.dorsey@email.info> (51 years old, address: 941 Merit C
 Walter Prince <walter.prince@email.co.uk> (26 years old, address: 204 Ralph Avenue, Gibbsville, Michigan, 6698)
 Wilkerson Mosley <wilkerson.mosley@email.biz> (48 years old, address: 734 Kosciusko Street, Marbury, Connecticut, 3037)
 
-$ go run client/main.go search --name=alenc
+$ users-cli search --name=alenc
 Jenifer Valencia <jenifer.valencia@email.us> (52 years old, address: 948 Jefferson Street, Guthrie, Louisiana, 2483)
 Valencia Dorsey <valencia.dorsey@email.info> (51 years old, address: 941 Merit Court, Grill, Mississippi, 4961)
+
+$ users-cli search --agefrom=30 --ageto=42
+Benjamin Frazier <benjamin.frazier@email.net> (31 years old, address: 289 Cyrus Avenue, Templeton, Maine, 5964)
+Stone Briggs <stone.briggs@email.info> (31 years old, address: 531 Atkins Avenue, Neahkahnie, Tennessee, 3981)
+Alford Cole <alford.cole@email.net> (33 years old, address: 763 Halleck Street, Elbert, Nevada, 3291)
+Brock Stanley <brock.stanley@email.me> (35 years old, address: 748 Aster Court, Elwood, Guam, 7446)
+Ina Perkins <ina.perkins@email.me> (35 years old, address: 899 Miami Court, Temperanceville, Virginia, 2821)
+Hardin Patton <hardin.patton@email.com> (42 years old, address: 241 Russell Street, Robinson, Oregon, 9576)
 ```
 
 Here is what the help looks like:
 
 ```sh
-$ go run client/main.go help
+$ users-cli help
 
 For setting the address of the form HOST:PORT, you can
 - use the flag --address=:8000
 - or use the env var ADDRESS
-- or you can set 'address: localhost:8000' in $HOME/.quote.yml
+- or you can set 'address: localhost:8000' in $HOME/.users-cli.yml
 
 Usage:
-  quote [command]
+  users-cli [command]
 
 Available Commands:
-  create      searchs users from the remote quote service
+  create      searchs users from the remote users-gprc service
   get         prints an user by its email (must be exact, not partial)
   help        Help about any command
   list        lists all users
-  search      searchs users from the remote quote service
+  search      searchs users from the remote users-server
   version     Print the version and git commit to stdout
 
 Flags:
       --address string   'host:port' to bind to (default ":8000")
-      --config string    config file (default is $HOME/.quote.yaml)
-  -h, --help             help for quote
+      --config string    config file (default is $HOME/.users-cli.yaml)
+  -h, --help             help for users-cli
   -v, --verbose          verbose output
 
-Use "quote [command] --help" for more information about a command.
+Use "users-cli [command] --help" for more information about a command.
 ```
 
 ## Install
@@ -170,7 +174,7 @@ latest commit. I use [moving-tags] `1`, `1.0` and fixed tag `1.0.0` (for
 example). To run the server on port 8123 locally:
 
 ```sh
-$ docker run -e LOG_FORMAT=text -e PORT=8123 -p 80:8123/tcp --rm -it maelvls/quote:1
+$ docker run -e LOG_FORMAT=text -e PORT=8123 -p 80:8123/tcp --rm -it maelvls/users-gprc:1
 INFO[0000] serving on port 8123 (version 1.0.0)
 ```
 
@@ -179,7 +183,7 @@ INFO[0000] serving on port 8123 (version 1.0.0)
 To run the client CLI:
 
 ```sh
-$ docker run --rm -it maelvls/quote:1 client --address=172.17.0.1:8123 ls
+$ docker run --rm -it maelvls/users-gprc:1 client --address=172.17.0.1:8123 ls
 ...
 ```
 
@@ -204,14 +208,14 @@ LLVM + way richer and complex language -- see my comparison [rust-vs-go]).
 ### Using go-get
 
 ```sh
-go get github.com/maelvls/quote/...
+go get github.com/maelvls/users-grpc/...
 ```
 
 ### Kubernetes & Helm
 
 ```sh
-helm install ./ci/helm/quote-svc --name quote-svc --namespace quote-svc --set image.tag=latest
-helm upgrade quote-svc ./ci/helm/quote-svc
+helm install ./ci/helm/users-gprc --name users-gprc --namespace users-gprc --set image.tag=latest
+helm upgrade users-gprc ./ci/helm/users-gprc
 ```
 
 ## Develop and hack it
@@ -220,8 +224,8 @@ Here is the minimal set of things you need to get started for hacking this
 project:
 
 ```sh
-git clone https://github.com/maelvls/quote
-cd quote/
+git clone https://github.com/maelvls/users-grpc
+cd users-grpc/
 
 brew install protobuf # only if .proto files are changed
 go generate ./...     # only if .proto files are changed
@@ -240,7 +244,7 @@ In order to debug docker builds, you can stop the build process before the
 bare-alpine stage by doing:
 
 ```sh
-docker build . -f ci/Dockerfile --tag maelvls/quote --target=builder
+docker build . -f ci/Dockerfile --tag maelvls/users-gprc --target=builder
 ```
 
 You can test the service is running correctly by using
@@ -259,12 +263,12 @@ status: SERVING
 From the docker container itself:
 
 ```sh
-$ docker run --rm -d --name=quote-svc maelvls/quote:1
-$ docker exec -i quote-svc grpc-health-probe -addr=:8000
+$ docker run --rm -d --name=users-gprc maelvls/users-gprc:1
+$ docker exec -i users-gprc grpc-health-probe -addr=:8000
 
 status: SERVING
 
-$ docker kill quote-svc
+$ docker kill users-gprc
 ```
 
 For building the CLI, I used the cobra cli generator:
@@ -278,7 +282,24 @@ use `httpie` or `curl` for HTTP REST APIs). I couple it with [`jo`][jo]
 which eases the process of dealing with JSON on the command line:
 
 ```sh
-prototool grpc --address :8000 --method quote.Quote/Search --data "$(jo query='')"
+$ prototool grpc --address :8000 --method user.UserService/GetByEmail --data "$(jo email='valencia.dorsey@email.info')" | jq
+
+{
+  "status": {
+    "code": "SUCCESS"
+  },
+  "user": {
+    "id": "5cfdf218f7efd273906c5b9e",
+    "age": 51,
+    "name": {
+      "first": "Valencia",
+      "last": "Dorsey"
+    },
+    "email": "valencia.dorsey@email.info",
+    "phone": "+1 (906) 568-2594",
+    "address": "941 Merit Court, Grill, Mississippi, 4961"
+  }
+}
 ```
 
 [grpc-health-probe]: https://github.com/grpc-ecosystem/grpc-health-probe
@@ -317,7 +338,7 @@ so that these methods get generated in the corresponding `test_*.go` file.
 Also, to make the visual comparison between 'got' and 'expected' easier on
 failing tests, I use `github.com/maxatome/go-testdeep`.
 
-### `quote version`
+### `users-cli version`
 
 I decided to use <https://github.com/ahmetb/govvv> in order to ease the
 process of using `-ldflags -Xmain.version=$(git describe)` and so on. I
@@ -503,13 +524,13 @@ Here is a checklist for my microservice and its CLI:
       kubernetes. Release ID = the history ID given by:
 
       ```sh
-      kubectl rollout history deployment.v1.apps/quote-svc
+      kubectl rollout history deployment.v1.apps/users-gprc
       ```
 
       And we can rollback using `kubectl rollout undo`.
 
       Similarly to Kubernetes, Helm provides a nice fallback mechanism: when
-      `helm upgrade quote-svc` fails, it will fall back the last known state
+      `helm upgrade users-gprc` fails, it will fall back the last known state
       of this helm release.
 
     - run = use Kubernetes as the supervisor, run the container in a Pod
@@ -594,7 +615,7 @@ liveness checks can work with this service. What I did:
 
 1. the service logs using json (logrus) for easy integration
 2. health probe working (readiness)
-3. `helm test --cleanup quote-svc` passes
+3. `helm test --cleanup users-gprc` passes
 4. the service can be exposed via an Ingress controller such as Traefik or
    Nginx. For example, using the Helm + GKE + Terraform configuration at
    [helm-gke-terraform]:
@@ -604,20 +625,20 @@ liveness checks can work with this service. What I did:
      tag: 1.0.0
    ingress:
      enabled: true
-     hosts: [quote.kube.maelvls.dev]
+     hosts: [users-grpc.kube.maelvls.dev]
      annotations:
        kubernetes.io/ingress.class: traefik
        certmanager.k8s.io/cluster-issuer: letsencrypt-prod
      tls:
-       - hosts: [quote.kube.maelvls.dev]
-         secretName: quote-example-tls
+       - hosts: [users-grpc.kube.maelvls.dev]
+         secretName: users-grpc-example-tls
    ```
 
    We can then have the service from the internet through Traefik (Ingress
    Controller)with TLS and dynamic DNS (external-dns):
 
    ```sh
-   helm install ./helm/quote-svc --name quote-svc --namespace quote-svc --set image.tag=latest --values helm/quote-svc.yaml
+   helm install ./helm/users-gprc --name users-gprc --namespace users-gprc --set image.tag=latest --values helm/users-gprc.yaml
    ```
 
 [helm-gke-terraform]: https://github.com/maelvls/awx-gke-terraform
@@ -627,7 +648,7 @@ To bootstrap the kubernetes YAML configuration for this service using my
 Helm chart, I used:
 
 ```sh
-helm template ./ci/helm/quote-svc --name quote-svc --namespace quote-svc --set image.tag=latest > ci/deployment.yml
+helm template ./ci/helm/users-gprc --name users-gprc --namespace users-gprc --set image.tag=latest > ci/deployment.yml
 ```
 
 We can now apply the configuration without using Helm. Note that I changed
@@ -636,9 +657,9 @@ the ClusterIP to NodePort so that no LoadBalancer, Ingress Controller nor
 
 ```sh
 $ kubectl apply -f ci/deployment.yml
-$ kubectl get svc quote-svc
+$ kubectl get svc users-gprc
 NAME        TYPE       CLUSTER-IP      EXTERNAL-IP   PORT(S)          AGE
-quote-svc   NodePort   10.110.71.154   <none>        8000:32344/TCP   15m
+users-gprc   NodePort   10.110.71.154   <none>        8000:32344/TCP   15m
 ```
 
 Now, in order to access it, we must retrieve the minikube cluster IP (i.e.,
@@ -702,18 +723,18 @@ Let's try the env var approach (using minikube):
 ```sh
 $ kubectl get pods
 NAME                               READY   STATUS    RESTARTS   AGE
-quote-svc-69d46c866f-t6rx4         1/1     Running   0          23m
+users-gprc-69d46c866f-t6rx4         1/1     Running   0          23m
 
-$ kubectl exec -it quote-svc-69d46c866f-t6rx4 env | grep -i quote
-HOSTNAME=quote-svc-69d46c866f-t6rx4
+$ kubectl exec -it users-gprc-69d46c866f-t6rx4 env | grep -i users-grpc
+HOSTNAME=users-gprc-69d46c866f-t6rx4
 ...
-QUOTE_SVC_SERVICE_PORT=8000
-QUOTE_SVC_SERVICE_HOST=10.110.71.154
+USERS_GRPC_SVC_SERVICE_PORT=8000
+USERS_GRPC_SVC_SERVICE_HOST=10.110.71.154
 ```
 
-Let us say we have service A that wants to use quote-svc. Service A will be
+Let us say we have service A that wants to use users-gprc. Service A will be
 provided with these env variables. Note that because of the dependency on
-quote-svc, this service would probably fail on startup until quote-svc is
+users-gprc, this service would probably fail on startup until users-gprc is
 up. Requires some extra logic on startup.
 
 #### Service discovery with Kubernetes, Consul or Linkerd3

@@ -8,7 +8,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 
-	pb "github.com/maelvls/quote/schema/user"
+	pb "github.com/maelvls/users-grpc/schema/user"
 )
 
 // LoadSampleUsers loads some hard-coded users into database.

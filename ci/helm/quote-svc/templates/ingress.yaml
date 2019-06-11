@@ -1,12 +1,12 @@
 {{- if .Values.ingress.enabled -}}
-{{- $serviceName := include "quote-svc.fullname" . -}}
+{{- $serviceName := include "users-gprc.fullname" . -}}
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
   name: {{ $serviceName }}
   labels:
-    app.kubernetes.io/name: {{ include "quote-svc.name" . }}
-    helm.sh/chart: {{ include "quote-svc.chart" . }}
+    app.kubernetes.io/name: {{ include "users-gprc.name" . }}
+    helm.sh/chart: {{ include "users-gprc.chart" . }}
     app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
   {{- with .Values.ingress.annotations }}

@@ -3,7 +3,7 @@ package service
 import (
 	"context"
 
-	v1 "github.com/maelvls/quote/schema/health/v1"
+	v1 "github.com/maelvls/users-grpc/schema/health/v1"
 )
 
 // HealthImpl implements the HealthServer interface (see health.pb.go file).

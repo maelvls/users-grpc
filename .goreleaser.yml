@@ -1,7 +1,7 @@
 # https://goreleaser.com/customization/
 builds:
   - id: client
-    binary: client
+    binary: users-cli
     main: ./client/main.go
     goos: [freebsd, windows, linux, darwin]
     goarch: [amd64, arm, arm64]
@@ -9,8 +9,9 @@ builds:
     ignore:
       - { goos: darwin, goarch: 386 }
       - { goos: linux, goarch: arm, goarm: 7 }
+
   - id: server
-    binary: server
+    binary: users-server
     main: ./server/main.go
     goos: [freebsd, windows, linux, darwin]
     goarch: [amd64, arm, arm64]

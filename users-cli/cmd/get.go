@@ -9,7 +9,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 
-	"github.com/maelvls/quote/schema/user"
+	"github.com/maelvls/users-grpc/schema/user"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 )

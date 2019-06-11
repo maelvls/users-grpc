@@ -1,4 +1,4 @@
-module github.com/maelvls/quote
+module github.com/maelvls/users-grpc
 
 go 1.12
 

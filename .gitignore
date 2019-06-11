@@ -2,7 +2,7 @@
 .vscode/
 
 # Go binaries
-/quote
+/users-gprc
 
 # Created by https://www.gitignore.io/api/go
 # Edit at https://www.gitignore.io/?templates=go
@@ -31,3 +31,5 @@ coverage.txt
 /client/client
 /server/server.idea/
 /.idea/
+users-cli/client
+users-server/server
