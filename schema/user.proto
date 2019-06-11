@@ -11,7 +11,7 @@ message User {
   string id = 1; // "5cfdf218090eae728f3ebf2d",
   int32 age = 2; // 27
   Name name = 3;
-  string email = 4;   //  "brianna.shelton@undefined.org",
+  string email = 4;   //  "brianna.shelton@email.org",
   string phone = 5;   //  "+1 (814) 482-3880",
   string address = 6; //  "255 Cortelyou Road, Volta, Indiana, 1608"
 }

@@ -42,7 +42,7 @@ var sampleUsers = []byte(`
       "first": "Valencia",
       "last": "Dorsey"
     },
-    "email": "valencia.dorsey@undefined.info",
+    "email": "valencia.dorsey@email.info",
     "phone": "+1 (906) 568-2594",
     "address": "941 Merit Court, Grill, Mississippi, 4961"
   },
@@ -53,7 +53,7 @@ var sampleUsers = []byte(`
       "first": "Brianna",
       "last": "Shelton"
     },
-    "email": "brianna.shelton@undefined.org",
+    "email": "brianna.shelton@email.org",
     "phone": "+1 (814) 482-3880",
     "address": "255 Cortelyou Road, Volta, Indiana, 1608"
   },
@@ -64,7 +64,7 @@ var sampleUsers = []byte(`
       "first": "Snider",
       "last": "Fisher"
     },
-    "email": "snider.fisher@undefined.biz",
+    "email": "snider.fisher@email.biz",
     "phone": "+1 (918) 591-2784",
     "address": "363 Williamsburg Street, Chicopee, Illinois, 6316"
   },
@@ -75,7 +75,7 @@ var sampleUsers = []byte(`
       "first": "Pacheco",
       "last": "Fitzgerald"
     },
-    "email": "pacheco.fitzgerald@undefined.name",
+    "email": "pacheco.fitzgerald@email.name",
     "phone": "+1 (828) 442-3262",
     "address": "278 McKibben Street, Nicholson, South Dakota, 3793"
   },
@@ -86,7 +86,7 @@ var sampleUsers = []byte(`
       "first": "Brock",
       "last": "Stanley"
     },
-    "email": "brock.stanley@undefined.me",
+    "email": "brock.stanley@email.me",
     "phone": "+1 (836) 594-3347",
     "address": "748 Aster Court, Elwood, Guam, 7446"
   },
@@ -97,7 +97,7 @@ var sampleUsers = []byte(`
       "first": "Hardin",
       "last": "Patton"
     },
-    "email": "hardin.patton@undefined.com",
+    "email": "hardin.patton@email.com",
     "phone": "+1 (977) 536-2989",
     "address": "241 Russell Street, Robinson, Oregon, 9576"
   },
@@ -108,7 +108,7 @@ var sampleUsers = []byte(`
       "first": "Walter",
       "last": "Prince"
     },
-    "email": "walter.prince@undefined.co.uk",
+    "email": "walter.prince@email.co.uk",
     "phone": "+1 (804) 553-3262",
     "address": "204 Ralph Avenue, Gibbsville, Michigan, 6698"
   },
@@ -119,7 +119,7 @@ var sampleUsers = []byte(`
       "first": "Acevedo",
       "last": "Quinn"
     },
-    "email": "acevedo.quinn@undefined.us",
+    "email": "acevedo.quinn@email.us",
     "phone": "+1 (886) 442-2144",
     "address": "403 Lawn Court, Walland, Federated States Of Micronesia, 8260"
   },
@@ -130,7 +130,7 @@ var sampleUsers = []byte(`
       "first": "Billie",
       "last": "Norton"
     },
-    "email": "billie.norton@undefined.io",
+    "email": "billie.norton@email.io",
     "phone": "+1 (934) 524-3718",
     "address": "699 Rapelye Street, Dupuyer, Ohio, 4175"
   },
@@ -141,7 +141,7 @@ var sampleUsers = []byte(`
       "first": "Solis",
       "last": "Irwin"
     },
-    "email": "solis.irwin@undefined.tv",
+    "email": "solis.irwin@email.tv",
     "phone": "+1 (855) 413-3330",
     "address": "739 Poly Place, Rosburg, Colorado, 9608"
   },
@@ -152,7 +152,7 @@ var sampleUsers = []byte(`
       "first": "Wilkerson",
       "last": "Mosley"
     },
-    "email": "wilkerson.mosley@undefined.biz",
+    "email": "wilkerson.mosley@email.biz",
     "phone": "+1 (884) 464-2806",
     "address": "734 Kosciusko Street, Marbury, Connecticut, 3037"
   },
@@ -163,7 +163,7 @@ var sampleUsers = []byte(`
       "first": "Alford",
       "last": "Cole"
     },
-    "email": "alford.cole@undefined.net",
+    "email": "alford.cole@email.net",
     "phone": "+1 (822) 589-2083",
     "address": "763 Halleck Street, Elbert, Nevada, 3291"
   },
@@ -174,7 +174,7 @@ var sampleUsers = []byte(`
       "first": "Stone",
       "last": "Briggs"
     },
-    "email": "stone.briggs@undefined.info",
+    "email": "stone.briggs@email.info",
     "phone": "+1 (828) 438-2266",
     "address": "531 Atkins Avenue, Neahkahnie, Tennessee, 3981"
   },
@@ -185,7 +185,7 @@ var sampleUsers = []byte(`
       "first": "Ratliff",
       "last": "Herring"
     },
-    "email": "ratliff.herring@undefined.org",
+    "email": "ratliff.herring@email.org",
     "phone": "+1 (949) 540-2608",
     "address": "246 Greene Avenue, Blairstown, Puerto Rico, 6855"
   },
@@ -196,7 +196,7 @@ var sampleUsers = []byte(`
       "first": "Angeline",
       "last": "Stokes"
     },
-    "email": "angeline.stokes@undefined.biz",
+    "email": "angeline.stokes@email.biz",
     "phone": "+1 (970) 569-3963",
     "address": "526 Java Street, Hailesboro, Pennsylvania, 1648"
   },
@@ -207,7 +207,7 @@ var sampleUsers = []byte(`
       "first": "Santos",
       "last": "Slater"
     },
-    "email": "santos.slater@undefined.name",
+    "email": "santos.slater@email.name",
     "phone": "+1 (858) 533-2802",
     "address": "459 Sharon Street, Belleview, Kentucky, 5483"
   },
@@ -218,7 +218,7 @@ var sampleUsers = []byte(`
       "first": "Ina",
       "last": "Perkins"
     },
-    "email": "ina.perkins@undefined.me",
+    "email": "ina.perkins@email.me",
     "phone": "+1 (844) 507-2552",
     "address": "899 Miami Court, Temperanceville, Virginia, 2821"
   },
@@ -229,7 +229,7 @@ var sampleUsers = []byte(`
       "first": "Rice",
       "last": "Pierce"
     },
-    "email": "rice.pierce@undefined.com",
+    "email": "rice.pierce@email.com",
     "phone": "+1 (899) 428-2988",
     "address": "291 Boardwalk , Chloride, North Carolina, 8401"
   },
@@ -240,7 +240,7 @@ var sampleUsers = []byte(`
       "first": "Shields",
       "last": "Moody"
     },
-    "email": "shields.moody@undefined.co.uk",
+    "email": "shields.moody@email.co.uk",
     "phone": "+1 (953) 554-3038",
     "address": "350 Powell Street, Chaparrito, Massachusetts, 2556"
   },
@@ -251,7 +251,7 @@ var sampleUsers = []byte(`
       "first": "Jenifer",
       "last": "Valencia"
     },
-    "email": "jenifer.valencia@undefined.us",
+    "email": "jenifer.valencia@email.us",
     "phone": "+1 (988) 463-2789",
     "address": "948 Jefferson Street, Guthrie, Louisiana, 2483"
   },
@@ -262,7 +262,7 @@ var sampleUsers = []byte(`
       "first": "Beasley",
       "last": "Byrd"
     },
-    "email": "beasley.byrd@undefined.io",
+    "email": "beasley.byrd@email.io",
     "phone": "+1 (819) 597-2912",
     "address": "213 McKibbin Street, Veguita, New Jersey, 3943"
   },
@@ -273,7 +273,7 @@ var sampleUsers = []byte(`
       "first": "Helen",
       "last": "Walker"
     },
-    "email": "helen.walker@undefined.tv",
+    "email": "helen.walker@email.tv",
     "phone": "+1 (805) 518-2099",
     "address": "861 Conselyea Street, Elliott, Texas, 4229"
   },
@@ -284,7 +284,7 @@ var sampleUsers = []byte(`
       "first": "Ivy",
       "last": "Stephens"
     },
-    "email": "ivy.stephens@undefined.biz",
+    "email": "ivy.stephens@email.biz",
     "phone": "+1 (948) 401-2314",
     "address": "246 Bushwick Avenue, Grazierville, California, 4664"
   },
@@ -295,7 +295,7 @@ var sampleUsers = []byte(`
       "first": "Benjamin",
       "last": "Frazier"
     },
-    "email": "benjamin.frazier@undefined.net",
+    "email": "benjamin.frazier@email.net",
     "phone": "+1 (953) 407-3166",
     "address": "289 Cyrus Avenue, Templeton, Maine, 5964"
   },
@@ -306,7 +306,7 @@ var sampleUsers = []byte(`
       "first": "Hodge",
       "last": "Cabrera"
     },
-    "email": "hodge.cabrera@undefined.info",
+    "email": "hodge.cabrera@email.info",
     "phone": "+1 (923) 543-3169",
     "address": "521 Richards Street, Takilma, Missouri, 4287"
   },
@@ -317,7 +317,7 @@ var sampleUsers = []byte(`
       "first": "Kent",
       "last": "Cochran"
     },
-    "email": "kent.cochran@undefined.org",
+    "email": "kent.cochran@email.org",
     "phone": "+1 (945) 512-2231",
     "address": "803 Cranberry Street, Inkerman, Marshall Islands, 6929"
   },
@@ -328,7 +328,7 @@ var sampleUsers = []byte(`
       "first": "Noreen",
       "last": "Parks"
     },
-    "email": "noreen.parks@undefined.biz",
+    "email": "noreen.parks@email.biz",
     "phone": "+1 (950) 461-3686",
     "address": "872 Milford Street, Goldfield, Minnesota, 3340"
   },
@@ -339,7 +339,7 @@ var sampleUsers = []byte(`
       "first": "Marion",
       "last": "Zimmerman"
     },
-    "email": "marion.zimmerman@undefined.name",
+    "email": "marion.zimmerman@email.name",
     "phone": "+1 (903) 437-2904",
     "address": "731 Jamison Lane, Independence, North Dakota, 846"
   },
@@ -350,7 +350,7 @@ var sampleUsers = []byte(`
       "first": "Blanca",
       "last": "Lang"
     },
-    "email": "blanca.lang@undefined.me",
+    "email": "blanca.lang@email.me",
     "phone": "+1 (848) 458-2687",
     "address": "995 Meadow Street, Greenbackville, New Mexico, 1237"
   },
@@ -361,7 +361,7 @@ var sampleUsers = []byte(`
       "first": "Dawson",
       "last": "Boyer"
     },
-    "email": "dawson.boyer@undefined.com",
+    "email": "dawson.boyer@email.com",
     "phone": "+1 (804) 566-3741",
     "address": "283 Jewel Street, Salvo, Oklahoma, 1417"
   }

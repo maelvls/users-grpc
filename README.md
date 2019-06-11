@@ -94,8 +94,8 @@ $ go run client/main.go get mael.valais@gmail.com
 Maël Valais <mael.valais@gmail.com> (0 years old, address: Toulouse)
 
 $ go run client/main.go search --name=alenc
-Jenifer Valencia <jenifer.valencia@undefined.us> (52 years old, address: 948 Jefferson Street, Guthrie, Louisiana, 2483)
-Valencia Dorsey <valencia.dorsey@undefined.info> (51 years old, address: 941 Merit Court, Grill, Mississippi, 4961)
+Jenifer Valencia <jenifer.valencia@email.us> (52 years old, address: 948 Jefferson Street, Guthrie, Louisiana, 2483)
+Valencia Dorsey <valencia.dorsey@email.info> (51 years old, address: 941 Merit Court, Grill, Mississippi, 4961)
 ```
 
 ## Install

@@ -91,7 +91,7 @@ func init() {
 		},
 	}
 
-	searchCmd.Flags().String("name", "", "Search with a substring of first and last name") // brianna.shelton@undefined.org
+	searchCmd.Flags().String("name", "", "Search with a substring of first and last name") // brianna.shelton@email.org
 	searchCmd.Flags().Int32("agefrom", 18, "Search in [agefrom, ageto]")
 	searchCmd.Flags().Int32("ageto", 18, "")
 

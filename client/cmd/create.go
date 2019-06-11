@@ -76,7 +76,7 @@ func init() {
 
 	createCmd.Flags().String("firstname", "", "") // Brianna
 	createCmd.Flags().String("lastname", "", "")  // Shelton
-	createCmd.Flags().String("email", "", "")     // brianna.shelton@undefined.org
+	createCmd.Flags().String("email", "", "")     // brianna.shelton@email.org
 	createCmd.Flags().Int32("age", 18, "")
 	createCmd.Flags().String("postaladdress", "", "") // 255 Cortelyou Road, Volta, Indiana, 1608
 
