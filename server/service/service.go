@@ -65,7 +65,7 @@ func (svc *UserImpl) Create(ctx context.Context, req *pb.CreateReq) (*pb.CreateR
 	}
 	txn.Commit()
 
-	resp := &pb.CreateResp{Status: &pb.Status{Code: pb.Status_SUCCESS}}
+	resp := &pb.CreateResp{User: user, Status: &pb.Status{Code: pb.Status_SUCCESS}}
 	return resp, nil
 }
 
@@ -162,5 +162,32 @@ func (svc *UserImpl) SearchName(ctx context.Context, req *pb.SearchNameReq) (*pb
 	}
 
 	resp := &pb.SearchResp{Users: users, Status: &pb.Status{Code: pb.Status_SUCCESS}}
+	return resp, nil
+}
+
+// GetByEmail returns a user by its email.
+func (svc *UserImpl) GetByEmail(ctx context.Context, req *pb.GetByEmailReq) (*pb.GetByEmailResp, error) {
+	txn := svc.DB.Txn(false)
+	defer txn.Abort()
+
+	raw, err := txn.First("user", "id", req.Email)
+	if err != nil {
+		panic(err)
+	}
+
+	// When not found, gracefully return 'email not found'
+	if raw == nil {
+		return &pb.GetByEmailResp{User: &pb.User{}, Status: &pb.Status{
+			Code: pb.Status_FAILED,
+			Msg:  "email not found"},
+		}, nil
+	}
+
+	u, ok := raw.(*pb.User)
+	if !ok {
+		logrus.Fatalf("could not unpack a quote.User, instead got: %#+v", raw)
+	}
+
+	resp := &pb.GetByEmailResp{User: u, Status: &pb.Status{Code: pb.Status_SUCCESS}}
 	return resp, nil
 }

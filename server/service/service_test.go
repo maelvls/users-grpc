@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"reflect"
 	"testing"
 
 	memdb "github.com/hashicorp/go-memdb"
@@ -10,6 +9,7 @@ import (
 	td "github.com/maxatome/go-testdeep"
 )
 
+// Helper for bootstraping a DB with the given users.
 func initDBWith(users []*pb.User) *memdb.MemDB {
 	db := NewDB()
 	txn := db.Txn(true)
@@ -23,35 +23,12 @@ func initDBWith(users []*pb.User) *memdb.MemDB {
 }
 
 func TestNewDB(t *testing.T) {
-	tests := []struct {
-		name string
-		want *memdb.MemDB
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := NewDB(); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("NewDB() = %v, want %v", got, tt.want)
-			}
-		})
-	}
+	// I don't really know how to test that
 }
 
 func TestNewUserImpl(t *testing.T) {
-	tests := []struct {
-		name string
-		want *UserImpl
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := NewUserImpl(); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("NewUserImpl() = %v, want %v", got, tt.want)
-			}
-		})
-	}
+	svc := NewUserImpl()
+	td.CmpStruct(t, svc, (*UserImpl)(nil), td.StructFields{"DB": td.NotNil()}, "DB isn't nil")
 }
 
 func TestUserImpl_Create(t *testing.T) {
@@ -60,23 +37,54 @@ func TestUserImpl_Create(t *testing.T) {
 		req *pb.CreateReq
 	}
 	tests := []struct {
-		name    string
-		svc     *UserImpl
-		args    args
-		want    *pb.CreateResp
-		wantErr bool
+		name        string
+		svc         *UserImpl
+		args        args
+		want        *pb.CreateResp
+		wantErr     bool
+		fieldChecks td.StructFields
+		postChecks  func(t *testing.T, svc *UserImpl)
 	}{
-		// TODO: Add test cases.
+		{
+			name: "when a user is created, it should appear in the DB",
+			svc: &UserImpl{DB: initDBWith([]*pb.User{
+				{Name: &pb.Name{First: "Elnora", Last: "Morales"}, Age: 21, Id: "ba3d530", Email: "eza@pod.ru"},
+				{Name: &pb.Name{First: "Wayne", Last: "Keller"}, Age: 42, Id: "c7dca0a", Email: "le@rec.gb"},
+			})},
+			args: args{req: &pb.CreateReq{User: &pb.User{Name: &pb.Name{First: "Flora", Last: "Hale"}, Age: 38, Id: "a4bcd38", Email: "zikuwcus@awobik.kr"}}},
+			want: &pb.CreateResp{
+				Status: &pb.Status{Code: pb.Status_SUCCESS},
+				User: &pb.User{
+					Name: &pb.Name{First: "Flora", Last: "Hale"}, Age: 38, Id: "a4bcd38", Email: "zikuwcus@awobik.kr",
+				},
+			},
+			fieldChecks: td.StructFields{},
+			postChecks: func(t *testing.T, svc *UserImpl) {
+				// Check that the user exists
+				txn := svc.DB.Txn(false)
+				defer txn.Abort()
+				raw, err := txn.First("user", "id", "zikuwcus@awobik.kr")
+				if td.CmpNoError(t, err) {
+					td.CmpNotNil(t, raw)
+				}
+			},
+		},
+		{
+			name:        "when a user is created with the 'Id' field missing, the Id should be generated",
+			svc:         &UserImpl{DB: initDBWith([]*pb.User{})},
+			args:        args{req: &pb.CreateReq{User: &pb.User{Name: &pb.Name{First: "Flora", Last: "Hale"}, Age: 38, Email: "zikuwcus@awobik.kr"}}},
+			want:        nil,
+			fieldChecks: td.StructFields{},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := tt.svc.Create(tt.args.ctx, tt.args.req)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("UserImpl.Create() error = %v, wantErr %v", err, tt.wantErr)
-				return
+			if td.CmpNoError(t, err) {
+				td.CmpStruct(t, got, tt.want, tt.fieldChecks, tt.name)
 			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("UserImpl.Create() = %v, want %v", got, tt.want)
+			if tt.postChecks != nil {
+				tt.postChecks(t, tt.svc)
 			}
 		})
 	}
@@ -96,7 +104,7 @@ func TestUserImpl_List(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name: "With no DB record, List should return an empty list of users",
+			name: "with no DB record, List should return an empty list of users",
 			svc:  NewUserImpl(),
 			args: args{req: &pb.ListReq{}},
 			want: &pb.SearchResp{
@@ -105,7 +113,7 @@ func TestUserImpl_List(t *testing.T) {
 			},
 		},
 		{
-			name: "With 3 users in DB, List should return a list of 3 users",
+			name: "with 3 users in DB, List should return a list of 3 users",
 			svc: &UserImpl{DB: initDBWith([]*pb.User{
 				{Name: &pb.Name{First: "Elnora", Last: "Morales"}, Age: 21, Id: "ba3d530", Email: "eza@pod.ru"},
 				{Name: &pb.Name{First: "Wayne", Last: "Keller"}, Age: 42, Id: "c7dca0a", Email: "le@rec.gb"},
@@ -244,21 +252,62 @@ func TestUserImpl_SearchName(t *testing.T) {
 }
 
 func Test_initDBWith(t *testing.T) {
+	// Meh, that's not very useful to test that I guess... for now
+}
+
+func TestUserImpl_GetByEmail(t *testing.T) {
+	type fields struct {
+		DB *memdb.MemDB
+	}
 	type args struct {
-		users []*pb.User
+		ctx context.Context
+		req *pb.GetByEmailReq
 	}
 	tests := []struct {
-		name string
-		args args
-		want *memdb.MemDB
+		name    string
+		fields  fields
+		args    args
+		want    *pb.GetByEmailResp
+		wantErr bool
 	}{
-		// TODO: Add test cases.
+		{
+			name: "should return FAILED when no user has this email",
+			fields: fields{DB: initDBWith([]*pb.User{
+				{Name: &pb.Name{First: "Elnora", Last: "Morales"}, Age: 21, Id: "ba3d530", Email: "eza@pod.ru"},
+				{Name: &pb.Name{First: "Wayne", Last: "Keller"}, Age: 42, Id: "c7dca0a", Email: "le@rec.gb"},
+				{Name: &pb.Name{First: "Flora", Last: "Hale"}, Age: 38, Id: "a4bcd38", Email: "zikuwcus@awobik.kr"},
+			})},
+			args: args{req: &pb.GetByEmailReq{Email: "someemail@gmail.com"}},
+			want: &pb.GetByEmailResp{
+				Status: &pb.Status{Code: pb.Status_FAILED, Msg: "email not found"},
+			},
+		},
+		{
+			name: "should return Wayne when 'wayne.keller@rec.gb' is given",
+			fields: fields{DB: initDBWith([]*pb.User{
+				{Name: &pb.Name{First: "Elnora", Last: "Morales"}, Age: 21, Id: "ba3d530", Email: "eza@pod.ru"},
+				{Name: &pb.Name{First: "Wayne", Last: "Keller"}, Age: 42, Id: "c7dca0a", Email: "wayne.keller@rec.gb"},
+				{Name: &pb.Name{First: "Flora", Last: "Hale"}, Age: 38, Id: "a4bcd38", Email: "zikuwcus@awobik.kr"},
+			})},
+			args: args{req: &pb.GetByEmailReq{Email: "wayne.keller@rec.gb"}},
+			want: &pb.GetByEmailResp{
+				Status: &pb.Status{Code: pb.Status_SUCCESS},
+				User: &pb.User{
+					Name: &pb.Name{First: "Wayne", Last: "Keller"}, Age: 42, Id: "c7dca0a", Email: "wayne.keller@rec.gb",
+				},
+			},
+		},
 	}
 	for _, tt := range tests {
+		svc := &UserImpl{
+			DB: tt.fields.DB,
+		}
 		t.Run(tt.name, func(t *testing.T) {
-			if got := initDBWith(tt.args.users); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("initDBWith() = %v, want %v", got, tt.want)
+			got, err := svc.GetByEmail(tt.args.ctx, tt.args.req)
+			if td.CmpNoError(t, err) {
+				td.CmpStruct(t, got, tt.want, td.StructFields{}, tt.name)
 			}
 		})
+
 	}
 }
