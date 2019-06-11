@@ -163,16 +163,23 @@ prototool grpc --address :8000 --method quote.Quote/Search --data "$(jo query=''
 - **OCI orchestration**: Kubernetes, OCI runtime = Docker, Minikube for
   testing
 - **Config management**: Helm
-- **Dependency analysis**: dependabot (updates go modules dependencies
-  daily)
-- **Local dev**: vim, vscode and goland, `gotests`, `protoc`, `prototool`,
-  `grpcurl`, `is-http2`
+- **Dependency analysis** (the DevSecOps trend): [dependabot] (updates go
+  modules dependencies daily)
+- **Local dev**: Vim, VSCode and Goland, [`gotests`][gotests], `golangci-lint`,
+  `protoc`, `prototool`, `grpcurl`, `is-http2`:
+
+  ```sh
+  brew install golangci/tap/golangci-lint protobuf prototool grpcurl
+  npm install -g is-http2-cli
+  ```
 
 I created this microservice from scratch. If I was to create a new
 microservice like this, I would probably use Lile for generating it (if it
 needs Postres + opentracing + prom metrics + service discovery). For
 example, [Lile-example].
 
+[dependabot]: https://dependabot.com/
+[gotests]: https://github.com/cweill/gotests
 [lile]: https://github.com/lileio/lile
 [lile-example]: https://github.com/arbarlow/account_service
 
@@ -243,6 +250,7 @@ is an excellent source of inspiration in that regard)
 
 [traefik-logrotate]: https://docs.traefik.io/configuration/logs/#log-rotation -->
 
+<!-->
 ### Static analysis, DevSecOps and CI
 
 - CI and commit hook : <https://github.com/golangci/golangci-lint> which
@@ -260,6 +268,7 @@ is an excellent source of inspiration in that regard)
 
 [pcg-untracked-issue]: https://github.com/maruel/pre-commit-go/issues/15
 [golem-post]: https://dev.to/erinbush/being-intentional-with-commits--59a3
+-->
 
 ## Examples that I read for inspiration
 
