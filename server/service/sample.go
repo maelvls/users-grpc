@@ -8,12 +8,12 @@ import (
 
 	"github.com/sirupsen/logrus"
 
-	"github.com/maelvls/quote/schema/user"
+	pb "github.com/maelvls/quote/schema/user"
 )
 
 // LoadSampleUsers loads some hard-coded users into database.
 func (svc *UserImpl) LoadSampleUsers() error {
-	var users []user.User
+	var users []pb.User
 	err := json.Unmarshal(sampleUsers, &users)
 	if err != nil {
 		return fmt.Errorf("could not parse json: %v", err)
@@ -21,7 +21,8 @@ func (svc *UserImpl) LoadSampleUsers() error {
 
 	txn := svc.DB.Txn(true)
 	for _, user := range users {
-		if err := txn.Insert("user", user); err != nil {
+		u := user
+		if err := txn.Insert("user", &u); err != nil {
 			return err
 		}
 	}

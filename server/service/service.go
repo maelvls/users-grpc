@@ -6,7 +6,6 @@ import (
 	"github.com/sirupsen/logrus"
 
 	memdb "github.com/hashicorp/go-memdb"
-	"github.com/maelvls/quote/schema/user"
 	pb "github.com/maelvls/quote/schema/user"
 	"github.com/rs/xid"
 	context "golang.org/x/net/context"
@@ -81,7 +80,7 @@ func (svc *UserImpl) List(ctx context.Context, req *pb.ListReq) (*pb.SearchResp,
 
 	var users = make([]*pb.User, 0)
 	for raw := it.Next(); raw != nil; raw = it.Next() {
-		user := raw.(*user.User)
+		user := raw.(*pb.User)
 		users = append(users, user)
 	}
 
@@ -115,8 +114,9 @@ func (svc *UserImpl) SearchAge(ctx context.Context, req *pb.SearchAgeReq) (*pb.S
 
 	var users = make([]*pb.User, 0)
 	for raw := it.Next(); raw != nil; raw = it.Next() {
-		u := raw.(*user.User)
-		if u.Age > 35 {
+		u := raw.(*pb.User)
+		// Filter out all users that beyond the upper limit
+		if u.Age > req.AgeRange.ToIncluded {
 			break
 		}
 		users = append(users, u)
@@ -164,7 +164,7 @@ func (svc *UserImpl) SearchName(ctx context.Context, req *pb.SearchNameReq) (*pb
 
 	var users = make([]*pb.User, 0)
 	for raw := it.Next(); raw != nil; raw = it.Next() {
-		u := raw.(*user.User)
+		u := raw.(*pb.User)
 		users = append(users, u)
 	}
 
