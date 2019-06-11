@@ -38,7 +38,7 @@ func init() {
 
 			firstname, _ := createCmd.Flags().GetString("firstname")
 			lastname, _ := createCmd.Flags().GetString("lastname")
-			ageStr, err := createCmd.Flags().GetString("age")
+			ageStr, _ := createCmd.Flags().GetString("age")
 			age, err := strconv.ParseInt(ageStr, 10, 32)
 			if ageStr != "" && err != nil {
 				logrus.Errorf("--age is not a number")

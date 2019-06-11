@@ -320,7 +320,7 @@ failing tests, I use `github.com/maxatome/go-testdeep`.
 ### `quote version`
 
 I decided to use <https://github.com/ahmetb/govvv> in order to ease the
-process of using `-ldflags -Xmain.Version=$(git describe)` and so on. I
+process of using `-ldflags -Xmain.version=$(git describe)` and so on. I
 could have done it without it 🙄
 
 ### Proto generation
