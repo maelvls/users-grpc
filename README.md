@@ -86,16 +86,76 @@ First, run the server (in order to get `client` and `server`, ):
 go run server/main.go
 ```
 
-Then, we can query it using the CLI client. Examples:
+Then, we can query it using the CLI client. The possible actions are
+
+- creating a user
+- fetching a user by his email ('get')
+- listing all users (the server loads some sample users on startup)
+- searching users by a string that matches their names
+- searching users by a age range
+
+Examples:
 
 ```sh
 $ go run client/main.go create --email=mael.valais@gmail.com --firstname="Maël" --lastname="Valais" --postaladdress="Toulouse"
+
 $ go run client/main.go get mael.valais@gmail.com
 Maël Valais <mael.valais@gmail.com> (0 years old, address: Toulouse)
+
+$ go run client/main.go search --agefrom=30 --ageto=42
+Benjamin Frazier <benjamin.frazier@email.net> (31 years old, address: 289 Cyrus Avenue, Templeton, Maine, 5964)
+Stone Briggs <stone.briggs@email.info> (31 years old, address: 531 Atkins Avenue, Neahkahnie, Tennessee, 3981)
+Alford Cole <alford.cole@email.net> (33 years old, address: 763 Halleck Street, Elbert, Nevada, 3291)
+Brock Stanley <brock.stanley@email.me> (35 years old, address: 748 Aster Court, Elwood, Guam, 7446)
+Ina Perkins <ina.perkins@email.me> (35 years old, address: 899 Miami Court, Temperanceville, Virginia, 2821)
+Hardin Patton <hardin.patton@email.com> (42 years old, address: 241 Russell Street, Robinson, Oregon, 9576)
+
+$ go run client/main.go list
+Acevedo Quinn <acevedo.quinn@email.us> (22 years old, address: 403 Lawn Court, Walland, Federated States Of Micronesia, 8260)
+Alford Cole <alford.cole@email.net> (33 years old, address: 763 Halleck Street, Elbert, Nevada, 3291)
+Angeline Stokes <angeline.stokes@email.biz> (48 years old, address: 526 Java Street, Hailesboro, Pennsylvania, 1648)
+Beasley Byrd <beasley.byrd@email.io> (56 years old, address: 213 McKibbin Street, Veguita, New Jersey, 3943)
+Benjamin Frazier <benjamin.frazier@email.net> (31 years old, address: 289 Cyrus Avenue, Templeton, Maine, 5964)
+Billie Norton <billie.norton@email.io> (28 years old, address: 699 Rapelye Street, Dupuyer, Ohio, 4175)
+...
+Stone Briggs <stone.briggs@email.info> (31 years old, address: 531 Atkins Avenue, Neahkahnie, Tennessee, 3981)
+Valencia Dorsey <valencia.dorsey@email.info> (51 years old, address: 941 Merit Court, Grill, Mississippi, 4961)
+Walter Prince <walter.prince@email.co.uk> (26 years old, address: 204 Ralph Avenue, Gibbsville, Michigan, 6698)
+Wilkerson Mosley <wilkerson.mosley@email.biz> (48 years old, address: 734 Kosciusko Street, Marbury, Connecticut, 3037)
 
 $ go run client/main.go search --name=alenc
 Jenifer Valencia <jenifer.valencia@email.us> (52 years old, address: 948 Jefferson Street, Guthrie, Louisiana, 2483)
 Valencia Dorsey <valencia.dorsey@email.info> (51 years old, address: 941 Merit Court, Grill, Mississippi, 4961)
+```
+
+Here is what the help looks like:
+
+```sh
+$ go run client/main.go help
+
+For setting the address of the form HOST:PORT, you can
+- use the flag --address=:8000
+- or use the env var ADDRESS
+- or you can set 'address: localhost:8000' in $HOME/.quote.yml
+
+Usage:
+  quote [command]
+
+Available Commands:
+  create      searchs users from the remote quote service
+  get         prints an user by its email (must be exact, not partial)
+  help        Help about any command
+  list        lists all users
+  search      searchs users from the remote quote service
+  version     Print the version and git commit to stdout
+
+Flags:
+      --address string   'host:port' to bind to (default ":8000")
+      --config string    config file (default is $HOME/.quote.yaml)
+  -h, --help             help for quote
+  -v, --verbose          verbose output
+
+Use "quote [command] --help" for more information about a command.
 ```
 
 ## Install
