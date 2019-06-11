@@ -1,10 +1,10 @@
 ---
-# Source: users-gprc/templates/service.yaml
+# Source: users-grpc/templates/service.yaml
 apiVersion: v1
 kind: Service
 metadata:
-  name: users-gprc
-  labels: { app.kubernetes.io/name: users-gprc }
+  name: users-grpc
+  labels: { app.kubernetes.io/name: users-grpc }
 spec:
   type: NodePort
   ports:
@@ -12,25 +12,25 @@ spec:
       targetPort: grpc
       protocol: TCP
       name: grpc
-  selector: { app.kubernetes.io/name: users-gprc }
+  selector: { app.kubernetes.io/name: users-grpc }
 ---
-# Source: users-gprc/templates/deployment.yaml
+# Source: users-grpc/templates/deployment.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: users-gprc
-  labels: { app.kubernetes.io/name: users-gprc }
+  name: users-grpc
+  labels: { app.kubernetes.io/name: users-grpc }
 spec:
   replicas: 1
   selector:
-    matchLabels: { app.kubernetes.io/name: users-gprc }
+    matchLabels: { app.kubernetes.io/name: users-grpc }
   template:
     metadata:
-      labels: { app.kubernetes.io/name: users-gprc }
+      labels: { app.kubernetes.io/name: users-grpc }
     spec:
       containers:
-        - name: users-gprc
-          image: "maelvls/users-gprc:1.0.0"
+        - name: users-grpc
+          image: "maelvls/users-grpc:1.0.0"
           env:
             - { name: LOG_FORMAT, value: json }
             - { name: PORT, value: "8000" }
@@ -48,4 +48,4 @@ spec:
             initialDelaySeconds: 5
 
 ---
-# Source: users-gprc/templates/ingress.yaml
+# Source: users-grpc/templates/ingress.yaml

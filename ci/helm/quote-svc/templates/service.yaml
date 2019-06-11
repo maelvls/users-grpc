@@ -1,10 +1,10 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "users-gprc.fullname" . }}
+  name: {{ include "users-grpc.fullname" . }}
   labels:
-    app.kubernetes.io/name: {{ include "users-gprc.name" . }}
-    helm.sh/chart: {{ include "users-gprc.chart" . }}
+    app.kubernetes.io/name: {{ include "users-grpc.name" . }}
+    helm.sh/chart: {{ include "users-grpc.chart" . }}
     app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
 spec:
@@ -15,5 +15,5 @@ spec:
       protocol: TCP
       name: grpc
   selector:
-    app.kubernetes.io/name: {{ include "users-gprc.name" . }}
+    app.kubernetes.io/name: {{ include "users-grpc.name" . }}
     app.kubernetes.io/instance: {{ .Release.Name }}

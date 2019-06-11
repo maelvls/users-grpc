@@ -38,7 +38,7 @@ steps:
     image: plugins/docker
     settings:
       dockerfile: ci/Dockerfile
-      repo: maelvls/users-gprc
+      repo: maelvls/users-grpc
       auto_tag: true
       username: { from_secret: DOCKER_USERNAME }
       password: { from_secret: DOCKER_PASSWORD }

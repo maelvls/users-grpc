@@ -1,22 +1,22 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "users-gprc.fullname" . }}
+  name: {{ include "users-grpc.fullname" . }}
   labels:
-    app.kubernetes.io/name: {{ include "users-gprc.name" . }}
-    helm.sh/chart: {{ include "users-gprc.chart" . }}
+    app.kubernetes.io/name: {{ include "users-grpc.name" . }}
+    helm.sh/chart: {{ include "users-grpc.chart" . }}
     app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
-      app.kubernetes.io/name: {{ include "users-gprc.name" . }}
+      app.kubernetes.io/name: {{ include "users-grpc.name" . }}
       app.kubernetes.io/instance: {{ .Release.Name }}
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: {{ include "users-gprc.name" . }}
+        app.kubernetes.io/name: {{ include "users-grpc.name" . }}
         app.kubernetes.io/instance: {{ .Release.Name }}
     spec:
       containers:

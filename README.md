@@ -1,9 +1,9 @@
 # Simple gRPC user service and its CLI client
 
-[![Build Status](https://cloud.drone.io/api/badges/maelvls/users-gprc/status.svg)](https://cloud.drone.io/maelvls/users-gprc)
-[![Docker layers](https://images.microbadger.com/badges/image/maelvls/users-gprc.svg)](https://microbadger.com/images/maelvls/users-gprc)
-[![Coverage Status](https://coveralls.io/repos/github/maelvls/users-gprc/badge.svg?branch=master)](https://coveralls.io/github/maelvls/users-gprc?branch=master)
-[![codecov](https://codecov.io/gh/maelvls/users-gprc/branch/master/graph/badge.svg)](https://codecov.io/gh/maelvls/users-gprc)
+[![Build Status](https://cloud.drone.io/api/badges/maelvls/users-grpc/status.svg)](https://cloud.drone.io/maelvls/users-grpc)
+[![Docker layers](https://images.microbadger.com/badges/image/maelvls/users-grpc.svg)](https://microbadger.com/images/maelvls/users-grpc)
+[![Coverage Status](https://coveralls.io/repos/github/maelvls/users-grpc/badge.svg?branch=master)](https://coveralls.io/github/maelvls/users-grpc?branch=master)
+[![codecov](https://codecov.io/gh/maelvls/users-grpc/branch/master/graph/badge.svg)](https://codecov.io/gh/maelvls/users-grpc)
 [![Go Report Card](https://goreportcard.com/badge/github.com/maelvls/users-grpc)](https://goreportcard.com/report/github.com/maelvls/users-grpc)
 [![GolangCI](https://golangci.com/badges/github.com/maelvls/users-grpc.svg)](https://golangci.com/r/github.com/maelvls/users-grpc)
 [![Godoc](https://godoc.org/github.com/maelvls/users-grpc?status.svg)](http://godoc.org/github.com/maelvls/users-grpc)
@@ -146,7 +146,7 @@ Usage:
   users-cli [command]
 
 Available Commands:
-  create      searchs users from the remote users-gprc service
+  create      searchs users from the remote users-grpc service
   get         prints an user by its email (must be exact, not partial)
   help        Help about any command
   list        lists all users
@@ -174,7 +174,7 @@ latest commit. I use [moving-tags] `1`, `1.0` and fixed tag `1.0.0` (for
 example). To run the server on port 8123 locally:
 
 ```sh
-$ docker run -e LOG_FORMAT=text -e PORT=8123 -p 80:8123/tcp --rm -it maelvls/users-gprc:1
+$ docker run -e LOG_FORMAT=text -e PORT=8123 -p 80:8123/tcp --rm -it maelvls/users-grpc:1
 INFO[0000] serving on port 8123 (version 1.0.0)
 ```
 
@@ -183,7 +183,7 @@ INFO[0000] serving on port 8123 (version 1.0.0)
 To run the client CLI:
 
 ```sh
-$ docker run --rm -it maelvls/users-gprc:1 client --address=172.17.0.1:8123 ls
+$ docker run --rm -it maelvls/users-grpc:1 client --address=172.17.0.1:8123 ls
 ...
 ```
 
@@ -214,8 +214,8 @@ go get github.com/maelvls/users-grpc/...
 ### Kubernetes & Helm
 
 ```sh
-helm install ./ci/helm/users-gprc --name users-gprc --namespace users-gprc --set image.tag=latest
-helm upgrade users-gprc ./ci/helm/users-gprc
+helm install ./ci/helm/users-grpc --name users-grpc --namespace users-grpc --set image.tag=latest
+helm upgrade users-grpc ./ci/helm/users-grpc
 ```
 
 ## Develop and hack it
@@ -244,7 +244,7 @@ In order to debug docker builds, you can stop the build process before the
 bare-alpine stage by doing:
 
 ```sh
-docker build . -f ci/Dockerfile --tag maelvls/users-gprc --target=builder
+docker build . -f ci/Dockerfile --tag maelvls/users-grpc --target=builder
 ```
 
 You can test the service is running correctly by using
@@ -263,12 +263,12 @@ status: SERVING
 From the docker container itself:
 
 ```sh
-$ docker run --rm -d --name=users-gprc maelvls/users-gprc:1
-$ docker exec -i users-gprc grpc-health-probe -addr=:8000
+$ docker run --rm -d --name=users-grpc maelvls/users-grpc:1
+$ docker exec -i users-grpc grpc-health-probe -addr=:8000
 
 status: SERVING
 
-$ docker kill users-gprc
+$ docker kill users-grpc
 ```
 
 For building the CLI, I used the cobra cli generator:
@@ -524,13 +524,13 @@ Here is a checklist for my microservice and its CLI:
       kubernetes. Release ID = the history ID given by:
 
       ```sh
-      kubectl rollout history deployment.v1.apps/users-gprc
+      kubectl rollout history deployment.v1.apps/users-grpc
       ```
 
       And we can rollback using `kubectl rollout undo`.
 
       Similarly to Kubernetes, Helm provides a nice fallback mechanism: when
-      `helm upgrade users-gprc` fails, it will fall back the last known state
+      `helm upgrade users-grpc` fails, it will fall back the last known state
       of this helm release.
 
     - run = use Kubernetes as the supervisor, run the container in a Pod
@@ -615,7 +615,7 @@ liveness checks can work with this service. What I did:
 
 1. the service logs using json (logrus) for easy integration
 2. health probe working (readiness)
-3. `helm test --cleanup users-gprc` passes
+3. `helm test --cleanup users-grpc` passes
 4. the service can be exposed via an Ingress controller such as Traefik or
    Nginx. For example, using the Helm + GKE + Terraform configuration at
    [helm-gke-terraform]:
@@ -638,7 +638,7 @@ liveness checks can work with this service. What I did:
    Controller)with TLS and dynamic DNS (external-dns):
 
    ```sh
-   helm install ./helm/users-gprc --name users-gprc --namespace users-gprc --set image.tag=latest --values helm/users-gprc.yaml
+   helm install ./helm/users-grpc --name users-grpc --namespace users-grpc --set image.tag=latest --values helm/users-grpc.yaml
    ```
 
 [helm-gke-terraform]: https://github.com/maelvls/awx-gke-terraform
@@ -648,7 +648,7 @@ To bootstrap the kubernetes YAML configuration for this service using my
 Helm chart, I used:
 
 ```sh
-helm template ./ci/helm/users-gprc --name users-gprc --namespace users-gprc --set image.tag=latest > ci/deployment.yml
+helm template ./ci/helm/users-grpc --name users-grpc --namespace users-grpc --set image.tag=latest > ci/deployment.yml
 ```
 
 We can now apply the configuration without using Helm. Note that I changed
@@ -657,9 +657,9 @@ the ClusterIP to NodePort so that no LoadBalancer, Ingress Controller nor
 
 ```sh
 $ kubectl apply -f ci/deployment.yml
-$ kubectl get svc users-gprc
+$ kubectl get svc users-grpc
 NAME        TYPE       CLUSTER-IP      EXTERNAL-IP   PORT(S)          AGE
-users-gprc   NodePort   10.110.71.154   <none>        8000:32344/TCP   15m
+users-grpc   NodePort   10.110.71.154   <none>        8000:32344/TCP   15m
 ```
 
 Now, in order to access it, we must retrieve the minikube cluster IP (i.e.,
@@ -723,18 +723,18 @@ Let's try the env var approach (using minikube):
 ```sh
 $ kubectl get pods
 NAME                               READY   STATUS    RESTARTS   AGE
-users-gprc-69d46c866f-t6rx4         1/1     Running   0          23m
+users-grpc-69d46c866f-t6rx4         1/1     Running   0          23m
 
-$ kubectl exec -it users-gprc-69d46c866f-t6rx4 env | grep -i users-grpc
-HOSTNAME=users-gprc-69d46c866f-t6rx4
+$ kubectl exec -it users-grpc-69d46c866f-t6rx4 env | grep -i users-grpc
+HOSTNAME=users-grpc-69d46c866f-t6rx4
 ...
 USERS_GRPC_SVC_SERVICE_PORT=8000
 USERS_GRPC_SVC_SERVICE_HOST=10.110.71.154
 ```
 
-Let us say we have service A that wants to use users-gprc. Service A will be
+Let us say we have service A that wants to use users-grpc. Service A will be
 provided with these env variables. Note that because of the dependency on
-users-gprc, this service would probably fail on startup until users-gprc is
+users-grpc, this service would probably fail on startup until users-grpc is
 up. Requires some extra logic on startup.
 
 #### Service discovery with Kubernetes, Consul or Linkerd3
