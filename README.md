@@ -35,8 +35,7 @@
   - [Memo on Kubernetes](#memo-on-kubernetes)
     - [Let other services use my service](#let-other-services-use-my-service)
       - [Service discovery with env vars](#service-discovery-with-env-vars)
-      - [Service discovery with CoreDNS](#service-discovery-with-coredns)
-      - [Service discovery with Consul or Linkerd3](#service-discovery-with-consul-or-linkerd3)
+      - [Service discovery with Kubernetes, Consul or Linkerd3](#service-discovery-with-kubernetes-consul-or-linkerd3)
     - [Now, add some events](#now-add-some-events)
 
 ## Install
@@ -154,14 +153,18 @@ prototool grpc --address :8000 --method quote.Quote/Search --data "$(jo query=''
 
 - **CI/CD**: Drone.io
 - **Coverage**: Coveralls, Codecov
-- **Code Quality**: Go Report Card, GolangCI
+- **Code Quality**: Go Report Card, GolangCI (CI) and Pre-commit-go (local
+  git hook) with:
   - **Static analysis**: gocritic, gosec, golint, goimports, deadcode,
     errcheck, gosimple, govet, ineffassign, staticcheck, structcheck,
     typecheck, unused, varcheck
-  - **Formatting**: gofmt on the CI and locally with 'format on save'
+  - **Formatting**: gofmt on the CI and locally with 'format on save' and
+    Pre-commit-hook
 - **OCI orchestration**: Kubernetes, OCI runtime = Docker, Minikube for
   testing
 - **Config management**: Helm
+- **Dependency analysis**: dependabot (updates go modules dependencies
+  daily)
 - Others: `goreleaser` for cross-compiling and uploading binaries to Github
   Releases, `protoc`, `prototool`
 
@@ -191,7 +194,6 @@ That said, I often use `go mod vendor` which comes very handy (I can browse the
 dependencies sources easily, everything is at hand).
 
 [should-i-vendor]: https://www.reddit.com/r/golang/comments/9ai79z/correct_usage_of_go_modules_vendor_still_connects/
-
 
 ### Testing
 
@@ -598,13 +600,12 @@ provided with these env variables. Note that because of the dependency on
 quote-svc, this service would probably fail on startup until quote-svc is
 up. Requires some extra logic on startup.
 
-#### Service discovery with CoreDNS
+#### Service discovery with Kubernetes, Consul or Linkerd3
 
-TODO:
-
-#### Service discovery with Consul or Linkerd3
-
-TODO:
+Service discovery can also directly use the Kubernetes API from the service
+itself, or using a sidekick container (Linkerd or Envoy as a service proxy)
+or with a library (Consul). Linkerd and Envoy also add the possibility of
+circuit breaking and service-level (L7) load-balancing.
 
 [connect-applications-service]: https://kubernetes.io/docs/concepts/services-networking/connect-applications-service/
 
