@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"os"
 	"strconv"
 	"time"
 
@@ -27,7 +28,8 @@ func init() {
 		Run: func(createCmd *cobra.Command, args []string) {
 			cc, err := grpc.Dial(client.address, grpc.WithInsecure())
 			if err != nil {
-				logrus.Fatalf("grpc client: %v\n", err)
+				logrus.Errorf("grpc client: %v\n", err)
+				os.Exit(1)
 			}
 
 			client := user.NewUserServiceClient(cc)
@@ -39,7 +41,8 @@ func init() {
 			ageStr, err := createCmd.Flags().GetString("age")
 			age, err := strconv.ParseInt(ageStr, 10, 32)
 			if ageStr != "" && err != nil {
-				logrus.Fatalf("--age is not a number")
+				logrus.Errorf("--age is not a number")
+				os.Exit(1)
 			}
 			postaladdress, _ := createCmd.Flags().GetString("postaladdress")
 			email, _ := createCmd.Flags().GetString("email")
@@ -58,11 +61,13 @@ func init() {
 			resp, err := client.Create(ctx, &user.CreateReq{User: usr})
 
 			if err != nil {
-				logrus.Fatalf("grpc client: %v\n", err)
+				logrus.Errorf("grpc client: %v\n", err)
+				os.Exit(1)
 			}
 
 			if resp.GetStatus().GetCode() != user.Status_SUCCESS {
-				logrus.Fatalf("grpc client: %v\n", resp.GetStatus())
+				logrus.Errorf("grpc client: %v\n", resp.GetStatus())
+				os.Exit(1)
 			}
 
 			// fmt.Println(Spprint(resp.GetUser()))

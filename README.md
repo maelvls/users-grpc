@@ -18,9 +18,12 @@
   - [Stack](#stack)
   - [Use](#use)
   - [Install](#install)
+    - [Docker images](#docker-images)
+    - [Binaries (Github Releases)](#binaries-github-releases)
+    - [Using go-get](#using-go-get)
     - [Kubernetes & Helm](#kubernetes--helm)
-  - [Develop](#develop)
-    - [Docker](#docker)
+  - [Develop and hack it](#develop-and-hack-it)
+    - [Develop using Docker](#develop-using-docker)
   - [Technical notes](#technical-notes)
     - [Vendor or not vendor and go 1.11 modules](#vendor-or-not-vendor-and-go-111-modules)
     - [Testing](#testing)
@@ -77,7 +80,7 @@ go run client/main.go create --email=mael.valais@gmail.com --firstname="Maël" -
 
 ## Use
 
-First, run the server:
+First, run the server (in order to get `client` and `server`, ):
 
 ```sh
 go run server/main.go
@@ -90,9 +93,14 @@ $ go run client/main.go create --email=mael.valais@gmail.com --firstname="Maël"
 $ go run client/main.go get mael.valais@gmail.com
 Maël Valais <mael.valais@gmail.com> (0 years old, address: Toulouse)
 
+$ go run client/main.go search --name=alenc
+Jenifer Valencia <jenifer.valencia@undefined.us> (52 years old, address: 948 Jefferson Street, Guthrie, Louisiana, 2483)
+Valencia Dorsey <valencia.dorsey@undefined.info> (51 years old, address: 941 Merit Court, Grill, Mississippi, 4961)
 ```
 
 ## Install
+
+### Docker images
 
 Docker images are created on each tag. The 'latest' tag represents the
 latest commit on master. I use multi-stages dockerfile so that the
@@ -119,6 +127,8 @@ $ docker run --rm -it maelvls/quote:1 client --address=172.17.0.1:8123 ls
 > containers through the host requires to use the IP of the docker0
 > interface instead of the loopback.
 
+### Binaries (Github Releases)
+
 Binaries are available on the Github Releases page. Releasing binaries was
 not necessary (except maybe for the CLI client) but I love the idea of Go
 (so easy to cross-compile + one single statically-linked binary) so I
@@ -131,6 +141,12 @@ LLVM + way richer and complex language -- see my comparison [rust-vs-go]).
 
 [rust-vs-go]: https://github.com/maelvls/rust-chat
 
+### Using go-get
+
+```sh
+go get github.com/maelvls/quote/...
+```
+
 ### Kubernetes & Helm
 
 ```sh
@@ -138,17 +154,23 @@ helm install ./ci/helm/quote-svc --name quote-svc --namespace quote-svc --set im
 helm upgrade quote-svc ./ci/helm/quote-svc
 ```
 
-## Develop
+## Develop and hack it
+
+Here is the minimal set of things you need to get started for hacking this
+project:
 
 ```sh
+git clone https://github.com/maelvls/quote
+cd quote/
+
 brew install protobuf # only if .proto files are changed
 go generate ./...     # only if .proto files are changed
+
 go run server/main.go &
 go run client/main.go
-LOG_FORMAT=json PORT=8234 go run server/main.go 2>&1 | jq
 ```
 
-### Docker
+### Develop using Docker
 
 ```sh
 docker build . -f ci/Dockerfile
@@ -202,7 +224,6 @@ prototool grpc --address :8000 --method quote.Quote/Search --data "$(jo query=''
 [grpc-health-probe]: https://github.com/grpc-ecosystem/grpc-health-probe
 [prototool]: https://github.com/uber/prototool
 [jo]: https://github.com/jpmens/jo
-
 
 ## Technical notes
 
@@ -272,6 +293,7 @@ is an excellent source of inspiration in that regard)
 [traefik-logrotate]: https://docs.traefik.io/configuration/logs/#log-rotation -->
 
 <!-->
+
 ### Static analysis, DevSecOps and CI
 
 - CI and commit hook : <https://github.com/golangci/golangci-lint> which
@@ -289,6 +311,7 @@ is an excellent source of inspiration in that regard)
 
 [pcg-untracked-issue]: https://github.com/maruel/pre-commit-go/issues/15
 [golem-post]: https://dev.to/erinbush/being-intentional-with-commits--59a3
+
 -->
 
 ## Examples that I read for inspiration

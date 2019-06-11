@@ -31,7 +31,8 @@ func main() {
 		var err error
 		port, err = strconv.Atoi(str)
 		if err != nil {
-			log.Fatalf("PORT not valid: %v", str)
+			log.Errorf("PORT not valid: %v", str)
+			os.Exit(1)
 		}
 	}
 
@@ -42,7 +43,8 @@ func main() {
 	case "json":
 		log.SetFormatter(&log.JSONFormatter{})
 	default:
-		log.Fatal(`expected LOG_FORMAT: 'json', 'text'`)
+		log.Errorf(`expected LOG_FORMAT: 'json', 'text'`)
+		os.Exit(1)
 	}
 
 	// Set to verbose.
@@ -53,7 +55,8 @@ func main() {
 	log.Printf("serving on port %v (version %s)", port, version)
 
 	if err := Run(port); err != nil {
-		log.Fatalf("launching server: %v", err)
+		log.Errorf("launching server: %v", err)
+		os.Exit(1)
 	}
 }
 
@@ -74,7 +77,8 @@ func Run(port int) error {
 	// 0.0.0.0:80) then the local system. See: https://godoc.org/net#Dial
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
 	if err != nil {
-		log.Fatalf("failed to listen: %v", err)
+		log.Errorf("failed to listen: %v", err)
+		os.Exit(1)
 	}
 	return srv.Serve(lis)
 }

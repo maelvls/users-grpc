@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/maelvls/quote/schema/user"
@@ -18,7 +19,8 @@ func init() {
 		Run: func(listCmd *cobra.Command, args []string) {
 			cc, err := grpc.Dial(client.address, grpc.WithInsecure())
 			if err != nil {
-				logrus.Fatalf("grpc client: %v\n", err)
+				logrus.Errorf("grpc client: %v\n", err)
+				os.Exit(1)
 			}
 
 			client := user.NewUserServiceClient(cc)
@@ -26,11 +28,13 @@ func init() {
 			resp, err := client.List(ctx, &user.ListReq{})
 
 			if err != nil {
-				logrus.Fatalf("grpc client: %v\n", err)
+				logrus.Errorf("grpc client: %v\n", err)
+				os.Exit(1)
 			}
 
 			if resp.GetStatus().GetCode() != user.Status_SUCCESS {
-				logrus.Fatalf("grpc client: %v\n", resp.GetStatus())
+				logrus.Errorf("grpc client: %v\n", resp.GetStatus())
+				os.Exit(1)
 			}
 
 			logrus.Debugf("number of users received: %v", len(resp.GetUsers()))

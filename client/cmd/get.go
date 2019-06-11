@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/sirupsen/logrus"
@@ -28,7 +29,8 @@ func init() {
 
 			cc, err := grpc.Dial(client.address, grpc.WithInsecure())
 			if err != nil {
-				logrus.Fatalf("grpc client: %v\n", err)
+				logrus.Errorf("grpc client: %v\n", err)
+				os.Exit(1)
 			}
 
 			client := user.NewUserServiceClient(cc)
@@ -38,15 +40,18 @@ func init() {
 			resp, err := client.GetByEmail(ctx, &user.GetByEmailReq{Email: givenEmail})
 
 			if err != nil {
-				logrus.Fatalf("grpc client: %v\n", err)
+				logrus.Errorf("grpc client: %v\n", err)
+				os.Exit(1)
 			}
 
 			if resp.GetStatus().GetCode() == user.Status_FAILED {
-				logrus.Fatalf("email not found")
+				logrus.Errorf("email not found")
+				os.Exit(1)
 			}
 
 			if resp.GetStatus().GetCode() != user.Status_SUCCESS {
-				logrus.Fatalf("grpc client: %#+v", resp.GetStatus())
+				logrus.Errorf("grpc client: %#+v", resp.GetStatus())
+				os.Exit(1)
 			}
 
 			fmt.Println(Spprint(resp.User))

@@ -1,6 +1,7 @@
 package service
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/sirupsen/logrus"
@@ -142,7 +143,8 @@ func (svc *UserImpl) SearchName(ctx context.Context, req *pb.SearchNameReq) (*pb
 		return func(raw interface{}) bool {
 			u, ok := raw.(*pb.User)
 			if !ok {
-				logrus.Fatalf("could not unpack a quote.User, instead got: %#+v", raw)
+				logrus.Errorf("filterByFirstOrLastName: could not unpack a quote.User, instead got: %#+v", raw)
+				return true // Skip this element
 			}
 
 			hasSubstr := strings.Contains(u.Name.First, query) ||
@@ -157,7 +159,7 @@ func (svc *UserImpl) SearchName(ctx context.Context, req *pb.SearchNameReq) (*pb
 	defer txn.Abort()
 	result, err := txn.Get("user", "id")
 	if err != nil {
-		logrus.Fatalf("err when getting data from db: %e\n", err)
+		return nil, fmt.Errorf("err when getting data from db: %e", err)
 	}
 
 	it := memdb.NewFilterIterator(result, filterByFirstOrLastName(req.Query))
@@ -192,7 +194,8 @@ func (svc *UserImpl) GetByEmail(ctx context.Context, req *pb.GetByEmailReq) (*pb
 
 	u, ok := raw.(*pb.User)
 	if !ok {
-		logrus.Fatalf("could not unpack a quote.User, instead got: %#+v", raw)
+		logrus.Errorf("could not unpack a quote.User, instead got: %#+v", raw)
+		return nil, fmt.Errorf("could not unpack a quote.User, instead got: %#+v", raw)
 	}
 
 	resp := &pb.GetByEmailResp{User: u, Status: &pb.Status{Code: pb.Status_SUCCESS}}

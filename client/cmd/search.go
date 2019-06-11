@@ -3,7 +3,7 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"strconv"
+	"os"
 	"time"
 
 	pb "github.com/maelvls/quote/schema/user"
@@ -16,59 +16,39 @@ func init() {
 	searchCmd := &cobra.Command{
 		Use:   "search (--name=PARTIALNAME | --agefrom=N --ageto=M)",
 		Short: "searchs users from the remote quote service",
-		Args: func(cmd *cobra.Command, args []string) error {
-			name, _ := cmd.Flags().GetString("name")
-			ageFromStr, _ := cmd.Flags().GetString("agefrom")
-			ageToStr, _ := cmd.Flags().GetString("ageto")
-			if name == "" && ageFromStr == "" && ageToStr == "" {
-				return fmt.Errorf("need either '--name=PARTIALNAME' or '--agefrom=N' and '--ageto=M'")
-			}
-			if name != "" && (ageFromStr != "" || ageToStr != "") {
-				return fmt.Errorf("cannot have both '--name=PARTIALNAME' or '--agefrom=N' and '--ageto=M'")
-			}
-			if (ageFromStr != "" && ageToStr == "") || (ageFromStr == "" && ageToStr != "") {
-				return fmt.Errorf("cannot have both '--name=PARTIALNAME' or '--agefrom=N' and '--ageto=M'")
-			}
-			return nil
-		},
 		Run: func(searchCmd *cobra.Command, args []string) {
 
 			cc, err := grpc.Dial(client.address, grpc.WithInsecure())
 			if err != nil {
-				logrus.Fatalf("grpc client: %v\n", err)
+				logrus.Errorf("grpc client: %v\n", err)
+				os.Exit(1)
 			}
 
 			client := pb.NewUserServiceClient(cc)
 			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 			defer cancel()
 
-			name, _ := searchCmd.Flags().GetString("name")
-			ageFromStr, _ := searchCmd.Flags().GetString("agefrom")
-			ageToStr, err := searchCmd.Flags().GetString("ageto")
+			var mode = "SearchAge"
 
-			// Check that either --agefrom --ageto OR --name is used, not
-			// both at the same time.
-			if ageFromStr != "" && ageToStr != "" && name != "" {
-				logrus.Fatalf("cannot use both --agefrom/--ageto and --name")
+			name, _ := searchCmd.Flags().GetString("name")
+			if name != "" {
+				mode = "SearchName"
 			}
 
-			if ageFromStr != "" && ageToStr != "" {
-				var ageFrom int64
-				var ageTo int64
-				var err error
-
-				// Parse both numbers
-				if ageFromStr != "" {
-					ageFrom, err = strconv.ParseInt(ageFromStr, 10, 32)
-					if err != nil {
-						logrus.Fatalf("--agefrom is not a number")
-					}
+			switch mode {
+			case "":
+				logrus.Errorf("need one of '--name=PARTIALNAME' or '--agefrom=N' + '--ageto=M'")
+			case "SearchAge":
+				var ageFrom, ageTo int32
+				ageFrom, err = searchCmd.Flags().GetInt32("agefrom")
+				if err != nil {
+					logrus.Errorf("--agefrom is not a number")
+					os.Exit(1)
 				}
-				if ageToStr != "" {
-					ageTo, err = strconv.ParseInt(ageFromStr, 10, 32)
-					if err != nil {
-						logrus.Fatalf("--agefrom is not a number")
-					}
+				ageTo, err = searchCmd.Flags().GetInt32("ageto")
+				if err != nil {
+					logrus.Errorf("--ageto is not a number")
+					os.Exit(1)
 				}
 				resp, err := client.SearchAge(ctx, &pb.SearchAgeReq{
 					AgeRange: &pb.SearchAgeReq_AgeRange{
@@ -77,23 +57,30 @@ func init() {
 					},
 				})
 
+				if err != nil {
+					logrus.Errorf("grpc client: %v\n", err)
+					os.Exit(1)
+				}
+
 				if resp.GetStatus().GetCode() != pb.Status_SUCCESS {
-					logrus.Fatalf("grpc client: %v\n", resp.GetStatus())
+					logrus.Errorf("grpc client: %v\n", resp.GetStatus())
+					os.Exit(1)
 				}
 
 				for _, u := range resp.GetUsers() {
 					fmt.Println(Spprint(u))
 				}
-			}
 
-			if name != "" {
+			case "SearchName":
 				resp, err := client.SearchName(ctx, &pb.SearchNameReq{Query: name})
 				if err != nil {
-					logrus.Fatalf("grpc client: %v\n", err)
+					logrus.Errorf("grpc client: %v\n", err)
+					os.Exit(1)
 				}
 
 				if resp.GetStatus().GetCode() != pb.Status_SUCCESS {
-					logrus.Fatalf("grpc client: %v\n", resp.GetStatus())
+					logrus.Errorf("grpc client: %v\n", resp.GetStatus())
+					os.Exit(1)
 				}
 
 				for _, u := range resp.GetUsers() {
