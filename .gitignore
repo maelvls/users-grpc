@@ -29,4 +29,5 @@
 
 coverage.txt
 /client/client
-/server/server
+/server/server.idea/
+/.idea/

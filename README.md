@@ -1,4 +1,4 @@
-# Simple gRPC quote service and its nice CLI
+# Simple gRPC service and its CLI client
 
 [![Build Status](https://cloud.drone.io/api/badges/maelvls/quote/status.svg)](https://cloud.drone.io/maelvls/quote)
 [![Docker layers](https://images.microbadger.com/badges/image/maelvls/quote.svg)](https://microbadger.com/images/maelvls/quote)
@@ -14,7 +14,7 @@
 > way of keeping track of them all 😅
 > Conventionnal Commits and GolangCI are kind of decorative-only.
 
-- [Simple gRPC quote service and its nice CLI](#simple-grpc-quote-service-and-its-nice-cli)
+- [Simple gRPC service and its CLI client](#simple-grpc-service-and-its-cli-client)
   - [Install](#install)
     - [Kubernetes & Helm](#kubernetes--helm)
   - [Develop](#develop)
@@ -22,17 +22,19 @@
   - [Stack](#stack)
   - [Technical notes](#technical-notes)
     - [Vendor or not vendor and go 1.11 modules](#vendor-or-not-vendor-and-go-111-modules)
+    - [Testing](#testing)
     - [`quote version`](#quote-version)
     - [Proto generation](#proto-generation)
     - [Logs, debug and verbosity](#logs-debug-and-verbosity)
     - [Static analysis, DevSecOps and CI](#static-analysis-devsecops-and-ci)
   - [Examples that I read for inspiration](#examples-that-i-read-for-inspiration)
-  - [Tools I used](#tools-i-used)
   - [Cloud native](#cloud-native)
   - [12 factor app](#12-factor-app)
-  - [Kubernetes](#kubernetes)
+  - [Kubernetes and Helm](#kubernetes-and-helm)
   - [Memo on Kubernetes](#memo-on-kubernetes)
     - [Let other services use my service](#let-other-services-use-my-service)
+      - [Service discovery with env vars](#service-discovery-with-env-vars)
+      - [Service discovery with Kubernetes, Consul or Linkerd3](#service-discovery-with-kubernetes-consul-or-linkerd3)
     - [Now, add some events](#now-add-some-events)
 
 ## Install
@@ -86,13 +88,9 @@ helm upgrade quote-svc ./ci/helm/quote-svc
 ```sh
 brew install protobuf # only if .proto files are changed
 go generate ./...     # only if .proto files are changed
-go build
-./quote
-```
-
-```sh
-go run server/main.go
-LOG_FORMAT=json go run server/main.go 2>&1 | jq
+go run server/main.go &
+go run client/main.go
+LOG_FORMAT=json PORT=8234 go run server/main.go 2>&1 | jq
 ```
 
 ### Docker
@@ -152,18 +150,38 @@ prototool grpc --address :8000 --method quote.Quote/Search --data "$(jo query=''
 
 ## Stack
 
-- **CI/CD**: Drone.io
+- **CI/CD**: Drone.io (tests, coverage, build docker image, upload `client`
+  CLI binaries to Github Releases using `goreleaser`)
 - **Coverage**: Coveralls, Codecov
-- **Code Quality**: Go Report Card, GolangCI
+- **Code Quality**: Go Report Card, GolangCI (CI) and Pre-commit-go (local
+  git hook) with:
   - **Static analysis**: gocritic, gosec, golint, goimports, deadcode,
     errcheck, gosimple, govet, ineffassign, staticcheck, structcheck,
     typecheck, unused, varcheck
-  - **Formatting**: gofmt on the CI and locally with 'format on save'
+  - **Formatting**: gofmt on the CI and locally with 'format on save' and
+    Pre-commit-hook
 - **OCI orchestration**: Kubernetes, OCI runtime = Docker, Minikube for
   testing
 - **Config management**: Helm
-- Others: `goreleaser` for cross-compiling and uploading binaries to Github
-  Releases, `protoc`, `prototool`
+- **Dependency analysis** (the DevSecOps trend): [dependabot] (updates go
+  modules dependencies daily)
+- **Local dev**: Vim, VSCode and Goland, [`gotests`][gotests], `golangci-lint`,
+  `protoc`, `prototool`, `grpcurl`, `is-http2`:
+
+  ```sh
+  brew install golangci/tap/golangci-lint protobuf prototool grpcurl
+  npm install -g is-http2-cli
+  ```
+
+I created this microservice from scratch. If I was to create a new
+microservice like this, I would probably use Lile for generating it (if it
+needs Postres + opentracing + prom metrics + service discovery). For
+example, [Lile-example].
+
+[dependabot]: https://dependabot.com/
+[gotests]: https://github.com/cweill/gotests
+[lile]: https://github.com/lileio/lile
+[lile-example]: https://github.com/arbarlow/account_service
 
 ## Technical notes
 
@@ -183,6 +201,19 @@ That said, I often use `go mod vendor` which comes very handy (I can browse the
 dependencies sources easily, everything is at hand).
 
 [should-i-vendor]: https://www.reddit.com/r/golang/comments/9ai79z/correct_usage_of_go_modules_vendor_still_connects/
+
+### Testing
+
+I use `gotests` for easing the TDD. Whenever I add a new method, I just
+have to run
+
+```sh
+gotests -all -w server/service/*
+```
+
+so that these methods get generated in the corresponding `test_*.go` file.
+Also, to make the visual comparison between 'got' and 'expected' easier on
+failing tests, I use `github.com/maxatome/go-testdeep`.
 
 ### `quote version`
 
@@ -219,6 +250,7 @@ is an excellent source of inspiration in that regard)
 
 [traefik-logrotate]: https://docs.traefik.io/configuration/logs/#log-rotation -->
 
+<!-->
 ### Static analysis, DevSecOps and CI
 
 - CI and commit hook : <https://github.com/golangci/golangci-lint> which
@@ -236,6 +268,7 @@ is an excellent source of inspiration in that regard)
 
 [pcg-untracked-issue]: https://github.com/maruel/pre-commit-go/issues/15
 [golem-post]: https://dev.to/erinbush/being-intentional-with-commits--59a3
+-->
 
 ## Examples that I read for inspiration
 
@@ -261,11 +294,6 @@ is an excellent source of inspiration in that regard)
 [go-scaffold]: https://github.com/orbs-network/go-scaffold
 [todogo]: https://github.com/kgantsov/todogo
 [helm-gh-pages-example]: https://github.com/int128/helm-github-pages
-
-## Tools I used
-
-- editors: vim, vscode and goland
-- misc: prototool (for testing the gRPC server)
 
 ## Cloud native
 
@@ -453,7 +481,7 @@ Here is a checklist for my microservice and its CLI:
 [12factor]: http://12factor.net
 [12factor-list]: https://gist.github.com/anandtripathi5/118995139602599dab64fddcd147545a
 
-## Kubernetes
+## Kubernetes and Helm
 
 In order to test the deployement of my service, I create a Helm chart (as
 well as a static `kubernetes.yml` -- which is way less flexible) and used
@@ -464,8 +492,31 @@ liveness checks can work with this service. What I did:
 2. health probe working (readiness)
 3. `helm test --cleanup quote-svc` passes
 4. the service can be exposed via an Ingress controller such as Traefik or
-   Nginx.
+   Nginx. For example, using the Helm + GKE + Terraform configuration at
+   [helm-gke-terraform]:
 
+   ```yaml
+   image:
+     tag: 1.0.0
+   ingress:
+     enabled: true
+     hosts: [quote.kube.maelvls.dev]
+     annotations:
+       kubernetes.io/ingress.class: traefik
+       certmanager.k8s.io/cluster-issuer: letsencrypt-prod
+     tls:
+       - hosts: [quote.kube.maelvls.dev]
+         secretName: quote-example-tls
+   ```
+
+   We can then have the service from the internet through Traefik (Ingress
+   Controller)with TLS and dynamic DNS (external-dns):
+
+   ```sh
+   helm install ./helm/quote-svc --name quote-svc --namespace quote-svc --set image.tag=latest --values helm/quote-svc.yaml
+   ```
+
+[helm-gke-terraform]: https://github.com/maelvls/awx-gke-terraform
 [grpc-healthcheck]: https://github.com/grpc/grpc/blob/master/doc/health-checking.md
 
 To bootstrap the kubernetes YAML configuration for this service using my
@@ -540,7 +591,9 @@ the cluster? As stated in the documentation
 > variables and DNS. The former works out of the box while the latter
 > requires the CoreDNS cluster addon.
 
-Let's try the env var approach.
+#### Service discovery with env vars
+
+Let's try the env var approach (using minikube):
 
 ```sh
 $ kubectl get pods
@@ -554,10 +607,17 @@ QUOTE_SVC_SERVICE_PORT=8000
 QUOTE_SVC_SERVICE_HOST=10.110.71.154
 ```
 
-The service that wants to use quote-svc will also be provided with these
-env variables. Note that because of the dependency on quote-svc, this
-service would probably fail on startup until quotee-svc is up. Requires a
-bit of defensive programming at this point.
+Let us say we have service A that wants to use quote-svc. Service A will be
+provided with these env variables. Note that because of the dependency on
+quote-svc, this service would probably fail on startup until quote-svc is
+up. Requires some extra logic on startup.
+
+#### Service discovery with Kubernetes, Consul or Linkerd3
+
+Service discovery can also directly use the Kubernetes API from the service
+itself, or using a sidekick container (Linkerd or Envoy as a service proxy)
+or with a library (Consul). Linkerd and Envoy also add the possibility of
+circuit breaking and service-level (L7) load-balancing.
 
 [connect-applications-service]: https://kubernetes.io/docs/concepts/services-networking/connect-applications-service/
 
