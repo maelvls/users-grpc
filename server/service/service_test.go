@@ -41,7 +41,6 @@ func TestUserImpl_Create(t *testing.T) {
 		svc         *UserImpl
 		args        args
 		want        *pb.CreateResp
-		wantErr     bool
 		fieldChecks td.StructFields
 		postChecks  func(t *testing.T, svc *UserImpl)
 	}{
@@ -97,11 +96,10 @@ func TestUserImpl_List(t *testing.T) {
 	}
 
 	tests := []struct {
-		name    string
-		svc     *UserImpl
-		args    args
-		want    *pb.SearchResp
-		wantErr bool
+		name string
+		svc  *UserImpl
+		args args
+		want *pb.SearchResp
 	}{
 		{
 			name: "with no DB record, List should return an empty list of users",
@@ -147,11 +145,10 @@ func TestUserImpl_SearchAge(t *testing.T) {
 		req *pb.SearchAgeReq
 	}
 	tests := []struct {
-		name    string
-		svc     *UserImpl
-		args    args
-		want    *pb.SearchResp
-		wantErr bool
+		name string
+		svc  *UserImpl
+		args args
+		want *pb.SearchResp
 	}{
 		{
 			name: "should return INVALID_QUERY when From greater than ToIncluded",
@@ -197,11 +194,10 @@ func TestUserImpl_SearchName(t *testing.T) {
 		req *pb.SearchNameReq
 	}
 	tests := []struct {
-		name    string
-		svc     *UserImpl
-		args    args
-		want    *pb.SearchResp
-		wantErr bool
+		name string
+		svc  *UserImpl
+		args args
+		want *pb.SearchResp
 	}{
 		{
 			name: "should INVALID_QUERY when the given query is empty",
@@ -264,11 +260,10 @@ func TestUserImpl_GetByEmail(t *testing.T) {
 		req *pb.GetByEmailReq
 	}
 	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		want    *pb.GetByEmailResp
-		wantErr bool
+		name   string
+		fields fields
+		args   args
+		want   *pb.GetByEmailResp
 	}{
 		{
 			name: "should return FAILED when no user has this email",

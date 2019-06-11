@@ -134,6 +134,10 @@ func (svc *UserImpl) SearchName(ctx context.Context, req *pb.SearchNameReq) (*pb
 			Msg:  "query cannot be empty"},
 		}, nil
 	}
+
+	// This function filters out all users that do not contain the given
+	// substr. Elmts are filtered/skipped when this function returns true.
+	// This function should return false when an element should be kept.
 	filterByFirstOrLastName := func(query string) func(interface{}) bool {
 		return func(raw interface{}) bool {
 			u, ok := raw.(*pb.User)
@@ -141,8 +145,11 @@ func (svc *UserImpl) SearchName(ctx context.Context, req *pb.SearchNameReq) (*pb
 				logrus.Fatalf("could not unpack a quote.User, instead got: %#+v", raw)
 			}
 
-			return !(strings.Contains(u.Name.First, query) &&
-				strings.Contains(u.Name.First, query))
+			hasSubstr := strings.Contains(u.Name.First, query) ||
+				strings.Contains(u.Name.Last, query)
+			// We SKIP the element whenever the substr has not been matched
+			pleaseSkipIt := !hasSubstr
+			return pleaseSkipIt
 		}
 	}
 

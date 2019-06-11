@@ -13,11 +13,13 @@ import (
 	"google.golang.org/grpc"
 )
 
-// Set during build, e.g.: go build  -ldflags"-X main.version=$(git describe)".
+// Set during build, e.g.: go build  -ldflags"-X main.version=$(git
+// describe)". Some vars are commented out so that 'golangci-lint run' us
+// happy, but you can un-comment them and use them.
 var (
 	version = "dev"
-	commit  = "none"
-	date    = "unknown"
+	// commit  = "none"
+	// date    = "unknown"
 )
 
 // I'll try to use the go-idiomatic 'happy-path' way.
