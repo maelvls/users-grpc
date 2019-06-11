@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/lithammer/dedent"
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -18,7 +19,12 @@ var version Version
 var rootCmd = &cobra.Command{
 	Use:   "quote",
 	Short: "A nice CLI for querying quotes from the quote microservice.",
-	Long:  ``,
+	Long: dedent.Dedent(`
+	For setting the address of the form HOST:PORT, you can
+	- use the flag --address=:8000
+	- or use the env var ADDRESS
+	- or you can set 'address: localhost:8000' in $HOME/.quote.yml
+	`),
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	//	Run: func(cmd *cobra.Command, args []string) { },
@@ -39,7 +45,7 @@ func init() {
 	logrus.SetFormatter(&logrus.TextFormatter{})
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.quote.yaml)")
 	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "verbose output")
-	rootCmd.PersistentFlags().String("address", "", "'host:port' to bind to; alternatively, use ADDRESS var or set ")
+	rootCmd.PersistentFlags().String("address", "", "'host:port' to bind to")
 	_ = viper.BindPFlag("address", rootCmd.Flags().Lookup("address"))
 }
 

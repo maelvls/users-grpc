@@ -1,6 +1,10 @@
 package service
 
 import (
+	"strings"
+
+	"github.com/sirupsen/logrus"
+
 	memdb "github.com/hashicorp/go-memdb"
 	"github.com/maelvls/quote/schema/user"
 	pb "github.com/maelvls/quote/schema/user"
@@ -8,67 +12,8 @@ import (
 	context "golang.org/x/net/context"
 )
 
-// DB is a simple K/V in-memory DB. As I want to keep things simple, it
-// uses a map[string] and directly uses the User from the protobuf.
-
-// // Create a write transaction
-// txn := db.Txn(true)
-
-// // Insert some people
-// people := []*Person{
-// 	&Person{"joe@aol.com", "Joe", 30},
-// 	&Person{"lucy@aol.com", "Lucy", 35},
-// 	&Person{"tariq@aol.com", "Tariq", 21},
-// 	&Person{"dorothy@aol.com", "Dorothy", 53},
-// }
-// for _, p := range people {
-// 	if err := txn.Insert("person", p); err != nil {
-// 		panic(err)
-// 	}
-// }
-
-// // Commit the transaction
-// txn.Commit()
-
-// // Create read-only transaction
-// txn = db.Txn(false)
-// defer txn.Abort()
-
-// // Lookup by email
-// raw, err := txn.First("person", "id", "joe@aol.com")
-// if err != nil {
-// 	panic(err)
-// }
-
-// // Say hi!
-// fmt.Printf("Hello %s!\n", raw.(*Person).Name)
-
-// // List all the people
-// it, err := txn.Get("person", "id")
-// if err != nil {
-// 	panic(err)
-// }
-
-// fmt.Println("All the people:")
-// for obj := it.Next(); obj != nil; obj = it.Next() {
-// 	p := obj.(*Person)
-// 	fmt.Printf("  %s\n", p.Name)
-// }
-
-// // Range scan over people with ages between 25 and 35 inclusive
-// it, err = txn.LowerBound("person", "age", 25)
-// if err != nil {
-// 	panic(err)
-// }
-
-// fmt.Println("People aged 25 - 35:")
-// for obj := it.Next(); obj != nil; obj = it.Next() {
-// 	p := obj.(*Person)
-// 	if p.Age > 35 {
-// 		break
-// 	}
-// 	fmt.Printf("  %s is aged %d\n", p.Name, p.Age)
-// }
+// MemDB is a simple in-memory DB by Hashicorp. As I wanted to keep things
+// simple, I did not go with Postgres.
 
 // NewDB initializes the DB.
 func NewDB() *memdb.MemDB {
@@ -135,8 +80,8 @@ func (svc *UserImpl) List(ctx context.Context, req *pb.ListReq) (*pb.SearchResp,
 	}
 
 	var users = make([]*pb.User, 0)
-	for obj := it.Next(); obj != nil; obj = it.Next() {
-		user := obj.(*user.User)
+	for raw := it.Next(); raw != nil; raw = it.Next() {
+		user := raw.(*user.User)
 		users = append(users, user)
 	}
 
@@ -160,6 +105,8 @@ func (svc *UserImpl) SearchAge(ctx context.Context, req *pb.SearchAgeReq) (*pb.S
 	}
 
 	txn := svc.DB.Txn(false) // read-only transaction
+	defer txn.Abort()
+
 	// Range scan over people with ages in a range
 	it, err := txn.LowerBound("user", "age", req.AgeRange.From)
 	if err != nil {
@@ -167,8 +114,8 @@ func (svc *UserImpl) SearchAge(ctx context.Context, req *pb.SearchAgeReq) (*pb.S
 	}
 
 	var users = make([]*pb.User, 0)
-	for obj := it.Next(); obj != nil; obj = it.Next() {
-		u := obj.(*user.User)
+	for raw := it.Next(); raw != nil; raw = it.Next() {
+		u := raw.(*user.User)
 		if u.Age > 35 {
 			break
 		}
@@ -181,6 +128,39 @@ func (svc *UserImpl) SearchAge(ctx context.Context, req *pb.SearchAgeReq) (*pb.S
 
 // SearchName searches a user by a part of its first or last name.
 func (svc *UserImpl) SearchName(ctx context.Context, req *pb.SearchNameReq) (*pb.SearchResp, error) {
-	resp := &pb.SearchResp{Status: &pb.Status{Code: pb.Status_NO_IMPL_YET, Msg: "SearchName not implemented"}}
+	if req.Query == "" {
+		return &pb.SearchResp{Users: make([]*pb.User, 0), Status: &pb.Status{
+			Code: pb.Status_INVALID_QUERY,
+			Msg:  "query cannot be empty"},
+		}, nil
+	}
+	filterByFirstOrLastName := func(query string) func(interface{}) bool {
+		return func(raw interface{}) bool {
+			u, ok := raw.(*pb.User)
+			if !ok {
+				logrus.Fatalf("could not unpack a quote.User, instead got: %#+v", raw)
+			}
+
+			return !(strings.Contains(u.Name.First, query) &&
+				strings.Contains(u.Name.First, query))
+		}
+	}
+
+	txn := svc.DB.Txn(false)
+	defer txn.Abort()
+	result, err := txn.Get("user", "id")
+	if err != nil {
+		logrus.Fatalf("err when getting data from db: %e\n", err)
+	}
+
+	it := memdb.NewFilterIterator(result, filterByFirstOrLastName(req.Query))
+
+	var users = make([]*pb.User, 0)
+	for raw := it.Next(); raw != nil; raw = it.Next() {
+		u := raw.(*user.User)
+		users = append(users, u)
+	}
+
+	resp := &pb.SearchResp{Users: users, Status: &pb.Status{Code: pb.Status_SUCCESS}}
 	return resp, nil
 }

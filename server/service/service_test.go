@@ -195,17 +195,49 @@ func TestUserImpl_SearchName(t *testing.T) {
 		want    *pb.SearchResp
 		wantErr bool
 	}{
-		// TODO: Add test cases.
+		{
+			name: "should INVALID_QUERY when the given query is empty",
+			svc:  &UserImpl{},
+			args: args{req: &pb.SearchNameReq{Query: ""}},
+			want: &pb.SearchResp{
+				Status: &pb.Status{Code: pb.Status_INVALID_QUERY, Msg: "query cannot be empty"},
+				Users:  make([]*pb.User, 0),
+			},
+		},
+		{
+			name: "should return an empty list of users when nothing is found",
+			svc: &UserImpl{DB: initDBWith([]*pb.User{
+				{Name: &pb.Name{First: "Elnora", Last: "Morales"}, Age: 21, Id: "ba3d530", Email: "eza@pod.ru"},
+				{Name: &pb.Name{First: "Wayne", Last: "Keller"}, Age: 42, Id: "c7dca0a", Email: "le@rec.gb"},
+				{Name: &pb.Name{First: "Flora", Last: "Hale"}, Age: 38, Id: "a4bcd38", Email: "zikuwcus@awobik.kr"},
+			})},
+			args: args{req: &pb.SearchNameReq{Query: "something-that-cannot-be-found"}},
+			want: &pb.SearchResp{
+				Status: &pb.Status{Code: pb.Status_SUCCESS},
+				Users:  make([]*pb.User, 0),
+			},
+		},
+		{
+			name: "should return 'Elnora' when 'nor' is searched",
+			svc: &UserImpl{DB: initDBWith([]*pb.User{
+				{Name: &pb.Name{First: "Elnora", Last: "Morales"}, Age: 21, Id: "ba3d530", Email: "eza@pod.ru"},
+				{Name: &pb.Name{First: "Wayne", Last: "Keller"}, Age: 42, Id: "c7dca0a", Email: "le@rec.gb"},
+				{Name: &pb.Name{First: "Flora", Last: "Hale"}, Age: 38, Id: "a4bcd38", Email: "zikuwcus@awobik.kr"},
+			})},
+			args: args{req: &pb.SearchNameReq{Query: "nor"}},
+			want: &pb.SearchResp{
+				Status: &pb.Status{Code: pb.Status_SUCCESS},
+				Users: []*pb.User{
+					{Name: &pb.Name{First: "Elnora", Last: "Morales"}, Age: 21, Id: "ba3d530", Email: "eza@pod.ru"},
+				},
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := tt.svc.SearchName(tt.args.ctx, tt.args.req)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("UserImpl.SearchName() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("UserImpl.SearchName() = %v, want %v", got, tt.want)
+			if td.CmpNoError(t, err) {
+				td.CmpStruct(t, got, tt.want, td.StructFields{}, tt.name)
 			}
 		})
 	}
