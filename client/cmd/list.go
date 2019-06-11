@@ -8,17 +8,15 @@ import (
 	"github.com/maelvls/quote/schema/user"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	"google.golang.org/grpc"
 )
 
 func init() {
 	listCmd := &cobra.Command{
 		Use:   "list",
-		Short: "lists users",
+		Short: "lists all users",
 		Run: func(listCmd *cobra.Command, args []string) {
-			addr := viper.GetString("address")
-			cc, err := grpc.Dial(addr, grpc.WithInsecure())
+			cc, err := grpc.Dial(client.address, grpc.WithInsecure())
 			if err != nil {
 				logrus.Fatalf("grpc client: %v\n", err)
 			}

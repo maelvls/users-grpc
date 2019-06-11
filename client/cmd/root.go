@@ -14,11 +14,21 @@ import (
 var cfgFile string
 var verbose bool
 var version Version
+var client grpcClient
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "quote",
+	Use:   "quote (list | search | create | get)",
 	Short: "A nice CLI for querying quotes from the quote microservice.",
+
+	// https://github.com/spf13/cobra#prerun-and-postrun-hooks
+	// This hook is also executed when subcommands are run.
+	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		client = grpcClient{
+			address: viper.GetString("address"),
+		}
+		logrus.Debugf("using address: %s", client.address)
+	},
 	Long: dedent.Dedent(`
 	For setting the address of the form HOST:PORT, you can
 	- use the flag --address=:8000
@@ -45,8 +55,15 @@ func init() {
 	logrus.SetFormatter(&logrus.TextFormatter{})
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.quote.yaml)")
 	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "verbose output")
-	rootCmd.PersistentFlags().String("address", "", "'host:port' to bind to")
-	_ = viper.BindPFlag("address", rootCmd.Flags().Lookup("address"))
+	rootCmd.PersistentFlags().String("address", ":8000", "'host:port' to bind to")
+	err := viper.BindPFlag("address", rootCmd.PersistentFlags().Lookup("address"))
+	if err != nil {
+		panic(err)
+	}
+}
+
+type grpcClient struct {
+	address string
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -72,6 +89,6 @@ func initConfig() {
 
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err == nil {
-		logrus.Debugf("Using config file: %v", viper.ConfigFileUsed())
+		logrus.Debugf("using config file: %v", viper.ConfigFileUsed())
 	}
 }

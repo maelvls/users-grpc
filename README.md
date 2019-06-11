@@ -15,11 +15,12 @@
 > Conventionnal Commits and GolangCI are kind of decorative-only.
 
 - [Simple gRPC service and its CLI client](#simple-grpc-service-and-its-cli-client)
+  - [Stack](#stack)
+  - [Use](#use)
   - [Install](#install)
     - [Kubernetes & Helm](#kubernetes--helm)
   - [Develop](#develop)
     - [Docker](#docker)
-  - [Stack](#stack)
   - [Technical notes](#technical-notes)
     - [Vendor or not vendor and go 1.11 modules](#vendor-or-not-vendor-and-go-111-modules)
     - [Testing](#testing)
@@ -36,6 +37,60 @@
       - [Service discovery with env vars](#service-discovery-with-env-vars)
       - [Service discovery with Kubernetes, Consul or Linkerd3](#service-discovery-with-kubernetes-consul-or-linkerd3)
     - [Now, add some events](#now-add-some-events)
+
+## Stack
+
+- **CI/CD**: Drone.io (tests, coverage, build docker image, upload `client`
+  CLI binaries to Github Releases using `goreleaser`)
+- **Coverage**: Coveralls, Codecov
+- **Code Quality**: Go Report Card, GolangCI (CI) and Pre-commit-go (local
+  git hook) with:
+  - **Static analysis**: gocritic, gosec, golint, goimports, deadcode,
+    errcheck, gosimple, govet, ineffassign, staticcheck, structcheck,
+    typecheck, unused, varcheck
+  - **Formatting**: gofmt on the CI and locally with 'format on save' and
+    Pre-commit-hook
+- **OCI orchestration**: Kubernetes, OCI runtime = Docker, Minikube for
+  testing
+- **Config management**: Helm
+- **Dependency analysis** (the DevSecOps trend): [dependabot] (updates go
+  modules dependencies daily)
+- **Local dev**: Vim, VSCode and Goland, [`gotests`][gotests], `golangci-lint`,
+  `protoc`, `prototool`, `grpcurl`, `is-http2`:
+
+  ```sh
+  brew install golangci/tap/golangci-lint protobuf prototool grpcurl
+  npm install -g is-http2-cli
+  ```
+
+I created this microservice from scratch. If I was to create a new
+microservice like this, I would probably use Lile for generating it (if it
+needs Postres + opentracing + prom metrics + service discovery). For
+example, [Lile-example].
+
+go run client/main.go create --email=mael.valais@gmail.com --firstname="Maël" --lastname="Valais" --postaladdress="Toulouse"
+
+[dependabot]: https://dependabot.com/
+[gotests]: https://github.com/cweill/gotests
+[lile]: https://github.com/lileio/lile
+[lile-example]: https://github.com/arbarlow/account_service
+
+## Use
+
+First, run the server:
+
+```sh
+go run server/main.go
+```
+
+Then, we can query it using the CLI client. Examples:
+
+```sh
+$ go run client/main.go create --email=mael.valais@gmail.com --firstname="Maël" --lastname="Valais" --postaladdress="Toulouse"
+$ go run client/main.go get mael.valais@gmail.com
+Maël Valais <mael.valais@gmail.com> (0 years old, address: Toulouse)
+
+```
 
 ## Install
 
@@ -148,40 +203,6 @@ prototool grpc --address :8000 --method quote.Quote/Search --data "$(jo query=''
 [prototool]: https://github.com/uber/prototool
 [jo]: https://github.com/jpmens/jo
 
-## Stack
-
-- **CI/CD**: Drone.io (tests, coverage, build docker image, upload `client`
-  CLI binaries to Github Releases using `goreleaser`)
-- **Coverage**: Coveralls, Codecov
-- **Code Quality**: Go Report Card, GolangCI (CI) and Pre-commit-go (local
-  git hook) with:
-  - **Static analysis**: gocritic, gosec, golint, goimports, deadcode,
-    errcheck, gosimple, govet, ineffassign, staticcheck, structcheck,
-    typecheck, unused, varcheck
-  - **Formatting**: gofmt on the CI and locally with 'format on save' and
-    Pre-commit-hook
-- **OCI orchestration**: Kubernetes, OCI runtime = Docker, Minikube for
-  testing
-- **Config management**: Helm
-- **Dependency analysis** (the DevSecOps trend): [dependabot] (updates go
-  modules dependencies daily)
-- **Local dev**: Vim, VSCode and Goland, [`gotests`][gotests], `golangci-lint`,
-  `protoc`, `prototool`, `grpcurl`, `is-http2`:
-
-  ```sh
-  brew install golangci/tap/golangci-lint protobuf prototool grpcurl
-  npm install -g is-http2-cli
-  ```
-
-I created this microservice from scratch. If I was to create a new
-microservice like this, I would probably use Lile for generating it (if it
-needs Postres + opentracing + prom metrics + service discovery). For
-example, [Lile-example].
-
-[dependabot]: https://dependabot.com/
-[gotests]: https://github.com/cweill/gotests
-[lile]: https://github.com/lileio/lile
-[lile-example]: https://github.com/arbarlow/account_service
 
 ## Technical notes
 

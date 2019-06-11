@@ -3,12 +3,11 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"os"
 	"time"
 
 	"github.com/maelvls/quote/schema/user"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	"google.golang.org/grpc"
 )
 
@@ -17,37 +16,35 @@ func init() {
 		Use:   "search",
 		Short: "searchs users from the remote quote service",
 		Run: func(searchCmd *cobra.Command, args []string) {
-			addr := viper.GetString("address")
-			cc, err := grpc.Dial(addr, grpc.WithInsecure())
+
+			cc, err := grpc.Dial(client.address, grpc.WithInsecure())
 			if err != nil {
-				_, _ = fmt.Fprintf(os.Stderr, "grpc client: %v\n", err)
-				os.Exit(1)
+				logrus.Fatalf("grpc client: %v\n", err)
 			}
 
 			client := user.NewUserServiceClient(cc)
 			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+			defer cancel()
 			resp, err := client.SearchName(ctx, &user.SearchNameReq{Query: ""})
 
 			if err != nil {
-				_, _ = fmt.Fprintf(os.Stderr, "grpc client: %v\n", err)
-				os.Exit(1)
+				logrus.Fatalf("grpc client: %v\n", err)
 			}
 
 			if resp.GetStatus().GetCode() != user.Status_SUCCESS {
-				_, _ = fmt.Fprintf(os.Stderr, "grpc client: %v\n", resp.GetStatus())
-				os.Exit(1)
+				logrus.Fatalf("grpc client: %v\n", resp.GetStatus())
 			}
 
-			for v := range resp.GetUsers() {
-				fmt.Println(v)
+			for _, u := range resp.GetUsers() {
+				fmt.Println(Spprint(u))
 			}
 
-			cancel()
 		},
 	}
 
-	searchCmd.Flags().String("address", "", "Address the server will bind to; alternatively, use ADDRESS var")
-	_ = viper.BindPFlag("address", searchCmd.Flags().Lookup("address"))
+	searchCmd.Flags().String("name", "", "Search with a substring of first and last name") // brianna.shelton@undefined.org
+	searchCmd.Flags().Int32("agefrom", 18, "Search in [agefrom, ageto]")
+	searchCmd.Flags().Int32("ageto", 18, "")
 
 	rootCmd.AddCommand(searchCmd)
 }
