@@ -39,7 +39,7 @@ func init() {
 
 			// Finally, we can display the users.
 			for _, user := range resp.GetUsers() {
-				fmt.Println(user)
+				fmt.Println(Spprint(user))
 			}
 
 			cancel()
