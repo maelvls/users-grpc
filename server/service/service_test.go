@@ -50,7 +50,9 @@ func TestUserImpl_Create(t *testing.T) {
 				{Name: &pb.Name{First: "Elnora", Last: "Morales"}, Age: 21, Id: "ba3d530", Email: "eza@pod.ru"},
 				{Name: &pb.Name{First: "Wayne", Last: "Keller"}, Age: 42, Id: "c7dca0a", Email: "le@rec.gb"},
 			})},
-			args: args{req: &pb.CreateReq{User: &pb.User{Name: &pb.Name{First: "Flora", Last: "Hale"}, Age: 38, Id: "a4bcd38", Email: "zikuwcus@awobik.kr"}}},
+			args: args{req: &pb.CreateReq{
+				User: &pb.User{Name: &pb.Name{First: "Flora", Last: "Hale"}, Age: 38, Id: "a4bcd38", Email: "zikuwcus@awobik.kr"}},
+			},
 			want: &pb.CreateResp{
 				Status: &pb.Status{Code: pb.Status_SUCCESS},
 				User: &pb.User{
@@ -69,9 +71,11 @@ func TestUserImpl_Create(t *testing.T) {
 			},
 		},
 		{
-			name:        "when a user is created with the 'Id' field missing, the Id should be generated",
-			svc:         &UserImpl{DB: initDBWith([]*pb.User{})},
-			args:        args{req: &pb.CreateReq{User: &pb.User{Name: &pb.Name{First: "Flora", Last: "Hale"}, Age: 38, Email: "zikuwcus@awobik.kr"}}},
+			name: "when a user is created with the 'Id' field missing, the Id should be generated",
+			svc:  &UserImpl{DB: initDBWith([]*pb.User{})},
+			args: args{req: &pb.CreateReq{
+				User: &pb.User{Name: &pb.Name{First: "Flora", Last: "Hale"}, Age: 38, Email: "zikuwcus@awobik.kr"}},
+			},
 			want:        nil,
 			fieldChecks: td.StructFields{},
 		},
