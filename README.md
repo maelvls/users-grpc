@@ -15,11 +15,15 @@
 > Conventionnal Commits and GolangCI are kind of decorative-only.
 
 - [Simple gRPC service and its CLI client](#simple-grpc-service-and-its-cli-client)
-  - [Install](#install)
-    - [Kubernetes & Helm](#kubernetes--helm)
-  - [Develop](#develop)
-    - [Docker](#docker)
   - [Stack](#stack)
+  - [Use](#use)
+  - [Install](#install)
+    - [Docker images](#docker-images)
+    - [Binaries (Github Releases)](#binaries-github-releases)
+    - [Using go-get](#using-go-get)
+    - [Kubernetes & Helm](#kubernetes--helm)
+  - [Develop and hack it](#develop-and-hack-it)
+    - [Develop using Docker](#develop-using-docker)
   - [Technical notes](#technical-notes)
     - [Vendor or not vendor and go 1.11 modules](#vendor-or-not-vendor-and-go-111-modules)
     - [Testing](#testing)
@@ -37,7 +41,126 @@
       - [Service discovery with Kubernetes, Consul or Linkerd3](#service-discovery-with-kubernetes-consul-or-linkerd3)
     - [Now, add some events](#now-add-some-events)
 
+## Stack
+
+- **CI/CD**: Drone.io (tests, coverage, build docker image, upload `client`
+  CLI binaries to Github Releases using `goreleaser`)
+- **Coverage**: Coveralls, Codecov
+- **Code Quality**: Go Report Card, GolangCI (CI) and Pre-commit-go (local
+  git hook) with:
+  - **Static analysis**: gocritic, gosec, golint, goimports, deadcode,
+    errcheck, gosimple, govet, ineffassign, staticcheck, structcheck,
+    typecheck, unused, varcheck
+  - **Formatting**: gofmt on the CI and locally with 'format on save' and
+    Pre-commit-hook
+- **OCI orchestration**: Kubernetes, OCI runtime = Docker, Minikube for
+  testing
+- **Config management**: Helm
+- **Dependency analysis** (the DevSecOps trend): [dependabot] (updates go
+  modules dependencies daily)
+- **Local dev**: Vim, VSCode and Goland, [`gotests`][gotests], `golangci-lint`,
+  `protoc`, `prototool`, `grpcurl`, `is-http2`:
+
+  ```sh
+  brew install golangci/tap/golangci-lint protobuf prototool grpcurl
+  npm install -g is-http2-cli
+  ```
+
+I created this microservice from scratch. If I was to create a new
+microservice like this, I would probably use Lile for generating it (if it
+needs Postres + opentracing + prom metrics + service discovery). For
+example, [Lile-example].
+
+go run client/main.go create --email=mael.valais@gmail.com --firstname="Maël" --lastname="Valais" --postaladdress="Toulouse"
+
+[dependabot]: https://dependabot.com/
+[gotests]: https://github.com/cweill/gotests
+[lile]: https://github.com/lileio/lile
+[lile-example]: https://github.com/arbarlow/account_service
+
+## Use
+
+First, run the server (in order to get `client` and `server`, ):
+
+```sh
+go run server/main.go
+```
+
+Then, we can query it using the CLI client. The possible actions are
+
+- creating a user
+- fetching a user by his email ('get')
+- listing all users (the server loads some sample users on startup)
+- searching users by a string that matches their names
+- searching users by a age range
+
+Examples:
+
+```sh
+$ go run client/main.go create --email=mael.valais@gmail.com --firstname="Maël" --lastname="Valais" --postaladdress="Toulouse"
+
+$ go run client/main.go get mael.valais@gmail.com
+Maël Valais <mael.valais@gmail.com> (0 years old, address: Toulouse)
+
+$ go run client/main.go search --agefrom=30 --ageto=42
+Benjamin Frazier <benjamin.frazier@email.net> (31 years old, address: 289 Cyrus Avenue, Templeton, Maine, 5964)
+Stone Briggs <stone.briggs@email.info> (31 years old, address: 531 Atkins Avenue, Neahkahnie, Tennessee, 3981)
+Alford Cole <alford.cole@email.net> (33 years old, address: 763 Halleck Street, Elbert, Nevada, 3291)
+Brock Stanley <brock.stanley@email.me> (35 years old, address: 748 Aster Court, Elwood, Guam, 7446)
+Ina Perkins <ina.perkins@email.me> (35 years old, address: 899 Miami Court, Temperanceville, Virginia, 2821)
+Hardin Patton <hardin.patton@email.com> (42 years old, address: 241 Russell Street, Robinson, Oregon, 9576)
+
+$ go run client/main.go list
+Acevedo Quinn <acevedo.quinn@email.us> (22 years old, address: 403 Lawn Court, Walland, Federated States Of Micronesia, 8260)
+Alford Cole <alford.cole@email.net> (33 years old, address: 763 Halleck Street, Elbert, Nevada, 3291)
+Angeline Stokes <angeline.stokes@email.biz> (48 years old, address: 526 Java Street, Hailesboro, Pennsylvania, 1648)
+Beasley Byrd <beasley.byrd@email.io> (56 years old, address: 213 McKibbin Street, Veguita, New Jersey, 3943)
+Benjamin Frazier <benjamin.frazier@email.net> (31 years old, address: 289 Cyrus Avenue, Templeton, Maine, 5964)
+Billie Norton <billie.norton@email.io> (28 years old, address: 699 Rapelye Street, Dupuyer, Ohio, 4175)
+...
+Stone Briggs <stone.briggs@email.info> (31 years old, address: 531 Atkins Avenue, Neahkahnie, Tennessee, 3981)
+Valencia Dorsey <valencia.dorsey@email.info> (51 years old, address: 941 Merit Court, Grill, Mississippi, 4961)
+Walter Prince <walter.prince@email.co.uk> (26 years old, address: 204 Ralph Avenue, Gibbsville, Michigan, 6698)
+Wilkerson Mosley <wilkerson.mosley@email.biz> (48 years old, address: 734 Kosciusko Street, Marbury, Connecticut, 3037)
+
+$ go run client/main.go search --name=alenc
+Jenifer Valencia <jenifer.valencia@email.us> (52 years old, address: 948 Jefferson Street, Guthrie, Louisiana, 2483)
+Valencia Dorsey <valencia.dorsey@email.info> (51 years old, address: 941 Merit Court, Grill, Mississippi, 4961)
+```
+
+Here is what the help looks like:
+
+```sh
+$ go run client/main.go help
+
+For setting the address of the form HOST:PORT, you can
+- use the flag --address=:8000
+- or use the env var ADDRESS
+- or you can set 'address: localhost:8000' in $HOME/.quote.yml
+
+Usage:
+  quote [command]
+
+Available Commands:
+  create      searchs users from the remote quote service
+  get         prints an user by its email (must be exact, not partial)
+  help        Help about any command
+  list        lists all users
+  search      searchs users from the remote quote service
+  version     Print the version and git commit to stdout
+
+Flags:
+      --address string   'host:port' to bind to (default ":8000")
+      --config string    config file (default is $HOME/.quote.yaml)
+  -h, --help             help for quote
+  -v, --verbose          verbose output
+
+Use "quote [command] --help" for more information about a command.
+```
+
 ## Install
+
+### Docker images
 
 Docker images are created on each tag. The 'latest' tag represents the
 latest commit on master. I use multi-stages dockerfile so that the
@@ -64,6 +187,8 @@ $ docker run --rm -it maelvls/quote:1 client --address=172.17.0.1:8123 ls
 > containers through the host requires to use the IP of the docker0
 > interface instead of the loopback.
 
+### Binaries (Github Releases)
+
 Binaries are available on the Github Releases page. Releasing binaries was
 not necessary (except maybe for the CLI client) but I love the idea of Go
 (so easy to cross-compile + one single statically-linked binary) so I
@@ -76,6 +201,12 @@ LLVM + way richer and complex language -- see my comparison [rust-vs-go]).
 
 [rust-vs-go]: https://github.com/maelvls/rust-chat
 
+### Using go-get
+
+```sh
+go get github.com/maelvls/quote/...
+```
+
 ### Kubernetes & Helm
 
 ```sh
@@ -83,17 +214,23 @@ helm install ./ci/helm/quote-svc --name quote-svc --namespace quote-svc --set im
 helm upgrade quote-svc ./ci/helm/quote-svc
 ```
 
-## Develop
+## Develop and hack it
+
+Here is the minimal set of things you need to get started for hacking this
+project:
 
 ```sh
+git clone https://github.com/maelvls/quote
+cd quote/
+
 brew install protobuf # only if .proto files are changed
 go generate ./...     # only if .proto files are changed
+
 go run server/main.go &
 go run client/main.go
-LOG_FORMAT=json PORT=8234 go run server/main.go 2>&1 | jq
 ```
 
-### Docker
+### Develop using Docker
 
 ```sh
 docker build . -f ci/Dockerfile
@@ -148,41 +285,6 @@ prototool grpc --address :8000 --method quote.Quote/Search --data "$(jo query=''
 [prototool]: https://github.com/uber/prototool
 [jo]: https://github.com/jpmens/jo
 
-## Stack
-
-- **CI/CD**: Drone.io (tests, coverage, build docker image, upload `client`
-  CLI binaries to Github Releases using `goreleaser`)
-- **Coverage**: Coveralls, Codecov
-- **Code Quality**: Go Report Card, GolangCI (CI) and Pre-commit-go (local
-  git hook) with:
-  - **Static analysis**: gocritic, gosec, golint, goimports, deadcode,
-    errcheck, gosimple, govet, ineffassign, staticcheck, structcheck,
-    typecheck, unused, varcheck
-  - **Formatting**: gofmt on the CI and locally with 'format on save' and
-    Pre-commit-hook
-- **OCI orchestration**: Kubernetes, OCI runtime = Docker, Minikube for
-  testing
-- **Config management**: Helm
-- **Dependency analysis** (the DevSecOps trend): [dependabot] (updates go
-  modules dependencies daily)
-- **Local dev**: Vim, VSCode and Goland, [`gotests`][gotests], `golangci-lint`,
-  `protoc`, `prototool`, `grpcurl`, `is-http2`:
-
-  ```sh
-  brew install golangci/tap/golangci-lint protobuf prototool grpcurl
-  npm install -g is-http2-cli
-  ```
-
-I created this microservice from scratch. If I was to create a new
-microservice like this, I would probably use Lile for generating it (if it
-needs Postres + opentracing + prom metrics + service discovery). For
-example, [Lile-example].
-
-[dependabot]: https://dependabot.com/
-[gotests]: https://github.com/cweill/gotests
-[lile]: https://github.com/lileio/lile
-[lile-example]: https://github.com/arbarlow/account_service
-
 ## Technical notes
 
 ### Vendor or not vendor and go 1.11 modules
@@ -218,7 +320,7 @@ failing tests, I use `github.com/maxatome/go-testdeep`.
 ### `quote version`
 
 I decided to use <https://github.com/ahmetb/govvv> in order to ease the
-process of using `-ldflags -Xmain.Version=$(git describe)` and so on. I
+process of using `-ldflags -Xmain.version=$(git describe)` and so on. I
 could have done it without it 🙄
 
 ### Proto generation
@@ -251,6 +353,7 @@ is an excellent source of inspiration in that regard)
 [traefik-logrotate]: https://docs.traefik.io/configuration/logs/#log-rotation -->
 
 <!-->
+
 ### Static analysis, DevSecOps and CI
 
 - CI and commit hook : <https://github.com/golangci/golangci-lint> which
@@ -268,6 +371,7 @@ is an excellent source of inspiration in that regard)
 
 [pcg-untracked-issue]: https://github.com/maruel/pre-commit-go/issues/15
 [golem-post]: https://dev.to/erinbush/being-intentional-with-commits--59a3
+
 -->
 
 ## Examples that I read for inspiration

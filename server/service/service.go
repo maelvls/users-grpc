@@ -1,12 +1,12 @@
 package service
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/sirupsen/logrus"
 
 	memdb "github.com/hashicorp/go-memdb"
-	"github.com/maelvls/quote/schema/user"
 	pb "github.com/maelvls/quote/schema/user"
 	"github.com/rs/xid"
 	context "golang.org/x/net/context"
@@ -81,7 +81,7 @@ func (svc *UserImpl) List(ctx context.Context, req *pb.ListReq) (*pb.SearchResp,
 
 	var users = make([]*pb.User, 0)
 	for raw := it.Next(); raw != nil; raw = it.Next() {
-		user := raw.(*user.User)
+		user := raw.(*pb.User)
 		users = append(users, user)
 	}
 
@@ -115,8 +115,9 @@ func (svc *UserImpl) SearchAge(ctx context.Context, req *pb.SearchAgeReq) (*pb.S
 
 	var users = make([]*pb.User, 0)
 	for raw := it.Next(); raw != nil; raw = it.Next() {
-		u := raw.(*user.User)
-		if u.Age > 35 {
+		u := raw.(*pb.User)
+		// Filter out all users that beyond the upper limit
+		if u.Age > req.AgeRange.ToIncluded {
 			break
 		}
 		users = append(users, u)
@@ -142,7 +143,8 @@ func (svc *UserImpl) SearchName(ctx context.Context, req *pb.SearchNameReq) (*pb
 		return func(raw interface{}) bool {
 			u, ok := raw.(*pb.User)
 			if !ok {
-				logrus.Fatalf("could not unpack a quote.User, instead got: %#+v", raw)
+				logrus.Errorf("filterByFirstOrLastName: could not unpack a quote.User, instead got: %#+v", raw)
+				return true // Skip this element
 			}
 
 			hasSubstr := strings.Contains(u.Name.First, query) ||
@@ -157,14 +159,14 @@ func (svc *UserImpl) SearchName(ctx context.Context, req *pb.SearchNameReq) (*pb
 	defer txn.Abort()
 	result, err := txn.Get("user", "id")
 	if err != nil {
-		logrus.Fatalf("err when getting data from db: %e\n", err)
+		return nil, fmt.Errorf("err when getting data from db: %e", err)
 	}
 
 	it := memdb.NewFilterIterator(result, filterByFirstOrLastName(req.Query))
 
 	var users = make([]*pb.User, 0)
 	for raw := it.Next(); raw != nil; raw = it.Next() {
-		u := raw.(*user.User)
+		u := raw.(*pb.User)
 		users = append(users, u)
 	}
 
@@ -192,7 +194,8 @@ func (svc *UserImpl) GetByEmail(ctx context.Context, req *pb.GetByEmailReq) (*pb
 
 	u, ok := raw.(*pb.User)
 	if !ok {
-		logrus.Fatalf("could not unpack a quote.User, instead got: %#+v", raw)
+		logrus.Errorf("could not unpack a quote.User, instead got: %#+v", raw)
+		return nil, fmt.Errorf("could not unpack a quote.User, instead got: %#+v", raw)
 	}
 
 	resp := &pb.GetByEmailResp{User: u, Status: &pb.Status{Code: pb.Status_SUCCESS}}

@@ -3,24 +3,24 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/maelvls/quote/schema/user"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	"google.golang.org/grpc"
 )
 
 func init() {
 	listCmd := &cobra.Command{
 		Use:   "list",
-		Short: "lists users",
+		Short: "lists all users",
 		Run: func(listCmd *cobra.Command, args []string) {
-			addr := viper.GetString("address")
-			cc, err := grpc.Dial(addr, grpc.WithInsecure())
+			cc, err := grpc.Dial(client.address, grpc.WithInsecure())
 			if err != nil {
-				logrus.Fatalf("grpc client: %v\n", err)
+				logrus.Errorf("grpc client: %v\n", err)
+				os.Exit(1)
 			}
 
 			client := user.NewUserServiceClient(cc)
@@ -28,18 +28,20 @@ func init() {
 			resp, err := client.List(ctx, &user.ListReq{})
 
 			if err != nil {
-				logrus.Fatalf("grpc client: %v\n", err)
+				logrus.Errorf("grpc client: %v\n", err)
+				os.Exit(1)
 			}
 
 			if resp.GetStatus().GetCode() != user.Status_SUCCESS {
-				logrus.Fatalf("grpc client: %v\n", resp.GetStatus())
+				logrus.Errorf("grpc client: %v\n", resp.GetStatus())
+				os.Exit(1)
 			}
 
 			logrus.Debugf("number of users received: %v", len(resp.GetUsers()))
 
 			// Finally, we can display the users.
 			for _, user := range resp.GetUsers() {
-				fmt.Println(user)
+				fmt.Println(Spprint(user))
 			}
 
 			cancel()
