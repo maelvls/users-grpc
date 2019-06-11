@@ -28,7 +28,6 @@
     - [Logs, debug and verbosity](#logs-debug-and-verbosity)
     - [Static analysis, DevSecOps and CI](#static-analysis-devsecops-and-ci)
   - [Examples that I read for inspiration](#examples-that-i-read-for-inspiration)
-  - [Tools I used](#tools-i-used)
   - [Cloud native](#cloud-native)
   - [12 factor app](#12-factor-app)
   - [Kubernetes and Helm](#kubernetes-and-helm)
@@ -151,7 +150,8 @@ prototool grpc --address :8000 --method quote.Quote/Search --data "$(jo query=''
 
 ## Stack
 
-- **CI/CD**: Drone.io
+- **CI/CD**: Drone.io (tests, coverage, build docker image, upload `client`
+  CLI binaries to Github Releases using `goreleaser`)
 - **Coverage**: Coveralls, Codecov
 - **Code Quality**: Go Report Card, GolangCI (CI) and Pre-commit-go (local
   git hook) with:
@@ -165,8 +165,8 @@ prototool grpc --address :8000 --method quote.Quote/Search --data "$(jo query=''
 - **Config management**: Helm
 - **Dependency analysis**: dependabot (updates go modules dependencies
   daily)
-- Others: `goreleaser` for cross-compiling and uploading binaries to Github
-  Releases, `protoc`, `prototool`
+- **Local dev**: vim, vscode and goland, `gotests`, `protoc`, `prototool`,
+  `grpcurl`, `is-http2`
 
 I created this microservice from scratch. If I was to create a new
 microservice like this, I would probably use Lile for generating it (if it
@@ -197,8 +197,16 @@ dependencies sources easily, everything is at hand).
 
 ### Testing
 
-I used `gotests server/service` (for example) for generating the test
-scaffolding.
+I use `gotests` for easing the TDD. Whenever I add a new method, I just
+have to run
+
+```sh
+gotests -all -w server/service/*
+```
+
+so that these methods get generated in the corresponding `test_*.go` file.
+Also, to make the visual comparison between 'got' and 'expected' easier on
+failing tests, I use `github.com/maxatome/go-testdeep`.
 
 ### `quote version`
 
@@ -277,11 +285,6 @@ is an excellent source of inspiration in that regard)
 [go-scaffold]: https://github.com/orbs-network/go-scaffold
 [todogo]: https://github.com/kgantsov/todogo
 [helm-gh-pages-example]: https://github.com/int128/helm-github-pages
-
-## Tools I used
-
-- editors: vim, vscode and goland
-- misc: prototool (for testing the gRPC server)
 
 ## Cloud native
 

@@ -5,6 +5,7 @@ go 1.12
 require (
 	github.com/golang/protobuf v1.3.1
 	github.com/hashicorp/go-memdb v1.0.3
+	github.com/maxatome/go-testdeep v1.0.8
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/rs/xid v1.2.1
 	github.com/sirupsen/logrus v1.4.2

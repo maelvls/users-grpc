@@ -126,8 +126,6 @@ func (svc *UserImpl) Create(ctx context.Context, req *pb.CreateReq) (*pb.CreateR
 
 // List all users.
 func (svc *UserImpl) List(ctx context.Context, req *pb.ListReq) (*pb.SearchResp, error) {
-	var users = make([]*pb.User, 0)
-
 	// List all the people.
 	txn := svc.DB.Txn(false) // read-only transaction
 	defer txn.Abort()
@@ -136,6 +134,7 @@ func (svc *UserImpl) List(ctx context.Context, req *pb.ListReq) (*pb.SearchResp,
 		panic(err)
 	}
 
+	var users = make([]*pb.User, 0)
 	for obj := it.Next(); obj != nil; obj = it.Next() {
 		user := obj.(*user.User)
 		users = append(users, user)
@@ -147,8 +146,37 @@ func (svc *UserImpl) List(ctx context.Context, req *pb.ListReq) (*pb.SearchResp,
 
 // SearchAge searches all users in the range [from, to_included].
 func (svc *UserImpl) SearchAge(ctx context.Context, req *pb.SearchAgeReq) (*pb.SearchResp, error) {
-	resp := pb.SearchResp{Status: &pb.Status{Code: pb.Status_NO_IMPL_YET, Msg: "SearchAge not implemented"}}
-	return &resp, nil
+	if req.AgeRange == nil {
+		return &pb.SearchResp{Users: make([]*pb.User, 0), Status: &pb.Status{
+			Code: pb.Status_INVALID_QUERY,
+			Msg:  "field AgeRange{From: int, ToIncluded: int} missing"},
+		}, nil
+	}
+	if req.AgeRange.From > req.AgeRange.ToIncluded {
+		return &pb.SearchResp{Users: make([]*pb.User, 0), Status: &pb.Status{
+			Code: pb.Status_INVALID_QUERY,
+			Msg:  "the From field must be lower or equal to ToIncluded"},
+		}, nil
+	}
+
+	txn := svc.DB.Txn(false) // read-only transaction
+	// Range scan over people with ages in a range
+	it, err := txn.LowerBound("user", "age", req.AgeRange.From)
+	if err != nil {
+		panic(err)
+	}
+
+	var users = make([]*pb.User, 0)
+	for obj := it.Next(); obj != nil; obj = it.Next() {
+		u := obj.(*user.User)
+		if u.Age > 35 {
+			break
+		}
+		users = append(users, u)
+	}
+
+	resp := &pb.SearchResp{Users: users, Status: &pb.Status{Code: pb.Status_SUCCESS}}
+	return resp, nil
 }
 
 // SearchName searches a user by a part of its first or last name.
