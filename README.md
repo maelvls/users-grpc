@@ -193,16 +193,20 @@ docker run --rm -it maelvls/users-grpc:1 users-cli --address=192.168.99.1:80 lis
 
 ### Binaries (Github Releases)
 
-Binaries are available on the Github Releases page. Releasing binaries was
-not necessary (except maybe for the CLI client) but I love the idea of Go
-(so easy to cross-compile + one single statically-linked binary) so I
-wanted to try it. Goreleaser is a fantastic tool for that purpose! That's
-where Go shines: tooling. It is exceptional (except for
-[gopls](https://github.com/golang/go/wiki/gopls) but it's getting better
-and better). Most importantly, tooling is fast at execution and also at
-compilation (contrary to Rust where compilation takes much more time --
-LLVM + way richer and complex language -- see my comparison [rust-vs-go]).
+Binaries `users-cli` and `users-server` are available on the [Github
+Releases page][github-releases].
 
+Releasing binaries was not necessary (except maybe for the CLI client) but
+I love the idea of Go (so easy to cross-compile + one single
+statically-linked binary) so I wanted to try it. Goreleaser is a fantastic
+tool for that purpose! That's where Go shines: tooling. It is exceptional
+(except for [gopls](https://github.com/golang/go/wiki/gopls) but it's
+getting better and better). Most importantly, tooling is fast at execution
+and also at compilation (contrary to Rust where compilation takes much more
+time -- LLVM + way richer and complex language -- see my comparison
+[rust-vs-go]).
+
+[github-releases]: https://github.com/maelvls/users-grpc/releases
 [rust-vs-go]: https://github.com/maelvls/rust-chat
 
 ### Using go-get
@@ -344,7 +348,8 @@ be added to `.drone.yml`:
 
 1. test the docker image (at least test that the `users-server` is
    launching using `grpc-health-probe`)
-2. test the CLI `users-cli` (I did not write any test for it yet)
+2. test the Helm chart
+3. test the CLI `users-cli` (I did not write any test for it yet)
 
 ### `users-cli version`
 
