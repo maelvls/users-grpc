@@ -32,17 +32,16 @@
     - [`users-cli version`](#users-cli-version)
     - [Proto generation](#proto-generation)
     - [Logs, debug and verbosity](#logs-debug-and-verbosity)
-    - [Static analysis, DevSecOps and CI](#static-analysis-devsecops-and-ci)
   - [Examples that I read for inspiration](#examples-that-i-read-for-inspiration)
-  - [Cloud native](#cloud-native)
-  - [12 factor app](#12-factor-app)
+  - [Cloud-nativeness of this project](#cloud-nativeness-of-this-project)
+  - [12 factor app checklist](#12-factor-app-checklist)
   - [Kubernetes and Helm](#kubernetes-and-helm)
   - [Memo on Kubernetes](#memo-on-kubernetes)
-    - [Let other services use my service](#let-other-services-use-my-service)
-      - [Service discovery with env vars](#service-discovery-with-env-vars)
   - [Future work](#future-work)
     - [Distributed tracing, metrics and logs](#distributed-tracing-metrics-and-logs)
     - [Service discovery and service mesh](#service-discovery-and-service-mesh)
+      - [Service discovery via environement variables](#service-discovery-via-environement-variables)
+      - [Service discovery via CoreDNS, Consul, Envoy or Linkerd3](#service-discovery-via-coredns-consul-envoy-or-linkerd3)
     - [Event store & event sourcing](#event-store--event-sourcing)
 
 ## Stack
@@ -376,34 +375,6 @@ I did not yet implement a way for my server or my client to make the log level
 higher or to set json as the logging format. For now, I use logrus; fortunately,
 logrus allows to configure these things.
 
-<!--
-I did not implement a way of logrotating the logs ([traefik's log rotation][traefik-logrotate]
-is an excellent source of inspiration in that regard)
-
-[traefik-logrotate]: https://docs.traefik.io/configuration/logs/#log-rotation -->
-
-<!--
-
-### Static analysis, DevSecOps and CI
-
-- CI and commit hook : <https://github.com/golangci/golangci-lint> which
-  runs gosec, go-critic and so on.
-- CI and commit hook: conventional-commit using github.com/geocine/golem
-  (see [golem-post]). I also like using emojis
-  (github.com/carloscuesta/gitmoji-cli) but the use of emojis is much more
-  debatable 😁
-- `GO111MODULES=off go get github.com/maruel/pre-commit-go/cmd/...` and
-  `pcg install` (caveat: it forces the dev to have no untracked file before
-  committing... good thing from my experience: it forces you to check in
-  the untracked files as soon as possible, see [pcg-untracked-issue]). Pcg
-  will run go build on every commit so that you don't have a failing commit
-  (easier to `git bisect` 👍)
-
-[pcg-untracked-issue]: https://github.com/maruel/pre-commit-go/issues/15
-[golem-post]: https://dev.to/erinbush/being-intentional-with-commits--59a3
-
--->
-
 ## Examples that I read for inspiration
 
 - [go-micro-services] (lacks tests but excellent geographic-related
@@ -429,18 +400,21 @@ is an excellent source of inspiration in that regard)
 [todogo]: https://github.com/kgantsov/todogo
 [helm-gh-pages-example]: https://github.com/int128/helm-github-pages
 
-## Cloud native
+## Cloud-nativeness of this project
 
 Cloud-native is taking advantage when your workload is on the cloud ([cncf-definition], [gitlab-native-talk]):
 
 - use containers,
 - dynamically orchestrated
-- use micro-services
+- use microservices
+
+In this project, we use OCI containers, use Kubernetes dynamic
+orchestration and use microservices.
 
 [gitlab-native-talk]: https://youtu.be/jc5cY3LoOOI?t=204
 [cncf-definition]: https://github.com/cncf/toc/blob/master/DEFINITION.md
 
-## 12 factor app
+## 12 factor app checklist
 
 <details>
 <summary>12 factor cheat sheet </summary>
@@ -715,37 +689,6 @@ Yey!! 🎉🎉🎉
 - **ConfigMap** -> for storing config files like `traefik.toml`
 - **Secret** -> for storing credentials and certificates
 
-### Let other services use my service
-
-Great, I built a service. Now, how can other services use it from inside
-the cluster? As stated in the documentation
-([connect-applications-service]),
-
-> Kubernetes supports 2 primary modes of finding a Service - environment
-> variables and DNS. The former works out of the box while the latter
-> requires the CoreDNS cluster addon.
-
-#### Service discovery with env vars
-
-Let's try the env var approach (using minikube):
-
-```sh
-$ kubectl get pods
-NAME                               READY   STATUS    RESTARTS   AGE
-users-grpc-69d46c866f-t6rx4         1/1     Running   0          23m
-
-$ kubectl exec -it users-grpc-69d46c866f-t6rx4 env | grep -i users-grpc
-HOSTNAME=users-grpc-69d46c866f-t6rx4
-...
-USERS_GRPC_SVC_SERVICE_PORT=8000
-USERS_GRPC_SVC_SERVICE_HOST=10.110.71.154
-```
-
-Let us say we have service A that wants to use users-grpc. Service A will be
-provided with these env variables. Note that because of the dependency on
-users-grpc, this service would probably fail on startup until users-grpc is
-up. Requires some extra logic on startup.
-
 ## Future work
 
 Here is a small list of things that could be implemented now that a MVP
@@ -766,10 +709,41 @@ These middlewares are listed and available at [go-grpc-middleware].
 
 ### Service discovery and service mesh
 
+How can other services use it from inside the cluster? As stated in the
+documentation ([connect-applications-service]),
+
+> Kubernetes supports 2 primary modes of finding a Service - environment
+> variables and DNS. The former works out of the box while the latter
+> requires the CoreDNS cluster addon.
+
+#### Service discovery via environement variables
+
+Let's try the env var approach (using minikube):
+
+```sh
+$ kubectl get pods
+NAME                               READY   STATUS    RESTARTS   AGE
+users-grpc-69d46c866f-t6rx4         1/1     Running   0          23m
+
+$ kubectl exec -it users-grpc-69d46c866f-t6rx4 env | grep -i users-grpc
+HOSTNAME=users-grpc-69d46c866f-t6rx4
+...
+USERS_GRPC_SVC_SERVICE_PORT=8000
+USERS_GRPC_SVC_SERVICE_HOST=10.110.71.154
+```
+
+Let us say we have service A that wants to use users-grpc. Service A will be
+provided with these env variables. Note that because of the dependency on
+users-grpc, this service would probably fail on startup until users-grpc is
+up. Requires some extra logic on startup.
+
+#### Service discovery via CoreDNS, Consul, Envoy or Linkerd3
+
 Service discovery can also directly use the Kubernetes API from the service
 itself, or using a sidekick container (Linkerd or Envoy as a service proxy)
-or with a library (Consul). Linkerd3 and Envoy also add the possibility of
-circuit breaking and service-level (L7) load-balancing.
+or with a library (Consul client that polls Consol). Linkerd3 and Envoy
+also add the possibility of circuit breaking and service-level (L7)
+load-balancing.
 
 [connect-applications-service]: https://kubernetes.io/docs/concepts/services-networking/connect-applications-service/
 
