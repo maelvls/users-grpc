@@ -40,13 +40,15 @@
   - [Memo on Kubernetes](#memo-on-kubernetes)
     - [Let other services use my service](#let-other-services-use-my-service)
       - [Service discovery with env vars](#service-discovery-with-env-vars)
-      - [Service discovery with Kubernetes, Consul or Linkerd3](#service-discovery-with-kubernetes-consul-or-linkerd3)
-    - [Now, add some events](#now-add-some-events)
+  - [Future work](#future-work)
+    - [Distributed tracing, metrics and logs](#distributed-tracing-metrics-and-logs)
+    - [Service discovery and service mesh](#service-discovery-and-service-mesh)
+    - [Event store & event sourcing](#event-store--event-sourcing)
 
 ## Stack
 
-- **CI/CD**: Drone.io (tests, coverage, build docker image, upload `client`
-  CLI binaries to Github Releases using `goreleaser`)
+- **CI/CD**: Drone.io (tests, coverage, build docker image, upload
+  `users-cli` CLI binaries to Github Releases using `goreleaser`)
 - **Coverage**: Coveralls, Codecov
 - **Code Quality**: Go Report Card, GolangCI (CI) and Pre-commit-go (local
   git hook) with:
@@ -56,24 +58,24 @@
   - **Formatting**: gofmt on the CI and locally with 'format on save' and
     Pre-commit-hook
 - **OCI orchestration**: Kubernetes, OCI runtime = Docker, Minikube for
-  testing
+  testing, GKE for more testing (see related [helm-gke-terraform])
 - **Config management**: Helm
 - **Dependency analysis** (the DevSecOps trend): [dependabot] (updates go
   modules dependencies daily)
-- **Local dev**: Vim, VSCode and Goland, [`gotests`][gotests], `golangci-lint`,
-  `protoc`, `prototool`, `grpcurl`, `is-http2`:
+- **Local dev**: Vim, VSCode and Goland, [`gotests`][gotests],
+  `golangci-lint`, `pcg` (pre-commit-go), `protoc`, `prototool`, `grpcurl`,
+  `is-http2`:
 
   ```sh
   brew install golangci/tap/golangci-lint protobuf prototool grpcurl
   npm install -g is-http2-cli
+  go install github.com/maruel/pre-commit-go/cmd/...
   ```
 
 I created this microservice from scratch. If I was to create a new
 microservice like this, I would probably use Lile for generating it (if it
 needs Postres + opentracing + prom metrics + service discovery). For
 example, [Lile-example].
-
-go run client/main.go create --email=mael.valais@gmail.com --firstname="Maël" --lastname="Valais" --postaladdress="Toulouse"
 
 [dependabot]: https://dependabot.com/
 [gotests]: https://github.com/cweill/gotests
@@ -82,7 +84,7 @@ go run client/main.go create --email=mael.valais@gmail.com --firstname="Maël" -
 
 ## Use
 
-Refer to 'install' below for getting `users-cli` and `users-server`.
+Refer to [Install](#install) below for getting `users-cli` and `users-server`.
 
 First, let `users-server` run somewhere:
 
@@ -180,11 +182,10 @@ INFO[0000] serving on port 8123 (version 1.0.0)
 
 [moving-tags]: http://plugins.drone.io/drone-plugins/drone-docker/#autotag
 
-To run the client CLI:
+To run `users-cli`:
 
 ```sh
-$ docker run --rm -it maelvls/users-grpc:1 client --address=172.17.0.1:8123 ls
-...
+docker run --rm -it maelvls/users-grpc:1 users-cli --address=192.168.99.1:80 list
 ```
 
 > This 172.17.0.1 address is required because communicating between
@@ -230,14 +231,14 @@ cd users-grpc/
 brew install protobuf # only if .proto files are changed
 go generate ./...     # only if .proto files are changed
 
-go run server/main.go &
-go run client/main.go
+go run users-server/main.go &
+go run users-cli/main.go
 ```
 
 ### Develop using Docker
 
 ```sh
-docker build . -f ci/Dockerfile
+docker build . -f ci/Dockerfile --tag maelvls/users-grpc
 ```
 
 In order to debug docker builds, you can stop the build process before the
@@ -253,7 +254,7 @@ You can test the service is running correctly by using
 checks are easy to do from kubenertes):
 
 ```sh
-$ PORT=8000 go run server/main.go &
+$ PORT=8000 go run users-server/main.go &
 $ go get github.com/grpc-ecosystem/grpc-health-probe
 $ grpc-health-probe -addr=:8000
 
@@ -328,7 +329,7 @@ dependencies sources easily, everything is at hand).
 ### Testing
 
 I use `gotests` for easing the TDD. Whenever I add a new method, I just
-have to run
+have to run:
 
 ```sh
 gotests -all -w server/service/*
@@ -337,6 +338,14 @@ gotests -all -w server/service/*
 so that these methods get generated in the corresponding `test_*.go` file.
 Also, to make the visual comparison between 'got' and 'expected' easier on
 failing tests, I use `github.com/maxatome/go-testdeep`.
+
+I mostly focused on TDD on `users-server`. With time, I realized that I had
+many manual tests before each release. Here is a list of this that should
+be added to `.drone.yml`:
+
+1. test the docker image (at least test that the `users-server` is
+   launching using `grpc-health-probe`)
+2. test the CLI `users-cli` (I did not write any test for it yet)
 
 ### `users-cli version`
 
@@ -373,7 +382,7 @@ is an excellent source of inspiration in that regard)
 
 [traefik-logrotate]: https://docs.traefik.io/configuration/logs/#log-rotation -->
 
-<!-->
+<!--
 
 ### Static analysis, DevSecOps and CI
 
@@ -489,10 +498,10 @@ Here is a checklist for my microservice and its CLI:
 2.  **Dependencies: Explicitly declare and isolate dependencies:**
 
     In this project, I use 'go modules' (go 1.11) which uses `go.sum` for
-    'locking' dependencies, promoting reproducible builds. One exception
-    though: `protoc`, the protobuf generator, is not 'version locked' but is
-    only needed when modifying .proto files (I didn't find a workaround on
-    that issue yet).
+    locking dependencies, promoting reproducible builds. One exception:
+    `protoc`, the protobuf generator, is not version locked but is only
+    needed when modifying .proto files (I didn't find a workaround on that
+    issue yet).
 
 3.  **Config: store config in the environment:**
 
@@ -737,16 +746,34 @@ provided with these env variables. Note that because of the dependency on
 users-grpc, this service would probably fail on startup until users-grpc is
 up. Requires some extra logic on startup.
 
-#### Service discovery with Kubernetes, Consul or Linkerd3
+## Future work
+
+Here is a small list of things that could be implemented now that a MVP
+microservice is working.
+
+### Distributed tracing, metrics and logs
+
+- Prometheus: one way would be to use a grpc interceptor that would send
+  metrics to prometheus
+- Jaeger: very nice for debugging a cascade of gRPC calls. It requires a
+  gRPC interceptor compatible with Opentracing.
+- Logs: logrus can log every request or only failing requests, and this can
+  be easily implemented using a gRPC interceptor (again!)
+
+These middlewares are listed and available at [go-grpc-middleware].
+
+[go-grpc-middleware]: https://github.com/grpc-ecosystem/go-grpc-middleware
+
+### Service discovery and service mesh
 
 Service discovery can also directly use the Kubernetes API from the service
 itself, or using a sidekick container (Linkerd or Envoy as a service proxy)
-or with a library (Consul). Linkerd and Envoy also add the possibility of
+or with a library (Consul). Linkerd3 and Envoy also add the possibility of
 circuit breaking and service-level (L7) load-balancing.
 
 [connect-applications-service]: https://kubernetes.io/docs/concepts/services-networking/connect-applications-service/
 
-### Now, add some events
+### Event store & event sourcing
 
 In case this README didn't have enough buzzwords, let's add an event store
 to the stack. Instead of a traditional DB (which only stores the current
