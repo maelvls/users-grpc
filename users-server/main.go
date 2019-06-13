@@ -18,8 +18,8 @@ import (
 // happy, but you can un-comment them and use them.
 var (
 	version = "dev"
-	// commit  = "none"
-	// date    = "unknown"
+	commit  = "none"
+	date    = "unknown"
 )
 
 // I'll try to use the go-idiomatic 'happy-path' way.
@@ -52,7 +52,7 @@ func main() {
 		log.SetLevel(log.TraceLevel)
 	}
 
-	log.Printf("serving on port %v (version %s)", port, version)
+	log.Printf("serving on port %v, version %s (git %s, built on %s)", port, version, commit, date)
 
 	if err := Run(port); err != nil {
 		log.Errorf("launching server: %v", err)

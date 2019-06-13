@@ -10,7 +10,10 @@ WORKDIR /go/src/github.com/maelvls/users-grpc
 RUN apk add git \
     && go get github.com/grpc-ecosystem/grpc-health-probe \
     && go get -v ./...
-RUN go install -v ./...
+RUN go install -ldflags \
+    "-X main.version=$(git describe --tags --always | sed 's/^v//') \
+    -X main.commit=$(git rev-parse --short HEAD) \
+    -X main.date=$(date --rfc-3339=date)" ./...
 
 FROM alpine
 WORKDIR /bin/

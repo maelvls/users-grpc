@@ -358,16 +358,19 @@ be added to `.drone.yml`:
 ### `users-cli version`
 
 At build time, I use `-ldflags` for setting global variables
-(`main.version`, `main.date` and `main.commit`). At first, I was using
-[govvv][] to ease the process. I then realized govvv didn't help as much as
-I thought; instead, if I want to have a build containing this information,
-I use `-ldflags` manually (in Dockerfile for example). For binaries
-puloaded to Github Releases, [`goreleaser`][goreleaser] handles that for
-me.
+(`main.version` (), `main.date` (RFC3339) and `main.commit`). At first, I
+was using [govvv][] to ease the process. I then realized govvv didn't help
+as much as I thought; instead, if I want to have a build containing this
+information, I use `-ldflags` manually (in Dockerfile for example). For
+binaries puloaded to Github Releases, [`goreleaser`][goreleaser] handles
+that for me. For example, a manual build looks like:
 
-I decided to use <https://github.com/ahmetb/govvv> in order to ease the
-process of using `-ldflags -Xmain.version=$(git describe)` and so on. I
-could have done it without it 🙄
+```hs
+go build -ldflags "-X main.version='$(git describe --tags --always | sed 's/^v//')' -X main.commit='$(git rev-parse --short HEAD)' -X main.date='$(date --rfc-3339=date)'" ./...
+```
+
+> Note: for some reason, `-X main.date='$DATE'` cannot accept spaces in
+> `$DATE` even though I use quoting. I'll have to investigate further.
 
 [govvv]: https://github.com/ahmetb/govvv
 [goreleaser]: https://github.com/goreleaser/goreleaser
