@@ -30,7 +30,7 @@
     - [Vendor or not vendor and go 1.11 modules](#vendor-or-not-vendor-and-go-111-modules)
     - [Testing](#testing)
     - [`users-cli version`](#users-cli-version)
-    - [Proto generation](#proto-generation)
+    - [Protobuf generation](#protobuf-generation)
     - [Logs, debug and verbosity](#logs-debug-and-verbosity)
   - [Examples that I read for inspiration](#examples-that-i-read-for-inspiration)
   - [Cloud-nativeness of this project](#cloud-nativeness-of-this-project)
@@ -41,13 +41,13 @@
     - [Distributed tracing, metrics and logs](#distributed-tracing-metrics-and-logs)
     - [Service discovery and service mesh](#service-discovery-and-service-mesh)
       - [Service discovery via environement variables](#service-discovery-via-environement-variables)
-      - [Service discovery via CoreDNS, Consul, Envoy or Linkerd3](#service-discovery-via-coredns-consul-envoy-or-linkerd3)
+      - [Service discovery via CoreDNS, Consul, Envoy or Linkerd2](#service-discovery-via-coredns-consul-envoy-or-linkerd2)
     - [Event store & event sourcing](#event-store--event-sourcing)
 
 ## Stack
 
 - **CI/CD**: Drone.io (tests, coverage, build docker image, upload
-  `users-cli` CLI binaries to Github Releases using `goreleaser`)
+  `users-cli` CLI binaries to Github Releases using [`goreleaser`][goreleaser])
 - **Coverage**: Coveralls, Codecov
 - **Code Quality**: Go Report Card, GolangCI (CI) and Pre-commit-go (local
   git hook) with:
@@ -57,9 +57,9 @@
   - **Formatting**: gofmt on the CI and locally with 'format on save' and
     Pre-commit-hook
 - **OCI orchestration**: Kubernetes, OCI runtime = Docker, Minikube for
-  testing, GKE for more testing (see related [helm-gke-terraform])
+  testing, GKE for more testing (see related [helm-gke-terraform][])
 - **Config management**: Helm
-- **Dependency analysis** (the DevSecOps trend): [dependabot] (updates go
+- **Dependency analysis** (the DevSecOps trend): [dependabot][] (updates go
   modules dependencies daily)
 - **Local dev**: Vim, VSCode and Goland, [`gotests`][gotests],
   `golangci-lint`, `pcg` (pre-commit-go), `protoc`, `prototool`, `grpcurl`,
@@ -74,7 +74,7 @@
 I created this microservice from scratch. If I was to create a new
 microservice like this, I would probably use Lile for generating it (if it
 needs Postres + opentracing + prom metrics + service discovery). For
-example, [Lile-example].
+example, [lile-example][].
 
 [dependabot]: https://dependabot.com/
 [gotests]: https://github.com/cweill/gotests
@@ -83,7 +83,8 @@ example, [Lile-example].
 
 ## Use
 
-Refer to [Install](#install) below for getting `users-cli` and `users-server`.
+Refer to [Install](#install) below for getting `users-cli` and
+`users-server`.
 
 First, let `users-server` run somewhere:
 
@@ -93,11 +94,11 @@ users-server
 
 Then, we can query it using the CLI client. The possible actions are
 
-- creating a user
-- fetching a user by his email ('get')
-- listing all users (the server loads some sample users on startup)
-- searching users by a string that matches their names
-- searching users by a age range
+- create a user
+- fetch a user by his email ('get')
+- list all users (the server loads some sample users on startup)
+- search users by a string that matches their names
+- search users by a age range
 
 Examples:
 
@@ -171,7 +172,7 @@ Docker images are created on each tag. The 'latest' tag represents the
 latest commit on master. I use multi-stages dockerfile so that the
 resulting image is less that 20MB (using Alpine/musl-libc). `latest` tag
 should only be used for dev purposes as it points to the image of the
-latest commit. I use [moving-tags] `1`, `1.0` and fixed tag `1.0.0` (for
+latest commit. I use [moving-tags][] `1`, `1.0` and fixed tag `1.0.0` (for
 example). To run the server on port 8123 locally:
 
 ```sh
@@ -200,13 +201,14 @@ Releasing binaries was not necessary (except maybe for the CLI client) but
 I love the idea of Go (so easy to cross-compile + one single
 statically-linked binary) so I wanted to try it. Goreleaser is a fantastic
 tool for that purpose! That's where Go shines: tooling. It is exceptional
-(except for [gopls](https://github.com/golang/go/wiki/gopls) but it's
-getting better and better). Most importantly, tooling is fast at execution
-and also at compilation (contrary to Rust where compilation takes much more
-time -- LLVM + way richer and complex language -- see my comparison
-[rust-vs-go]).
+(except for [gopls][]n the Go Language Server) but it's getting better and
+better). Most importantly, tooling is fast at execution and also at
+compilation (contrary to Rust where compilation takes much more time --
+LLVM + way richer and complex language -- see my comparison
+[rust-vs-go][]).
 
 [github-releases]: https://github.com/maelvls/users-grpc/releases
+[gopls]: https://github.com/golang/go/wiki/gopls
 [rust-vs-go]: https://github.com/maelvls/rust-chat
 
 ### Using go-get
@@ -281,8 +283,8 @@ For building the CLI, I used the cobra cli generator:
 go get github.com/spf13/cobra/cobra
 ```
 
-Using Uber's [prototool], we can debug the gRPC server (a bit like when we
-use `httpie` or `curl` for HTTP REST APIs). I couple it with [`jo`][jo]
+Using Uber's [prototool][], we can debug the gRPC server (a bit like when
+we use `httpie` or `curl` for HTTP REST APIs). I couple it with [`jo`][jo]
 which eases the process of dealing with JSON on the command line:
 
 ```sh
@@ -319,10 +321,9 @@ may have to maintain on the long run, a more 'stable' option such as 'dep'
 should be used (as of June 2019 at least). The reason is that I feel many
 tools and libraries do not (yet) work with vgo (go 1.11 modules).
 
-In the first iterations of this project, I was vendoring (using `go mod vendor`)
-and checked the vendor/ folder in with the code. Then, I realized things have
-evolved and it is not necessary anymore (as of june 2019; see [should-i-vendor]
-as things may evolve).
+In the first iterations of this project, I was vendoring (using `go mod vendor`) and checked the vendor/ folder in with the code. Then, I realized
+things have evolved and it is not necessary anymore (as of june 2019; see
+[should-i-vendor][] as things may evolve).
 
 That said, I often use `go mod vendor` which comes very handy (I can browse the
 dependencies sources easily, everything is at hand).
@@ -331,33 +332,47 @@ dependencies sources easily, everything is at hand).
 
 ### Testing
 
-I use `gotests` for easing the TDD. Whenever I add a new method, I just
-have to run:
+I use [gotests][] for easing the TDD workflow. Whenever I add a new
+function, I just have to run:
 
 ```sh
 gotests -all -w server/service/*
 ```
 
-so that these methods get generated in the corresponding `test_*.go` file.
-Also, to make the visual comparison between 'got' and 'expected' easier on
-failing tests, I use `github.com/maxatome/go-testdeep`.
+so that these functions get generated in the corresponding `test_*.go`
+file. Also, I use [go-testdeep][] in order to display a nice colorful diff
+between 'got' and 'expected' for a friendlier testing experience.
+
+[gotests]: https://github.com/cweill/gotests
+[go-testdeep]: github.com/maxatome/go-testdeep
 
 I mostly focused on TDD on `users-server`. With time, I realized that I had
 many manual tests before each release. Here is a list of this that should
 be added to `.drone.yml`:
 
 1. test the docker image (at least test that the `users-server` is
-   launching using `grpc-health-probe`)
+   launching using [`grpc-health-probe`][grpc-health-probe])
 2. test the Helm chart
 3. test the CLI `users-cli` (I did not write any test for it yet)
 
 ### `users-cli version`
 
+At build time, I use `-ldflags` for setting global variables
+(`main.version`, `main.date` and `main.commit`). At first, I was using
+[govvv][] to ease the process. I then realized govvv didn't help as much as
+I thought; instead, if I want to have a build containing this information,
+I use `-ldflags` manually (in Dockerfile for example). For binaries
+puloaded to Github Releases, [`goreleaser`][goreleaser] handles that for
+me.
+
 I decided to use <https://github.com/ahmetb/govvv> in order to ease the
 process of using `-ldflags -Xmain.version=$(git describe)` and so on. I
 could have done it without it 🙄
 
-### Proto generation
+[govvv]: https://github.com/ahmetb/govvv
+[goreleaser]: https://github.com/goreleaser/goreleaser
+
+### Protobuf generation
 
 Ideally, the `.proto` and the generated `.pb.go` should be separated from
 my service, e.g. `github.com/maelvls/schema` with semver versionning and
@@ -376,27 +391,29 @@ go generate ./...
 
 ### Logs, debug and verbosity
 
-I did not yet implement a way for my server or my client to make the log level
-higher or to set json as the logging format. For now, I use logrus; fortunately,
-logrus allows to configure these things.
+I did not yet implement a way for my server or my client to make the log
+level higher or to set json as the logging format. For now, I use
+[logrus][]. A step further (that I did not implement yet) is to log all
+gRPC handlers activity (through gRPC interceptors). One way of doing that
+is proposed in [go-grpc-middleware][].
 
 ## Examples that I read for inspiration
 
-- [go-micro-services] (lacks tests but excellent geographic-related
+- [go-micro-services][] (lacks tests but excellent geographic-related
   business case)
-- [route_guide] (example from the official grpc-go)
-- [go-scaffold] (mainly for the BDD unit + using Ginkgo)
-- [todogo] (just for the general layout)
+- [route_guide][] (example from the official grpc-go)
+- [go-scaffold][] (mainly for the BDD unit + using Ginkgo)
+- [todogo][] (just for the general layout)
 - [Medium: _Simple API backed by PostgresQL, Golang and
   gRPC_][medium-grpc-pg] for grpc middleware (opentracing interceptor,
   prometheus metrics, gRPC-specific logging with logrus, tags
   retry/failover, circuit-breaking -- alghouth these last two might be
-  better handled by a service proxy such as Linkerd3)
+  better handled by a service proxy such as [linkerd2][])
 - the Go standard library was also extremely useful for learning how to
   write idiomatic code. The `net` one is a gold mine (on top of that I love
   all the networking bits).
 - I learned how to publish helm charts on Github Pages there:
-  [helm-gh-pages-example]. Didn't have time to finish that part though.
+  [helm-gh-pages-example][]. Didn't have time to finish that part though.
 
 [medium-grpc-pg]: https://medium.com/@vptech/complexity-is-the-bane-of-every-software-engineer-e2878d0ad45a
 [go-micro-services]: https://github.com/harlow/go-micro-services
@@ -404,14 +421,16 @@ logrus allows to configure these things.
 [go-scaffold]: https://github.com/orbs-network/go-scaffold
 [todogo]: https://github.com/kgantsov/todogo
 [helm-gh-pages-example]: https://github.com/int128/helm-github-pages
+[linkerd2]: https://github.com/linkerd/linkerd2
 
 ## Cloud-nativeness of this project
 
-Cloud-native is taking advantage when your workload is on the cloud ([cncf-definition], [gitlab-native-talk]):
+Cloud-native is taking advantage when your workload is on the cloud
+([cncf-definition][], [gitlab-native-talk][]):
 
 - use containers,
-- dynamically orchestrated
-- use microservices
+- dynamically orchestrated,
+- use microservices.
 
 In this project, we use OCI containers, use Kubernetes dynamic
 orchestration and use microservices.
@@ -424,29 +443,29 @@ orchestration and use microservices.
 <details>
 <summary>12 factor cheat sheet </summary>
 
-> Source: [12factor-list]
+> Source: [12factor-list][]
 
-| ✓   | Factors                                                                    | Status                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
-| --- | -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| 1   | Codebase                                                                   | One codebase tracked in revision control, many deploys. One Code base one repo is handling all the environment. ex: production, staging, integration, local                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| 2   | Dependencies: Explicitly declare and isolate dependencies                  | All the dependencies are declaraed outside the CodeBase. Pip installable library is used and virtualenv for isolation of dependencies.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
-| 3   | Config: store config in the environment                                    | strict separation of config from code. Config varies substantially across deploys, code does not. Store config in environment variables. Will store env variables in env file not tracked and used by the code, used to declare environment variables only.                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| 4   | Backing services: treat backing services as attached resources             | A backing service is any service the app consumes over the network as part of its normal operation. Examples include MySQL, RabbitMQ both are attached resources, accessed via a URL or other locator/credentials stored in the config(ENV_VAR). Attached resources must be change without any code changes. **Remark**: depends on 3.                                                                                                                                                                                                                                                                                                                                                                                         |
+| ✓   | Factors                                                                    | Status                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| --- | -------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Codebase                                                                   | One codebase tracked in revision control, many deploys. One Code base one repo is handling all the environment. ex: production, staging, integration, local                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| 2   | Dependencies: Explicitly declare and isolate dependencies                  | All the dependencies are declaraed outside the CodeBase. Pip installable library is used and virtualenv for isolation of dependencies.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| 3   | Config: store config in the environment                                    | strict separation of config from code. Config varies substantially across deploys, code does not. Store config in environment variables. Will store env variables in env file not tracked and used by the code, used to declare environment variables only.                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| 4   | Backing services: treat backing services as attached resources             | A backing service is any service the app consumes over the network as part of its normal operation. Examples include MySQL, RabbitMQ both are attached resources, accessed via a URL or other locator/credentials stored in the config(ENV_VAR). Attached resources must be change without any code changes. **Remark**: depends on 3.                                                                                                                                                                                                                                                                                                                                                                                        |
 | 5   | Build, release, run: strictly separate build and run stages                | We have to maintain three stages to release a project: Build stage(Convert a project to build module using the executable commit from version system it fetches vendors dependencies and compiles binaries and assets.) Release stage (takes the build produced by the build stage and combines it with the deploy’s current config). Run stage(Runs the app in the execution environment, by launching some set of the app’s processes against a selected release using the gunicorn, worker or the supervisor). Have to use some deployment tools so that every release should have a release ID and having the capability to rollback to a particular release ID. Docker-based containerized deploy strategy would be used |
-| 6   | Processes: execute the app as one or more stateless processes              | App should be stateless and any data that needs to persist should be managed through a stateful backing service like mysql and rabbitMq.The Memory space or filesystem of the process can be used as a brief, single-transaction cache, So that it can be run through multiple processes. And gunicorn maintaining the one or more stateless processes                                                                                                                                                                                                                                                                                                                                                                         |
-| 7   | Port binding: export services via port binding                             | The web app exports HTTP as a service by binding to a port, and listening to requests coming in on that port. Example: the developer visits a service URL like <http://localhost:5000/> to access the service exported by their app. Running the flask app through gunicorn and bind it to IP and PORT which you want to use.                                                                                                                                                                                                                                                                                                                                                                                                  |
-| 8   | Concurrency: scale out via the process model                               | Architect app to handle diverse workloads by assigning each type of work to a process type. For example, HTTP requests may be handled by a web process, and long-running background tasks handled by a worker process. Application must also be able to span multiple processes running on multiple physical machines.                                                                                                                                                                                                                                                                                                                                                                                                         |
-| 9   | Disposability: maximize robustness with fast startup and graceful shutdown | Processes should strive to minimize startup time. Ideally, a process takes a few seconds from the time the launch command is executed until the process is up and ready to receive requests or jobs. Short startup time provides more agility for the release process and scaling up; and it aids robustness, because the process manager can more easily move processes to new physical machines when warranted. and a graceful shutdown. Flask server should be shutdown with supervisor stop as it makes the process to shutdown gracefully                                                                                                                                                                                 |
-| 10  | Dev/prod parity: keep dev, staging, and prod as similar as possible        | Make the time gap small: a developer may write code and have it deployed hours or even just minutes later. Make the personnel gap small: developers who wrote code are closely involved in deploying it and watching its behavior in production.Make the tools gap small: keep development and production as similar as possible. **Remark:** redeploy every hour, code authors must be the deployers, dev and prod env must be as same as possible                                                                                                                                                                                                                                                                            |
-| 11  | Logs: treat logs as event streams                                          | App should not attempt to write to or manage logfiles. Instead, each running process writes its event stream, unbuffered, to stdout.In staging or production deploys, each process’ stream will be captured by the execution environment, collated together with all other streams from the app, and routed to one or more final destinations for viewing and long-term archival. Should Follow ELK.                                                                                                                                                                                                                                                                                                                           |
-| 12  | Admin processes: run admin/management tasks as one-off processes           | Any admin or management tasks for a 12-factor app should be run as one-off processes within a deploy’s execution environment. This process runs against a release using the same codebase and configs as any process in that release and uses the same dependency isolation techniques as the long-running processes.                                                                                                                                                                                                                                                                                                                                                                                                          |
+| 6   | Processes: execute the app as one or more stateless processes              | App should be stateless and any data that needs to persist should be managed through a stateful backing service like mysql and rabbitMq.The Memory space or filesystem of the process can be used as a brief, single-transaction cache, So that it can be run through multiple processes. And gunicorn maintaining the one or more stateless processes                                                                                                                                                                                                                                                                                                                                                                        |
+| 7   | Port binding: export services via port binding                             | The web app exports HTTP as a service by binding to a port, and listening to requests coming in on that port. Example: the developer visits a service URL like <http://localhost:5000/> to access the service exported by their app. Running the flask app through gunicorn and bind it to IP and PORT which you want to use.                                                                                                                                                                                                                                                                                                                                                                                                 |
+| 8   | Concurrency: scale out via the process model                               | Architect app to handle diverse workloads by assigning each type of work to a process type. For example, HTTP requests may be handled by a web process, and long-running background tasks handled by a worker process. Application must also be able to span multiple processes running on multiple physical machines.                                                                                                                                                                                                                                                                                                                                                                                                        |
+| 9   | Disposability: maximize robustness with fast startup and graceful shutdown | Processes should strive to minimize startup time. Ideally, a process takes a few seconds from the time the launch command is executed until the process is up and ready to receive requests or jobs. Short startup time provides more agility for the release process and scaling up; and it aids robustness, because the process manager can more easily move processes to new physical machines when warranted. and a graceful shutdown. Flask server should be shutdown with supervisor stop as it makes the process to shutdown gracefully                                                                                                                                                                                |
+| 10  | Dev/prod parity: keep dev, staging, and prod as similar as possible        | Make the time gap small: a developer may write code and have it deployed hours or even just minutes later. Make the personnel gap small: developers who wrote code are closely involved in deploying it and watching its behavior in production.Make the tools gap small: keep development and production as similar as possible. **Remark:** redeploy every hour, code authors must be the deployers, dev and prod env must be as same as possible                                                                                                                                                                                                                                                                           |
+| 11  | Logs: treat logs as event streams                                          | App should not attempt to write to or manage logfiles. Instead, each running process writes its event stream, unbuffered, to stdout.In staging or production deploys, each process’ stream will be captured by the execution environment, collated together with all other streams from the app, and routed to one or more final destinations for viewing and long-term archival. Should Follow ELK.                                                                                                                                                                                                                                                                                                                          |
+| 12  | Admin processes: run admin/management tasks as one-off processes           | Any admin or management tasks for a 12-factor app should be run as one-off processes within a deploy’s execution environment. This process runs against a release using the same codebase and configs as any process in that release and uses the same dependency isolation techniques as the long-running processes.                                                                                                                                                                                                                                                                                                                                                                                                         |
 
 </details>
 
-[12factor] is a manifest originally proposed by Heroku and largely adopted
-among the cloud-native ommunity. It presents the 12 main ideas that should
-be thought of when building an application that is meant to be run on a
-cloud provider (e.g., platforms like Now.sh or Heroku or any other
+[12factor][] is a manifest originally proposed by Heroku and largely
+adopted among the cloud-native ommunity. It presents the 12 main ideas that
+should be thought of when building an application that is meant to be run
+on a cloud provider (e.g., platforms like Now.sh or Heroku or any other
 cloud-oriented platform such as Kubernetes).
 
 Here is a checklist for my microservice and its CLI:
@@ -464,7 +483,7 @@ Here is a checklist for my microservice and its CLI:
     - tags are 'immutable and identifiable releases' that trigger a
       deployment to the production env (might need a bit more process here,
       like having a `prod` branch and PRs from `master` to `prod`; I found
-      [gitlab-workflow] very interesting on that subject).
+      [gitlab-workflow][] very interesting on that subject).
 
     Note: (this is an opinion!) I don't think that another branch like `staging`
     or `develop` should be introduced unless a pull-request workflow is needed
@@ -582,7 +601,7 @@ Here is a checklist for my microservice and its CLI:
     there should exist a '12 factor kube' where metrics and distributed
     tracing is addressed.
 
-    Service discovery and service mesh (consul, linkerd, istio) isn't
+    Service discovery and service mesh (Consul, [linkerd2][], Istio) isn't
     addressed either.
 
 12. **Admin processes: run admin/management tasks as one-off processes:**
@@ -598,15 +617,15 @@ Here is a checklist for my microservice and its CLI:
 
 In order to test the deployment of my service, I create a Helm chart (as
 well as a static `kubernetes.yml` -- which is way less flexible) and used
-minikube in order to test it. I implemented the [grpc-healthcheck] so that Kubernetes's readyness and
+minikube in order to test it. I implemented the [grpc-healthcheck][] so that Kubernetes's readyness and
 liveness checks can work with this service. What I did:
 
-1. the service logs using json (logrus) for easy integration
+1. clean logs in JSON ([logrus][]) for easy integration with Elastic/ELK
 2. health probe working (readiness)
 3. `helm test --cleanup users-grpc` passes
 4. the service can be exposed via an Ingress controller such as Traefik or
    Nginx. For example, using the Helm + GKE + Terraform configuration at
-   [helm-gke-terraform]:
+   [helm-gke-terraform][]:
 
    ```yaml
    image:
@@ -623,7 +642,8 @@ liveness checks can work with this service. What I did:
    ```
 
    We can then have the service from the internet through Traefik (Ingress
-   Controller)with TLS and dynamic DNS (external-dns):
+   Controller) with dynamic per-endpoint TLS ([cert-manager][]) and DNS
+   ([external-dns][]):
 
    ```sh
    helm install ./helm/users-grpc --name users-grpc --namespace users-grpc --set image.tag=latest --values helm/users-grpc.yaml
@@ -631,6 +651,9 @@ liveness checks can work with this service. What I did:
 
 [helm-gke-terraform]: https://github.com/maelvls/awx-gke-terraform
 [grpc-healthcheck]: https://github.com/grpc/grpc/blob/master/doc/health-checking.md
+[logrus]: https://github.com/sirupsen/logrus
+[external-dns]: https://github.com/kubernetes-incubator/external-dns
+[cert-manager]: https://github.com/jetstack/cert-manager
 
 To bootstrap the kubernetes YAML configuration for this service using my
 Helm chart, I used:
@@ -658,7 +681,8 @@ $ minikube status
 kubectl: Correctly Configured: pointing to minikube-vm at 192.168.99.105
 ```
 
-We then use the address `192.168.99.105:32344`. Let's try with [grpc-health-probe]:
+We then use the address `192.168.99.105:32344`. Let's try with
+[grpc-health-probe][]:
 
 ```sh
 % grpc-health-probe -addr=192.168.99.105:32344
@@ -705,17 +729,17 @@ microservice is working.
   metrics to prometheus
 - Jaeger: very nice for debugging a cascade of gRPC calls. It requires a
   gRPC interceptor compatible with Opentracing.
-- Logs: logrus can log every request or only failing requests, and this can
+- Logs: [logrus][] can log every request or only failing requests, and this can
   be easily implemented using a gRPC interceptor (again!)
 
-These middlewares are listed and available at [go-grpc-middleware].
+These middlewares are listed and available at [go-grpc-middleware][].
 
 [go-grpc-middleware]: https://github.com/grpc-ecosystem/go-grpc-middleware
 
 ### Service discovery and service mesh
 
 How can other services use it from inside the cluster? As stated in the
-documentation ([connect-applications-service]),
+documentation ([connect-applications-service][]),
 
 > Kubernetes supports 2 primary modes of finding a Service - environment
 > variables and DNS. The former works out of the box while the latter
@@ -742,15 +766,17 @@ provided with these env variables. Note that because of the dependency on
 users-grpc, this service would probably fail on startup until users-grpc is
 up. Requires some extra logic on startup.
 
-#### Service discovery via CoreDNS, Consul, Envoy or Linkerd3
+#### Service discovery via CoreDNS, Consul, Envoy or Linkerd2
 
 Service discovery can also directly use the Kubernetes API from the service
-itself, or using a sidekick container (Linkerd or Envoy as a service proxy)
-or with a library (Consul client that polls Consol). Linkerd3 and Envoy
-also add the possibility of circuit breaking and service-level (L7)
-load-balancing.
+itself, or using a sidekick container ([linkerd2][] or [envoy][] as a
+service proxy) or with a [grpc-consul-resolver][]. [linkerd2][] and
+[envoy][] also add the possibility of circuit breaking and service-level
+(L7) load-balancing.
 
 [connect-applications-service]: https://kubernetes.io/docs/concepts/services-networking/connect-applications-service/
+[envoy]: https://www.envoyproxy.io/
+[grpc-consul-resolver]: https://github.com/mbobakov/grpc-consul-resolver
 
 ### Event store & event sourcing
 
