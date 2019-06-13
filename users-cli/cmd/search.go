@@ -15,7 +15,7 @@ import (
 func init() {
 	searchCmd := &cobra.Command{
 		Use:   "search (--name=PARTIALNAME | --agefrom=N --ageto=M)",
-		Short: "searchs users from the remote users-server",
+		Short: "Search users from the remote users-server",
 		Run: func(searchCmd *cobra.Command, args []string) {
 
 			cc, err := grpc.Dial(client.address, grpc.WithInsecure())

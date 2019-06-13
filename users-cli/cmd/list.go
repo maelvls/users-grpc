@@ -15,7 +15,7 @@ import (
 func init() {
 	listCmd := &cobra.Command{
 		Use:   "list",
-		Short: "lists all users",
+		Short: "List all users",
 		Run: func(listCmd *cobra.Command, args []string) {
 			cc, err := grpc.Dial(client.address, grpc.WithInsecure())
 			if err != nil {

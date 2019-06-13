@@ -148,11 +148,11 @@ Usage:
   users-cli [command]
 
 Available Commands:
-  create      searchs users from the remote users-grpc service
+  create      creates a new user
   get         prints an user by its email (must be exact, not partial)
   help        Help about any command
   list        lists all users
-  search      searchs users from the remote users-server
+  search      searches users from the remote users-server
   version     Print the version and git commit to stdout
 
 Flags:

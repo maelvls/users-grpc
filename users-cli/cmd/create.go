@@ -17,7 +17,7 @@ import (
 func init() {
 	createCmd := &cobra.Command{
 		Use:   "create --email=EMAIL [--firstname] [--lastname] [--age] [--postaladdress]",
-		Short: "searchs users from the remote users-grpc service",
+		Short: "Create a user",
 		Args: func(createCmd *cobra.Command, args []string) error {
 			email, err := createCmd.Flags().GetString("email")
 			if email == "" || err != nil {

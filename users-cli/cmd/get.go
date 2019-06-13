@@ -17,7 +17,7 @@ import (
 func init() {
 	getCmd := &cobra.Command{
 		Use:   "get EMAIL",
-		Short: "prints an user by its email (must be exact, not partial)",
+		Short: "Fetch a user by its email (must be exact, not partial)",
 		Args: func(cmd *cobra.Command, args []string) error {
 			if len(args) < 1 {
 				return errors.New("requires an email as argument")
