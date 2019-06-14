@@ -51,7 +51,7 @@ steps:
     image: goreleaser/goreleaser:v0.108.0
     commands:
       - git diff
-      - goreleaser release --rm-dist
+      - goreleaser release --rm-dist --skip-validate
     environment:
       GITHUB_TOKEN: { from_secret: GITHUB_TOKEN }
     when:

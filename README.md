@@ -336,7 +336,7 @@ I use [gotests][] for easing the TDD workflow. Whenever I add a new
 function, I just have to run:
 
 ```sh
-gotests -all -w server/service/*
+gotests -all -w users-server/service/*
 ```
 
 so that these functions get generated in the corresponding `test_*.go`
