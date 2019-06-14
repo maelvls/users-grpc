@@ -12,11 +12,15 @@ platform:
   os: linux
   arch: amd64
 
-clone:
-  image: plugins/git
-  tags: true
-
 steps:
+  # Goreleaser needs at least the last two tags so that it can pick the
+  # right commits for the changelog. When building the docker image, I also
+  # want the last tag.
+  - name: fetch-tags
+    image: docker:git
+    commands:
+      - git fetch --tags
+
   - name: tests
     image: golang
     environment:
@@ -46,8 +50,8 @@ steps:
   - name: release
     image: goreleaser/goreleaser:v0.108.0
     commands:
-      - git fetch --no-tags origin +refs/tags/${DRONE_TAG}:refs/tags/${DRONE_TAG}
-      - goreleaser release --rm-dist --skip-validate
+      - git diff
+      - goreleaser release --rm-dist
     environment:
       GITHUB_TOKEN: { from_secret: GITHUB_TOKEN }
     when:

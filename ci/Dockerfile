@@ -7,7 +7,7 @@ WORKDIR /go/src/github.com/maelvls/users-grpc
 # Note 1 remember to use multi-line RUN; otherwise it creates many
 # unnecessary layers. Note 2: in this dockerfile we are in $GOPATH; vgo/go
 # modules are then disabled.
-RUN apk add git \
+RUN apk add git coreutils \
     && go get github.com/grpc-ecosystem/grpc-health-probe \
     && go get -v ./...
 RUN go install -ldflags \

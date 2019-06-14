@@ -34,3 +34,5 @@ coverage.txt
 users-cli/client
 users-server/server
 dist/
+.envrc
+dist/
