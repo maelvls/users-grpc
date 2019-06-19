@@ -366,7 +366,7 @@ binaries puloaded to Github Releases, [`goreleaser`][goreleaser] handles
 that for me. For example, a manual build looks like:
 
 ```hs
-go build -ldflags "-X main.version='$(git describe --tags --always | sed 's/^v//')' -X main.commit='$(git rev-parse --short HEAD)' -X main.date='$(date --rfc-3339=date)'" ./...
+go build -ldflags "-X main.version='$(git describe --tags --always | sed 's/^v//')' -X main.commit=$(git rev-parse --short HEAD) -X main.date=$(date --rfc-3339=date)" ./...
 ```
 
 > Note: for some reason, `-X main.date='$DATE'` cannot accept spaces in
