@@ -5,12 +5,13 @@ COPY . /go/src/github.com/maelvls/users-grpc
 WORKDIR /go/src/github.com/maelvls/users-grpc
 
 # Note 1 remember to use multi-line RUN; otherwise it creates many
-# unnecessary layers. Note 2: in this dockerfile we are in $GOPATH; vgo/go
-# modules are then disabled.
+# unnecessary layers. GO111MODULE=off required in order to avoid messing
+# the go.mod. GO111MODULE=on required in order to enforce fixed versions of
+# go packages.
 RUN apk add git coreutils \
-    && go get github.com/grpc-ecosystem/grpc-health-probe \
-    && go get -v ./...
-RUN go install -ldflags \
+    && GO111MODULE=off go get github.com/grpc-ecosystem/grpc-health-probe \
+    && GO111MODULE=on go get -v ./...
+RUN GO111MODULE=on go install -ldflags \
     "-X main.version=$(git describe --tags --always | sed 's/^v//') \
     -X main.commit=$(git rev-parse --short HEAD) \
     -X main.date=$(date --rfc-3339=date)" ./...
