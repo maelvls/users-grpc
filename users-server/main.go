@@ -6,6 +6,8 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/go-pg/pg"
+
 	grpc_health_v1 "github.com/maelvls/users-grpc/schema/health/v1"
 	"github.com/maelvls/users-grpc/schema/user"
 	"github.com/maelvls/users-grpc/users-server/service"
@@ -47,28 +49,56 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Set to verbose.
+	// Set to verbose when DEBUG variable is given.
 	if os.Getenv("DEBUG") != "" {
 		log.SetLevel(log.TraceLevel)
 	}
 
+	// Get the database information. By default, if en vars are empty,
+	// go-pg will use the defaults.
+	pgOpts := pg.Options{
+		Addr: "",
+		User: "postgres",
+	}
+	if os.Getenv("PG_ADDR") != "" {
+		pgOpts.Addr = os.Getenv("PG_ADDR")
+	}
+	if os.Getenv("PG_USER") != "" {
+		pgOpts.User = os.Getenv("PG_USER")
+	}
+
 	log.Printf("serving on port %v, version %s (git %s, built on %s)", port, version, commit, date)
 
-	if err := Run(port); err != nil {
+	if err := Run(port, &pgOpts); err != nil {
 		log.Errorf("launching server: %v", err)
 		os.Exit(1)
 	}
+
 }
 
 // Run starts the server
-func Run(port int) error {
-	svc := service.NewUserImpl()
-	err := svc.LoadSampleUsers()
+func Run(port int, pgOpts *pg.Options) error {
+	db := pg.Connect(pgOpts)
+	defer db.Close()
+
+	err := service.InitSchema(db)
+	if err != nil {
+		log.Errorf("failed to create: %v", err)
+		os.Exit(1)
+	}
+
+	tx, err := db.Begin()
 	if err != nil {
 		return err
 	}
 
-	srv := grpc.NewServer()
+	svc := service.UserImpl{}
+
+	if err := svc.LoadSampleUsers(tx); err != nil {
+		return err
+	}
+
+	srv := grpc.NewServer(grpc.UnaryInterceptor(service.TxInterceptor(db)))
 	user.RegisterUserServiceServer(srv, svc)
 	grpc_health_v1.RegisterHealthServer(srv, &service.HealthImpl{})
 
