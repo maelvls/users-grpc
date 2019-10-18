@@ -4,7 +4,7 @@ go 1.12
 
 require (
 	github.com/golang/protobuf v1.3.2
-	github.com/hashicorp/go-memdb v1.0.3
+	github.com/hashicorp/go-memdb v1.0.4
 	github.com/lithammer/dedent v1.1.0
 	github.com/mattn/go-colorable v0.1.2 // indirect
 	github.com/maxatome/go-testdeep v1.1.0
