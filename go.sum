@@ -98,6 +98,8 @@ github.com/maxatome/go-testdeep v1.1.2 h1:pN/Xd8hSaH5QKND0JJf51H5kG5Mje4JCus6UKL
 github.com/maxatome/go-testdeep v1.1.2/go.mod h1:011SgQ6efzZYAen6fDn4BqQ+lUR72ysdyKe7Dyogw70=
 github.com/maxatome/go-testdeep v1.2.0 h1:KbyWa8oMydzwPIr+3gtxsRgEj8wjCUhsKsCWqG3/4wI=
 github.com/maxatome/go-testdeep v1.2.0/go.mod h1:011SgQ6efzZYAen6fDn4BqQ+lUR72ysdyKe7Dyogw70=
+github.com/maxatome/go-testdeep v1.4.0 h1:vKQh3/lHKAMsxggya/fXB6fLbf70c7k6wlLveuS9sKE=
+github.com/maxatome/go-testdeep v1.4.0/go.mod h1:011SgQ6efzZYAen6fDn4BqQ+lUR72ysdyKe7Dyogw70=
 github.com/mgutz/ansi v0.0.0-20170206155736-9520e82c474b h1:j7+1HpAFS1zy5+Q4qx1fWh90gTKwiN4QCGoY9TWyyO4=
 github.com/mgutz/ansi v0.0.0-20170206155736-9520e82c474b/go.mod h1:01TrycV0kFyexm33Z7vhZRXopbI8J3TDReVlkTgMUxE=
 github.com/mitchellh/go-homedir v1.1.0 h1:lukF9ziXFxDFPkA1vsr5zpc1XuPDn/wFntq5mG+4E0Y=
