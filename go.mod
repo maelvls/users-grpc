@@ -13,7 +13,7 @@ require (
 	github.com/rs/xid v1.2.1
 	github.com/sirupsen/logrus v1.4.2
 	github.com/spf13/cobra v0.0.5
-	github.com/spf13/viper v1.6.2
+	github.com/spf13/viper v1.7.0
 	golang.org/x/net v0.0.0-20190522155817-f3200d17e092
 	google.golang.org/grpc v1.27.1
 )
