@@ -5,6 +5,8 @@ import (
 	"os"
 
 	"github.com/lithammer/dedent"
+	"github.com/mattn/go-isatty"
+	"github.com/mgutz/ansi"
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -28,12 +30,23 @@ var rootCmd = &cobra.Command{
 			address: viper.GetString("address"),
 		}
 		logrus.Debugf("using address: %s", client.address)
+		switch viper.GetString("color") {
+		case "auto":
+			ansi.DisableColors(!isatty.IsTerminal(os.Stdout.Fd()))
+		case "always":
+			ansi.DisableColors(false)
+		case "never":
+			ansi.DisableColors(true)
+		default:
+			logrus.Errorf("%s is not a valid value for --color; must be either 'auto', 'always' or 'never'", viper.GetString("color"))
+			os.Exit(1)
+		}
 	},
 	Long: dedent.Dedent(`
 	For setting the address of the form HOST:PORT, you can
-	- use the flag --address=:8000
-	- or use the env var ADDRESS
-	- or you can set 'address: localhost:8000' in $HOME/.users-cli.yml
+	* use the flag --address=:8000
+	* or use the env var ADDRESS
+	* or you can set 'address: localhost:8000' in $HOME/.users-cli.yml
 	`),
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
@@ -56,7 +69,12 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.users-cli.yml)")
 	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "verbose output")
 	rootCmd.PersistentFlags().String("address", ":8000", "'host:port' to bind to")
+	rootCmd.PersistentFlags().String("color", "auto", "Supported are 'auto', 'always' and 'never'. In 'auto' mode, colors are enabled when stdout is a tty.")
 	err := viper.BindPFlag("address", rootCmd.PersistentFlags().Lookup("address"))
+	if err != nil {
+		panic(err)
+	}
+	err = viper.BindPFlag("color", rootCmd.PersistentFlags().Lookup("color"))
 	if err != nil {
 		panic(err)
 	}

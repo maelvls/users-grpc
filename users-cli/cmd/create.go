@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"strconv"
 	"time"
 
 	"github.com/maelvls/users-grpc/schema/user"
@@ -38,12 +37,8 @@ func init() {
 
 			firstname, _ := createCmd.Flags().GetString("firstname")
 			lastname, _ := createCmd.Flags().GetString("lastname")
-			ageStr, _ := createCmd.Flags().GetString("age")
-			age, err := strconv.ParseInt(ageStr, 10, 32)
-			if ageStr != "" && err != nil {
-				logrus.Errorf("--age is not a number")
-				os.Exit(1)
-			}
+			age, _ := createCmd.Flags().GetInt32("age")
+
 			postaladdress, _ := createCmd.Flags().GetString("postaladdress")
 			email, _ := createCmd.Flags().GetString("email")
 
@@ -53,7 +48,7 @@ func init() {
 					First: firstname,
 					Last:  lastname,
 				},
-				Age:     int32(age),
+				Age:     age,
 				Address: postaladdress,
 			}
 
@@ -77,7 +72,7 @@ func init() {
 	createCmd.Flags().String("firstname", "", "") // Brianna
 	createCmd.Flags().String("lastname", "", "")  // Shelton
 	createCmd.Flags().String("email", "", "")     // brianna.shelton@email.org
-	createCmd.Flags().Int32("age", 18, "")
+	createCmd.Flags().Int32("age", 0, "")
 	createCmd.Flags().String("postaladdress", "", "") // 255 Cortelyou Road, Volta, Indiana, 1608
 
 	rootCmd.AddCommand(createCmd)
