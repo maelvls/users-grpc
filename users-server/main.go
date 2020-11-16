@@ -55,10 +55,14 @@ func main() {
 // Run starts the server.
 func Run(addr string) error {
 	svc := service.NewUserImpl()
-	err := svc.LoadSampleUsers()
+
+	txn := svc.DB.Txn(true)
+	err := service.LoadSampleUsers(txn)
 	if err != nil {
+		txn.Abort()
 		return err
 	}
+	txn.Commit()
 
 	srv := grpc.NewServer()
 	user.RegisterUserServiceServer(srv, svc)

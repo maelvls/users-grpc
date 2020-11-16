@@ -6,27 +6,29 @@ import (
 	"encoding/json"
 	"fmt"
 
+	memdb "github.com/hashicorp/go-memdb"
 	"github.com/sirupsen/logrus"
 
 	pb "github.com/maelvls/users-grpc/schema/user"
 )
 
-// LoadSampleUsers loads some hard-coded users into database.
-func (svc *UserImpl) LoadSampleUsers() error {
+// LoadSampleUsers loads some hard-coded users into database. The
+// transaction must be created in write mode and must be committed
+// afterwards.
+func LoadSampleUsers(txn *memdb.Txn) error {
 	var users []pb.User
 	err := json.Unmarshal(sampleUsers, &users)
 	if err != nil {
 		return fmt.Errorf("could not parse json: %v", err)
 	}
 
-	txn := svc.DB.Txn(true)
 	for _, user := range users {
 		u := user
 		if err := txn.Insert("user", &u); err != nil {
 			return err
 		}
 	}
-	txn.Commit()
+
 	logrus.Debugf("added user samples to DB")
 
 	return nil
