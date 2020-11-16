@@ -61,12 +61,13 @@ func TestUserImpl_Create(t *testing.T) {
 			},
 			fieldChecks: td.StructFields{},
 			postChecks: func(t *testing.T, svc *UserImpl) {
-				// Check that the user exists
+				// Check that the user exists.
 				txn := svc.DB.Txn(false)
 				defer txn.Abort()
 				raw, err := txn.First("user", "id", "zikuwcus@awobik.kr")
-				if td.CmpNoError(t, err) {
-					td.CmpNotNil(t, raw)
+				if td.CmpNoError(t, err) && td.CmpNotNil(t, raw) {
+					user := raw.(*pb.User)
+					td.Cmp(t, &pb.User{Name: &pb.Name{First: "Flora", Last: "Hale"}, Age: 38, Id: "a4bcd38", Email: "zikuwcus@awobik.kr"}, user)
 				}
 			},
 		},
@@ -77,6 +78,20 @@ func TestUserImpl_Create(t *testing.T) {
 				User: &pb.User{Name: &pb.Name{First: "Flora", Last: "Hale"}, Age: 38, Email: "zikuwcus@awobik.kr"}},
 			},
 			want:        nil,
+			fieldChecks: td.StructFields{},
+		},
+		{
+			name: "when a user is created with an email that already exists, it should fail",
+			svc: &UserImpl{DB: initDBWith([]*pb.User{
+				{Name: &pb.Name{First: "Elnora", Last: "Morales"}, Age: 21, Id: "ba3d530", Email: "eza@pod.ru"},
+				{Name: &pb.Name{First: "Wayne", Last: "Keller"}, Age: 42, Id: "c7dca0a", Email: "le@rec.gb"},
+			})},
+			args: args{req: &pb.CreateReq{
+				User: &pb.User{Name: &pb.Name{First: "Elnora", Last: "Morales"}, Age: 38, Email: "eza@pod.ru"}},
+			},
+			want: &pb.CreateResp{
+				Status: &pb.Status{Code: pb.Status_FAILED, Msg: "email already exists"},
+			},
 			fieldChecks: td.StructFields{},
 		},
 	}

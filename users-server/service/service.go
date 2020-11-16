@@ -17,23 +17,23 @@ import (
 
 // NewDB initializes the DB.
 func NewDB() *memdb.MemDB {
-	// Create the DB schema
+	// Create the DB schema.
 	schema := &memdb.DBSchema{
 		Tables: map[string]*memdb.TableSchema{
 			"user": {
 				Name: "user",
 				Indexes: map[string]*memdb.IndexSchema{
-					"id": {Name: "id", Unique: true,
-						Indexer: &memdb.StringFieldIndex{Field: "Email"},
-					},
-					"age": {Name: "age", Unique: false,
-						Indexer: &memdb.IntFieldIndex{Field: "Age"},
-					},
+					// The primary key is on 'email'; we have to call this index 'id'
+					// because go-memdb wants the table to have at least one 'id'
+					// index.
+					"id":    {Name: "id", Unique: true, Indexer: &memdb.StringFieldIndex{Field: "Email"}},
+					"email": {Name: "email", Unique: true, Indexer: &memdb.StringFieldIndex{Field: "Email"}},
+					"age":   {Name: "age", Unique: false, Indexer: &memdb.IntFieldIndex{Field: "Age"}},
 				},
 			},
 		},
 	}
-	// Create a new data base
+	// Create a new data base.
 	db, err := memdb.NewMemDB(schema)
 	if err != nil {
 		panic(err)
@@ -60,8 +60,22 @@ func (svc *UserImpl) Create(ctx context.Context, req *pb.CreateReq) (*pb.CreateR
 		user.Id = xid.New().String()
 	}
 	txn := svc.DB.Txn(true)
-	if err := txn.Insert("user", user); err != nil {
-		panic(err)
+
+	// Let's make sure this email doesn't already exist.
+	raw, err := txn.First("user", "email", req.User.Email)
+	if err != nil {
+		return nil, fmt.Errorf("finding if the email %s is already used: %w", req.User.Email, err)
+	}
+	if raw != nil {
+		return &pb.CreateResp{User: &pb.User{}, Status: &pb.Status{
+			Code: pb.Status_FAILED,
+			Msg:  "email already exists"},
+		}, nil
+	}
+
+	err = txn.Insert("user", user)
+	if err != nil {
+		return nil, fmt.Errorf("inserting user %s: %w", user.Email, err)
 	}
 	txn.Commit()
 
@@ -71,12 +85,11 @@ func (svc *UserImpl) Create(ctx context.Context, req *pb.CreateReq) (*pb.CreateR
 
 // List all users.
 func (svc *UserImpl) List(ctx context.Context, req *pb.ListReq) (*pb.SearchResp, error) {
-	// List all the people.
 	txn := svc.DB.Txn(false) // read-only transaction
 	defer txn.Abort()
-	it, err := txn.Get("user", "id")
+	it, err := txn.Get("user", "email")
 	if err != nil {
-		panic(err)
+		return nil, fmt.Errorf("list users: %w", err)
 	}
 
 	var users = make([]*pb.User, 0)
@@ -107,16 +120,16 @@ func (svc *UserImpl) SearchAge(ctx context.Context, req *pb.SearchAgeReq) (*pb.S
 	txn := svc.DB.Txn(false) // read-only transaction
 	defer txn.Abort()
 
-	// Range scan over people with ages in a range
+	// Range scan over people with ages in a range.
 	it, err := txn.LowerBound("user", "age", req.AgeRange.From)
 	if err != nil {
-		panic(err)
+		return nil, fmt.Errorf("listing users starting at age %d: %w", req.AgeRange.From, err)
 	}
 
 	var users = make([]*pb.User, 0)
 	for raw := it.Next(); raw != nil; raw = it.Next() {
 		u := raw.(*pb.User)
-		// Filter out all users that beyond the upper limit
+		// Filter out all users that beyond the upper limit.
 		if u.Age > req.AgeRange.ToIncluded {
 			break
 		}
@@ -157,7 +170,7 @@ func (svc *UserImpl) SearchName(ctx context.Context, req *pb.SearchNameReq) (*pb
 
 	txn := svc.DB.Txn(false)
 	defer txn.Abort()
-	result, err := txn.Get("user", "id")
+	result, err := txn.Get("user", "email")
 	if err != nil {
 		return nil, fmt.Errorf("err when getting data from db: %e", err)
 	}
@@ -179,9 +192,9 @@ func (svc *UserImpl) GetByEmail(ctx context.Context, req *pb.GetByEmailReq) (*pb
 	txn := svc.DB.Txn(false)
 	defer txn.Abort()
 
-	raw, err := txn.First("user", "id", req.Email)
+	raw, err := txn.First("user", "email", req.Email)
 	if err != nil {
-		panic(err)
+		return nil, fmt.Errorf("finding the user with email %s: %w", req.Email, err)
 	}
 
 	// When not found, gracefully return 'email not found'
