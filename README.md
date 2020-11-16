@@ -24,10 +24,11 @@
   - [Using go-get](#using-go-get)
   - [Kubernetes & Helm](#kubernetes--helm)
 - [Develop and hack it](#develop-and-hack-it)
+  - [Testing](#testing)
   - [Develop using Docker](#develop-using-docker)
 - [Technical notes](#technical-notes)
   - [Vendor or not vendor and go 1.11 modules](#vendor-or-not-vendor-and-go-111-modules)
-  - [Testing](#testing)
+  - [Testing](#testing-1)
   - [`users-cli version`](#users-cli-version)
   - [Protobuf generation](#protobuf-generation)
   - [Logs, debug and verbosity](#logs-debug-and-verbosity)
@@ -41,37 +42,23 @@
 - **CI/CD**: Drone.io (tests, coverage, build docker image, upload
   `users-cli` CLI binaries to Github Releases using [`goreleaser`][goreleaser])
 - **Coverage**: Coveralls, Codecov
-- **Code Quality**: Go Report Card, GolangCI (CI) and Pre-commit-go (local
-  git hook) with:
-  - **Static analysis**: gocritic, gosec, golint, goimports, deadcode,
-    errcheck, gosimple, govet, ineffassign, staticcheck, structcheck,
-    typecheck, unused, varcheck
-  - **Formatting**: gofmt on the CI and locally with 'format on save' and
-    Pre-commit-hook
-- **OCI orchestration**: Kubernetes, OCI runtime = Docker, Minikube for
-  testing, GKE for more testing (see related [helm-gke-terraform][])
+- **Code Quality**: Go Report Card, GolangCI (CI & local git pre-push
+  hook).
+- **OCI orchestration**: Kubernetes,
+  [Kind](https://github.com/kubernetes-sigs/kind) for testing, Civo for
+  live testing (see related [k.maelvls.dev][])
 - **Config management**: Helm
 - **Dependency analysis** (the DevSecOps trend): [dependabot][] (updates go
   modules dependencies daily)
 - **Local dev**: Vim, VSCode and Goland, [`gotests`][gotests],
-  `golangci-lint`, `pcg` (pre-commit-go), `protoc`, `prototool`, `grpcurl`,
-  `is-http2`:
+  `golangci-lint`, `pcg` (pre-commit-go), `protoc`, `prototool`, `grpcurl`:
 
   ```sh
   brew install golangci/tap/golangci-lint protobuf prototool grpcurl
-  npm install -g is-http2-cli
-  go install github.com/maruel/pre-commit-go/cmd/...
   ```
-
-I created this microservice from scratch. If I was to create a new
-microservice like this, I would probably use Lile for generating it (if it
-needs Postres + opentracing + prom metrics + service discovery). For
-example, [lile-example][].
 
 [dependabot]: https://dependabot.com/
 [gotests]: https://github.com/cweill/gotests
-[lile]: https://github.com/lileio/lile
-[lile-example]: https://github.com/arbarlow/account_service
 
 ## Use
 
@@ -228,9 +215,28 @@ cd users-grpc/
 brew install protobuf # only if .proto files are changed
 go generate ./...     # only if .proto files are changed
 
-go run users-server/main.go &
-go run users-cli/main.go
+go run ./users-server &
+go run ./users-cli
 ```
+
+### Testing
+
+I wrote two kinds of tests:
+
+- Unit tests to make sure that the database logic works as expected. Tests
+  are wrapped in transactions which are rolled back after the test. To run the unit tests:
+
+  ```sh
+  go test ./... -short
+  ```
+
+- End-to-end tests where both the CLI and server are built and run. These
+  tests check the user-facing behaviors, e.g., that the CLI arguments work
+  as expected and that the CLI returns the expected exit code. To run those:
+
+  ```sh
+  go test ./test/e2e
+  ```
 
 ### Develop using Docker
 
@@ -251,7 +257,7 @@ You can test the service is running correctly by using
 checks are easy to do from kubenertes):
 
 ```sh
-$ PORT=8000 go run users-server/main.go &
+$ PORT=8000 go run ./users-server &
 $ go get github.com/grpc-ecosystem/grpc-health-probe
 $ grpc-health-probe -addr=:8000
 
@@ -429,8 +435,8 @@ liveness checks can work with this service. What I did:
 2. health probe working (readiness)
 3. `helm test --cleanup users-grpc` passes
 4. the service can be exposed via an Ingress controller such as Traefik or
-   Nginx. For example, using the Helm + GKE + Terraform configuration at
-   [helm-gke-terraform][]:
+   Nginx. For example, using the Helm + Civo K3s + Terraform configuration at
+   [k.maelvls.dev][]:
 
    ```yaml
    image:
@@ -454,7 +460,7 @@ liveness checks can work with this service. What I did:
    helm install ./helm/users-grpc --name users-grpc --namespace users-grpc --set image.tag=latest --values helm/users-grpc.yaml
    ```
 
-[helm-gke-terraform]: https://github.com/maelvls/awx-gke-terraform
+[k.maelvls.dev]: https://github.com/maelvls/k.maelvls.dev
 [grpc-healthcheck]: https://github.com/grpc/grpc/blob/master/doc/health-checking.md
 [logrus]: https://github.com/sirupsen/logrus
 [external-dns]: https://github.com/kubernetes-incubator/external-dns
