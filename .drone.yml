@@ -4,7 +4,9 @@
 # DOCKER_USERNAME (the Docker Hub ID, not the email)
 # DOCKER_PASSWORD
 # GITHUB_TOKEN (scope required: repo/public_repo)
+# REVIEWDOG_TOKEN, see https://reviewdog.app/gh/maelvls/users-grpc
 
+type: docker
 kind: pipeline
 name: default
 
@@ -24,17 +26,21 @@ steps:
   - name: tests
     image: golang
     environment:
-      GO111MODULE: on
+      GO111MODULE: "on"
       CODECOV_TOKEN: { from_secret: CODECOV_TOKEN }
       COVERALLS_TOKEN: { from_secret: COVERALLS_TOKEN }
+      REVIEWDOG_GITHUB_API_TOKEN: { from_secret: GITHUB_TOKEN }
+      REVIEWDOG_TOKEN: { from_secret: REVIEWDOG_TOKEN }
     commands:
-      - go get -v golang.org/x/lint/golint
-      - go get -v golang.org/x/tools/cmd/cover
-      - go get -v github.com/mattn/goveralls
-      - go get -v github.com/onsi/ginkgo/ginkgo
-      - go build -v ./...
-      - go test ./... -race -coverprofile=coverage.txt -covermode=atomic
-      # - ginkgo -r --randomizeAllSpecs --failFast --cover --trace
+      - wget -O - -q https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $(go env GOPATH)/bin v1.32.2
+      - wget -O - -q https://raw.githubusercontent.com/reviewdog/reviewdog/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v0.11.0
+      - golangci-lint run -v --out-format line-number --timeout=30m  | reviewdog -tee -f=golangci-lint -name=golangci-lint -reporter=github-pr-review
+
+      # Unit tests.
+      - go test ./... -short -race -coverprofile=coverage.txt -covermode=atomic
+      # Ent-to-end tests.
+      - go test ./test/e2e
+
       - curl -s https://codecov.io/bash | bash
       - goveralls -coverprofile=coverage.txt -service=drone.io
 
@@ -54,7 +60,7 @@ steps:
       - git diff
       - goreleaser release --rm-dist --skip-validate
     environment:
-      GO111MODULE: on
+      GO111MODULE: "on"
       GITHUB_TOKEN: { from_secret: GITHUB_TOKEN }
     when:
       event:
