@@ -9,6 +9,7 @@ require (
 	github.com/lithammer/dedent v1.1.0
 	github.com/mattn/go-colorable v0.1.2 // indirect
 	github.com/mattn/go-isatty v0.0.8
+	github.com/mattn/goveralls v0.0.7 // indirect
 	github.com/maxatome/go-testdeep v1.2.0
 	github.com/mgutz/ansi v0.0.0-20170206155736-9520e82c474b
 	github.com/mitchellh/go-homedir v1.1.0
