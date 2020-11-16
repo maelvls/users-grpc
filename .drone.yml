@@ -5,6 +5,7 @@
 # DOCKER_PASSWORD
 # GITHUB_TOKEN (scope required: repo/public_repo)
 # REVIEWDOG_TOKEN, see https://reviewdog.app/gh/maelvls/users-grpc
+# REVIEWDOG_GITHUB_API_TOKEN, same as GITHUB_TOKEN
 
 type: docker
 kind: pipeline
@@ -29,7 +30,7 @@ steps:
       GO111MODULE: "on"
       CODECOV_TOKEN: { from_secret: CODECOV_TOKEN }
       COVERALLS_TOKEN: { from_secret: COVERALLS_TOKEN }
-      REVIEWDOG_GITHUB_API_TOKEN: { from_secret: GITHUB_TOKEN }
+      REVIEWDOG_GITHUB_API_TOKEN: { from_secret: REVIEWDOG_GITHUB_API_TOKEN }
       REVIEWDOG_TOKEN: { from_secret: REVIEWDOG_TOKEN }
     commands:
       - wget -O - -q https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $(go env GOPATH)/bin v1.32.2
