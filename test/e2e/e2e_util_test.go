@@ -11,10 +11,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/onsi/gomega/gbytes"
 	"github.com/onsi/gomega/gexec"
 	"github.com/phayes/freeport"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -74,26 +72,6 @@ func contents(f io.Reader) string {
 	return string(bytes)
 }
 
-// When given a io.Reader, checks that the given string eventuall appears.
-// A bit like Testify's require.Eventually but works directly on a
-// io.Reader.
-func eventuallyEqual(t *testing.T, expected string, got io.Reader, msgsAndArgs ...interface{}) {
-	expectedBuffer := gbytes.Say(expected)
-
-	match := func() func() bool {
-		return func() bool {
-			ok, err := expectedBuffer.Match(got)
-			assert.NoError(t, err)
-
-			return ok
-		}
-	}
-
-	if !assert.Eventually(t, match(), 2*time.Second, 100*time.Millisecond, msgsAndArgs...) {
-		t.Errorf(expectedBuffer.FailureMessage(expected))
-	}
-}
-
 // createWriterLoggerStr returns a writer that behaves like w except that it
 // logs (using log.Printf) each write to standard error, printing the
 // prefix and the data written as a string.
@@ -126,3 +104,26 @@ func freePort() string {
 	}
 	return strconv.Itoa(port)
 }
+
+// When given a io.Reader, checks that the given string eventuall appears.
+// A bit like Testify's require.Eventually but works directly on a
+// io.Reader.
+//
+// Commented out since I'm not using it anymore.
+
+// func eventuallyEqual(t *testing.T, expected string, got io.Reader, msgsAndArgs ...interface{}) {
+// 	expectedBuffer := gbytes.Say(expected)
+//
+// 	match := func() func() bool {
+// 		return func() bool {
+// 			ok, err := expectedBuffer.Match(got)
+// 			assert.NoError(t, err)
+//
+// 			return ok
+// 		}
+// 	}
+//
+// 	if !assert.Eventually(t, match(), 2*time.Second, 100*time.Millisecond, msgsAndArgs...) {
+// 		t.Errorf(expectedBuffer.FailureMessage(expected))
+// 	}
+// }
