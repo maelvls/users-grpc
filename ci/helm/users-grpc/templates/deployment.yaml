@@ -23,9 +23,9 @@ spec:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
-          env:
-            - {name: LOG_FORMAT, value: json}
-            - {name: PORT, value: "8000"}
+          args:
+          - --logfmt=json
+          - --address=0.0.0.0:8000
           ports:
             - name: grpc
               containerPort: 8000
