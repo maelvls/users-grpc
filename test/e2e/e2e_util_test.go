@@ -1,7 +1,6 @@
 package e2e
 
 import (
-	"bytes"
 	"io"
 	"io/ioutil"
 	"log"
@@ -11,8 +10,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/onsi/gomega/gbytes"
 	"github.com/onsi/gomega/gexec"
 	"github.com/phayes/freeport"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -38,7 +39,7 @@ func withBinaries(t *testing.T) (string, string) {
 
 type e2ecmd struct {
 	*exec.Cmd
-	Output *bytes.Buffer // Both stdout and stderr.
+	Output *gbytes.Buffer // Both stdout and stderr.
 	T      *testing.T
 }
 
@@ -50,7 +51,7 @@ func (cmd *e2ecmd) Wait() *e2ecmd {
 // Runs the passed command and make sure SIGTERM is called on cleanup. Also
 // dumps stderr and stdout using log.Printf.
 func startWith(t *testing.T, cmd *exec.Cmd) *e2ecmd {
-	buff := bytes.NewBuffer(nil)
+	buff := gbytes.NewBuffer()
 	cmd.Stdout = createWriterLoggerStr("stdout", buff)
 	cmd.Stderr = createWriterLoggerStr("stderr", buff)
 
@@ -111,19 +112,19 @@ func freePort() string {
 //
 // Commented out since I'm not using it anymore.
 
-// func eventuallyEqual(t *testing.T, expected string, got io.Reader, msgsAndArgs ...interface{}) {
-// 	expectedBuffer := gbytes.Say(expected)
-//
-// 	match := func() func() bool {
-// 		return func() bool {
-// 			ok, err := expectedBuffer.Match(got)
-// 			assert.NoError(t, err)
-//
-// 			return ok
-// 		}
-// 	}
-//
-// 	if !assert.Eventually(t, match(), 2*time.Second, 100*time.Millisecond, msgsAndArgs...) {
-// 		t.Errorf(expectedBuffer.FailureMessage(expected))
-// 	}
-// }
+func eventuallyEqual(t *testing.T, expected string, got *gbytes.Buffer, msgsAndArgs ...interface{}) {
+	expectedBuffer := gbytes.Say(expected)
+
+	match := func() func() bool {
+		return func() bool {
+			ok, err := expectedBuffer.Match(got)
+			assert.NoError(t, err)
+
+			return ok
+		}
+	}
+
+	if !assert.Eventually(t, match(), 2*time.Second, 100*time.Millisecond, msgsAndArgs...) {
+		t.Errorf(expectedBuffer.FailureMessage(expected))
+	}
+}

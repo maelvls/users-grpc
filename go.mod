@@ -20,7 +20,9 @@ require (
 	github.com/spf13/cobra v0.0.5
 	github.com/spf13/viper v1.6.2
 	github.com/stretchr/testify v1.6.1
-	golang.org/x/net v0.0.0-20201006153459-a7d1128ccaa0
+	golang.org/x/net v0.0.0-20201110031124-69a78807bb2b
+	golang.org/x/text v0.3.4 // indirect
+	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	google.golang.org/grpc v1.27.1
 	gopkg.in/yaml.v3 v3.0.0-20200615113413-eeeca48fe776 // indirect
 )

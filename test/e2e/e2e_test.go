@@ -20,7 +20,9 @@ func Test_CLI(t *testing.T) {
 
 		t.Run("should return all 30 lines of sample data", func(t *testing.T) {
 			addr := "127.0.0.1:" + freePort()
-			_ = startWith(t, exec.Command(binsrv, "--address", addr))
+			srv := startWith(t, exec.Command(binsrv, "--address", addr))
+			eventuallyEqual(t, "listening", srv.Output) // Wait until listening.
+
 			cli := startWith(t, exec.Command(bincli, "--color=never", "--address", addr, "list")).Wait()
 
 			output := contents(cli.Output)
@@ -35,7 +37,8 @@ func Test_CLI(t *testing.T) {
 	t.Run("users-cli create", func(t *testing.T) {
 		t.Run("should allow creating a user with just an email", func(t *testing.T) {
 			addr := "127.0.0.1:" + freePort()
-			_ = startWith(t, exec.Command(binsrv, "--address", addr))
+			srv := startWith(t, exec.Command(binsrv, "--address", addr))
+			eventuallyEqual(t, "listening", srv.Output) // Wait until listening.
 
 			cli := startWith(t, exec.Command(bincli, "--color=never", "--address", addr, "create", "--email=foo@bar.com")).Wait()
 			assert.Equal(t, 0, cli.ProcessState.ExitCode())
@@ -49,7 +52,8 @@ func Test_CLI(t *testing.T) {
 
 		t.Run("should allow creating a user with all information", func(t *testing.T) {
 			addr := "127.0.0.1:" + freePort()
-			_ = startWith(t, exec.Command(binsrv, "--address", addr))
+			srv := startWith(t, exec.Command(binsrv, "--address", addr))
+			eventuallyEqual(t, "listening", srv.Output) // Wait until listening.
 
 			cli := startWith(t, exec.Command(bincli, "--color=never", "--address", addr,
 				"create", "--email=foo@bar.com", "--firstname=Foo", "--lastname=Bar", "--age=87", "--postaladdress", "1930 Movun Point, Svalbard & Jan Mayen")).Wait()
@@ -64,7 +68,8 @@ func Test_CLI(t *testing.T) {
 
 		t.Run("should exit with 1 when creating with an existing email", func(t *testing.T) {
 			addr := "127.0.0.1:" + freePort()
-			_ = startWith(t, exec.Command(binsrv, "--address", addr))
+			srv := startWith(t, exec.Command(binsrv, "--address", addr))
+			eventuallyEqual(t, "listening", srv.Output) // Wait until listening.
 
 			cli := startWith(t, exec.Command(bincli, "--color=never", "--address", addr, "create", "--email=wilkerson.mosley@email.biz")).Wait()
 			assert.Equal(t, 1, cli.ProcessState.ExitCode())
@@ -76,7 +81,8 @@ func Test_CLI(t *testing.T) {
 
 		t.Run("should print the user associated with a given email", func(t *testing.T) {
 			addr := "127.0.0.1:" + freePort()
-			_ = startWith(t, exec.Command(binsrv, "--address", addr))
+			srv := startWith(t, exec.Command(binsrv, "--address", addr))
+			eventuallyEqual(t, "listening", srv.Output) // Wait until listening.
 
 			cli := startWith(t, exec.Command(bincli, "--color=never", "--address", addr, "get", "rice.pierce@email.com")).Wait()
 			assert.Equal(t, 0, cli.ProcessState.ExitCode())
@@ -85,7 +91,8 @@ func Test_CLI(t *testing.T) {
 
 		t.Run("should exit with 1 when the email is not found", func(t *testing.T) {
 			addr := "127.0.0.1:" + freePort()
-			_ = startWith(t, exec.Command(binsrv, "--address", addr))
+			srv := startWith(t, exec.Command(binsrv, "--address", addr))
+			eventuallyEqual(t, "listening", srv.Output) // Wait until listening.
 
 			cli := startWith(t, exec.Command(bincli, "--color=never", "--address", addr, "get", "impossible.name@email.com")).Wait()
 			assert.Equal(t, 1, cli.ProcessState.ExitCode())
@@ -96,7 +103,8 @@ func Test_CLI(t *testing.T) {
 	t.Run("users-cli search", func(t *testing.T) {
 		t.Run("should print users using a part of their name", func(t *testing.T) {
 			addr := "127.0.0.1:" + freePort()
-			_ = startWith(t, exec.Command(binsrv, "--address", addr))
+			srv := startWith(t, exec.Command(binsrv, "--address", addr))
+			eventuallyEqual(t, "listening", srv.Output) // Wait until listening.
 
 			cli := startWith(t, exec.Command(bincli, "--color=never", "--address", addr, "search", "--name", "Pierce")).Wait()
 			assert.Equal(t, 0, cli.ProcessState.ExitCode())
@@ -105,7 +113,8 @@ func Test_CLI(t *testing.T) {
 
 		t.Run("should print users that are between two ages", func(t *testing.T) {
 			addr := "127.0.0.1:" + freePort()
-			_ = startWith(t, exec.Command(binsrv, "--address", addr))
+			srv := startWith(t, exec.Command(binsrv, "--address", addr))
+			eventuallyEqual(t, "listening", srv.Output) // Wait until listening.
 
 			cli := startWith(t, exec.Command(bincli, "--color=never", "--address", addr, "search", "--agefrom=46", "--ageto=48")).Wait()
 			assert.Equal(t, 0, cli.ProcessState.ExitCode())
@@ -119,7 +128,8 @@ func Test_CLI(t *testing.T) {
 
 		t.Run("should print nothing and exit with 0 when no user is found", func(t *testing.T) {
 			addr := "127.0.0.1:" + freePort()
-			_ = startWith(t, exec.Command(binsrv, "--address", addr))
+			srv := startWith(t, exec.Command(binsrv, "--address", addr))
+			eventuallyEqual(t, "listening", srv.Output) // Wait until listening.
 
 			cli := startWith(t, exec.Command(bincli, "--color=never", "--address", addr, "search", "--name=Foo")).Wait()
 			assert.Equal(t, 0, cli.ProcessState.ExitCode())
