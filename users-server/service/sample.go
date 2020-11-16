@@ -6,28 +6,32 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/sirupsen/logrus"
-
+	"github.com/go-pg/pg"
 	pb "github.com/maelvls/users-grpc/schema/user"
+	"github.com/sirupsen/logrus"
 )
 
 // LoadSampleUsers loads some hard-coded users into database.
-func (svc *UserImpl) LoadSampleUsers() error {
+func (svc *UserImpl) LoadSampleUsers(tx *pg.Tx) error {
 	var users []pb.User
 	err := json.Unmarshal(sampleUsers, &users)
 	if err != nil {
 		return fmt.Errorf("could not parse json: %v", err)
 	}
 
-	txn := svc.DB.Txn(true)
 	for _, user := range users {
-		u := user
-		if err := txn.Insert("user", &u); err != nil {
-			return err
+		u := fromPB(user)
+		if _, err := tx.Model(&u).OnConflict("DO UPDATE").Insert(); err != nil {
+			pgErr, ok := err.(pg.Error)
+			if ok && pgErr.IntegrityViolation() {
+				logrus.Infof("user %s already exists, skipping", u.Email)
+				continue
+			}
+			return fmt.Errorf("inserting user %s: %w", u.Email, err)
 		}
 	}
-	txn.Commit()
-	logrus.Debugf("added user samples to DB")
+
+	logrus.Infof("added %d user samples to the database", len(users))
 
 	return nil
 }

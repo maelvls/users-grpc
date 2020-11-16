@@ -16,33 +16,34 @@
 
 [![asciicast](https://asciinema.org/a/251067.svg)](https://asciinema.org/a/251067)
 
-- [Simple gRPC user service and its CLI client](#simple-grpc-user-service-and-its-cli-client)
-  - [Stack](#stack)
-  - [Use](#use)
-  - [Install](#install)
-    - [Docker images](#docker-images)
-    - [Binaries (Github Releases)](#binaries-github-releases)
-    - [Using go-get](#using-go-get)
-    - [Kubernetes & Helm](#kubernetes--helm)
-  - [Develop and hack it](#develop-and-hack-it)
-    - [Develop using Docker](#develop-using-docker)
-  - [Technical notes](#technical-notes)
-    - [Vendor or not vendor and go 1.11 modules](#vendor-or-not-vendor-and-go-111-modules)
-    - [Testing](#testing)
-    - [`users-cli version`](#users-cli-version)
-    - [Protobuf generation](#protobuf-generation)
-    - [Logs, debug and verbosity](#logs-debug-and-verbosity)
-  - [Examples that I read for inspiration](#examples-that-i-read-for-inspiration)
-  - [Cloud-nativeness of this project](#cloud-nativeness-of-this-project)
-  - [12 factor app checklist](#12-factor-app-checklist)
-  - [Kubernetes and Helm](#kubernetes-and-helm)
-  - [Memo on Kubernetes](#memo-on-kubernetes)
-  - [Future work](#future-work)
-    - [Distributed tracing, metrics and logs](#distributed-tracing-metrics-and-logs)
-    - [Service discovery and service mesh](#service-discovery-and-service-mesh)
-      - [Service discovery via environement variables](#service-discovery-via-environement-variables)
-      - [Service discovery via CoreDNS, Consul, Envoy or Linkerd2](#service-discovery-via-coredns-consul-envoy-or-linkerd2)
-    - [Event store & event sourcing](#event-store--event-sourcing)
+- [Stack](#stack)
+- [Use](#use)
+- [Install](#install)
+  - [Docker images](#docker-images)
+  - [Binaries (Github Releases)](#binaries-github-releases)
+  - [Using go-get](#using-go-get)
+  - [Kubernetes & Helm](#kubernetes--helm)
+- [Develop and hack it](#develop-and-hack-it)
+  - [Develop using Docker](#develop-using-docker)
+- [Technical notes](#technical-notes)
+  - [Vendor or not vendor and go 1.11 modules](#vendor-or-not-vendor-and-go-111-modules)
+  - [Testing](#testing)
+  - [`users-cli version`](#users-cli-version)
+  - [Protobuf generation](#protobuf-generation)
+  - [Logs, debug and verbosity](#logs-debug-and-verbosity)
+- [Examples that I read for inspiration](#examples-that-i-read-for-inspiration)
+- [Cloud-nativeness of this project](#cloud-nativeness-of-this-project)
+- [12 factor app checklist](#12-factor-app-checklist)
+- [Kubernetes and Helm](#kubernetes-and-helm)
+- [Memo on Kubernetes](#memo-on-kubernetes)
+- [Future work](#future-work)
+  - [Distributed tracing, metrics and logs](#distributed-tracing-metrics-and-logs)
+  - [Service discovery and service mesh](#service-discovery-and-service-mesh)
+    - [Service discovery via environement variables](#service-discovery-via-environement-variables)
+    - [Service discovery via CoreDNS, Consul, Envoy or Linkerd2](#service-discovery-via-coredns-consul-envoy-or-linkerd2)
+  - [Event store & event sourcing](#event-store--event-sourcing)
+- [Discussion](#discussion)
+  - [Storing transaction in context](#storing-transaction-in-context)
 
 ## Stack
 
@@ -802,3 +803,21 @@ example:
   users for the month.
 - service `Email` is also subscribing to the topic 'user-added'. Upon
   reception, it sends an email to Claudia Greene for welcoming her.
+
+---
+
+## Discussion
+
+### Storing transaction in context
+
+Not sure if that's a great idea; storing the transaction in a
+`context.Context` would be the simplest way of wrapping every GRPC call in
+a transation without having to do it manually for every single call.
+
+What I could do instead is to replicate all the functions (`Create`) and
+have a `txn` passed, and then wrap every call in a transaction. That means
+I could still unit test properly thanks to the transaction rollback.
+
+This idea of storing the transation in a context.Context was also
+[discussed](https://groups.google.com/g/golang-nuts/c/y8uLMofW2-E) with
+Dave Cheney in February 2017; in a few words: not a great idea.
