@@ -11,7 +11,7 @@ import (
 
 // Helper for bootstraping a DB with the given users.
 func initDBWith(users []*pb.User) *memdb.MemDB {
-	db := NewDB()
+	db := NewDBOrPanic()
 	txn := db.Txn(true)
 	for _, user := range users {
 		if err := txn.Insert("user", user); err != nil {

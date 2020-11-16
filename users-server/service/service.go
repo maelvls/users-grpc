@@ -15,8 +15,8 @@ import (
 // MemDB is a simple in-memory DB by Hashicorp. As I wanted to keep things
 // simple, I did not go with Postgres.
 
-// NewDB initializes the DB.
-func NewDB() *memdb.MemDB {
+// NewDBOrPanic initializes the DB.
+func NewDBOrPanic() *memdb.MemDB {
 	// Create the DB schema.
 	schema := &memdb.DBSchema{
 		Tables: map[string]*memdb.TableSchema{
@@ -50,7 +50,7 @@ type UserImpl struct {
 
 // NewUserImpl returns a new server.
 func NewUserImpl() *UserImpl {
-	return &UserImpl{DB: NewDB()}
+	return &UserImpl{DB: NewDBOrPanic()}
 }
 
 // Create a user. If the given user has no id, generate one.
