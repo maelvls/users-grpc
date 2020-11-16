@@ -1,4 +1,4 @@
-package service
+package grpcsvc
 
 import (
 	"context"
