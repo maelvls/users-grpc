@@ -453,8 +453,9 @@ liveness checks can work with this service. What I did:
    [k.maelvls.dev][]:
 
    ```yaml
+   # users-grpc.yaml
    image:
-     tag: 1.0.0
+     tag: 1.1.1
    ingress:
      enabled: true
      hosts: [users-grpc.kube.maelvls.dev]
@@ -463,15 +464,20 @@ liveness checks can work with this service. What I did:
        certmanager.k8s.io/cluster-issuer: letsencrypt-prod
      tls:
        - hosts: [users-grpc.kube.maelvls.dev]
-         secretName: users-grpc-example-tls
+         secretName: users-grpc-tls
    ```
 
    We can then have the service from the internet through Traefik (Ingress
    Controller) with dynamic per-endpoint TLS ([cert-manager][]) and DNS
-   ([external-dns][]):
+   ([external-dns][]).
+
+   The helm chart is available at <https://maelvls.dev/helm-charts> and are
+   updated on every tag by the CI. Note that the `image` tag may be out of
+   date!
 
    ```sh
-   helm install ./helm/users-grpc --name users-grpc --namespace users-grpc --set image.tag=latest --values helm/users-grpc.yaml
+   helm repo add maelvls https://maelvls.dev/helm-charts && helm repo update
+   helm install maelvls/grpc-users --name users-grpc --create-namespace --namespace users-grpc --values users-grpc.yaml
    ```
 
 [k.maelvls.dev]: https://github.com/maelvls/k.maelvls.dev
