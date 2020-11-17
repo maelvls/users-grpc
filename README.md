@@ -5,14 +5,10 @@
 [![Coverage Status](https://coveralls.io/repos/github/maelvls/users-grpc/badge.svg?branch=master)](https://coveralls.io/github/maelvls/users-grpc?branch=master)
 [![codecov](https://codecov.io/gh/maelvls/users-grpc/branch/master/graph/badge.svg)](https://codecov.io/gh/maelvls/users-grpc)
 [![Go Report Card](https://goreportcard.com/badge/github.com/maelvls/users-grpc)](https://goreportcard.com/report/github.com/maelvls/users-grpc)
-[![GolangCI](https://golangci.com/badges/github.com/maelvls/users-grpc.svg)](https://golangci.com/r/github.com/maelvls/users-grpc)
-[![Godoc](https://godoc.org/github.com/maelvls/users-grpc?status.svg)](http://godoc.org/github.com/maelvls/users-grpc)
-[![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-yellow.svg)](https://conventionalcommits.org)
 
 > So many shiny badges, I guess it doesn't mean anything anymore! I have
 > been testing many services in order to select the good ones. Badges is a
 > way of keeping track of them all 😅
-> Conventionnal Commits and GolangCI are kind of decorative-only.
 
 [![asciicast](https://asciinema.org/a/251067.svg)](https://asciinema.org/a/251067)
 
