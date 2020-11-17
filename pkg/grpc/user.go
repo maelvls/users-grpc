@@ -24,26 +24,35 @@ type UserService interface {
 // also wanted to be able to trace my service (e.g. using jaeger), I would
 // also make sure to store opentracing.Tracer there.
 type UserServer struct {
-	DB  *memdb.MemDB
-	Svc UserService // For testing purposes.
+	Txn      func(write bool) *memdb.Txn
+	Commit   func(*memdb.Txn)
+	Rollback func(*memdb.Txn)
+
+	// For testing purposes.
+	Svc UserService
 }
 
 // NewUserServer returns a new server.
 func NewUserServer() *UserServer {
-	return &UserServer{DB: service.NewDBOrPanic(), Svc: service.UserSvc{}}
+	db := service.NewDBOrPanic()
+
+	return &UserServer{
+		Txn:      db.Txn,
+		Commit:   func(m *memdb.Txn) { m.Commit() },
+		Rollback: func(m *memdb.Txn) { m.Abort() },
+		Svc:      service.UserSvc{},
+	}
 }
 
 // Create a user. If the given user has no id, generate one.
 func (server *UserServer) Create(ctx context.Context, req *pb.CreateReq) (*pb.CreateResp, error) {
-	txn := server.DB.Txn(true)
-	defer txn.Abort()
+	txn := server.Txn(true)
+	defer server.Rollback(txn)
 
 	err := server.Svc.Create(txn, FromPB(req.User))
-
-	status := &pb.Status{Code: pb.Status_SUCCESS}
 	switch {
 	case err == service.EmailAlreadyExists:
-		status = &pb.Status{Code: pb.Status_FAILED, Msg: err.Error()}
+		return &pb.CreateResp{User: &pb.User{}, Status: &pb.Status{Code: pb.Status_FAILED, Msg: err.Error()}}, nil
 	case err != nil:
 		logrus.WithError(err).WithField("email", req.User.Email).Error("Create returned an unexpected error")
 		return nil, fmt.Errorf("something wrong happened while creating user, email=" + req.User.Email)
@@ -51,23 +60,23 @@ func (server *UserServer) Create(ctx context.Context, req *pb.CreateReq) (*pb.Cr
 
 	user, err := server.Svc.GetByEmail(txn, req.User.Email)
 	if err != nil {
-		logrus.Error("GetByEmail returned an unexpected error")
+		logrus.WithError(err).Error("GetByEmail returned an unexpected error")
 		return nil, fmt.Errorf("something wrong happened while finding the user, email=" + req.User.Email)
 	}
 
-	txn.Commit()
-	return &pb.CreateResp{User: ToPB(user), Status: status}, nil
+	server.Commit(txn)
+	return &pb.CreateResp{User: ToPB(user), Status: &pb.Status{Code: pb.Status_SUCCESS}}, nil
 }
 
 // List all users.
 func (server *UserServer) List(ctx context.Context, req *pb.ListReq) (*pb.SearchResp, error) {
-	txn := server.DB.Txn(false) // read-only transaction
-	defer txn.Abort()
+	txn := server.Txn(false) // read-only transaction
+	defer server.Rollback(txn)
 
 	users, err := server.Svc.List(txn)
 	if err != nil {
 		logrus.WithError(err).Error("List returned an unexpected error")
-		return nil, fmt.Errorf("something wrong happened while listing")
+		return nil, fmt.Errorf("something wrong happened while listing users")
 	}
 
 	resp := &pb.SearchResp{Users: ToPBs(users), Status: &pb.Status{Code: pb.Status_SUCCESS}}
@@ -79,12 +88,12 @@ func (server *UserServer) SearchAge(ctx context.Context, req *pb.SearchAgeReq) (
 	if req.AgeRange == nil {
 		return &pb.SearchResp{Users: make([]*pb.User, 0), Status: &pb.Status{
 			Code: pb.Status_INVALID_QUERY,
-			Msg:  ""},
-		}, nil
+			Msg:  "the AgeRange object cannot be omitted",
+		}}, nil
 	}
 
-	txn := server.DB.Txn(false)
-	defer txn.Abort()
+	txn := server.Txn(false)
+	defer server.Rollback(txn)
 
 	users, err := server.Svc.SearchAge(txn, req.AgeRange.From, req.AgeRange.ToIncluded)
 
@@ -92,8 +101,11 @@ func (server *UserServer) SearchAge(ctx context.Context, req *pb.SearchAgeReq) (
 	case err == service.AgeFromIsGreaterThanAgeTo:
 		return &pb.SearchResp{Users: make([]*pb.User, 0), Status: &pb.Status{
 			Code: pb.Status_INVALID_QUERY,
-			Msg:  "the From field must be lower or equal to ToIncluded"},
-		}, nil
+			Msg:  "age is invalid, the 'from' age must be lower or equal to the 'to' age",
+		}}, nil
+	case err != nil:
+		logrus.WithError(err).Error("SearchAge returned an unexpected error")
+		return nil, fmt.Errorf("something wrong happened while searching users with their age")
 	}
 
 	resp := &pb.SearchResp{Users: ToPBs(users), Status: &pb.Status{Code: pb.Status_SUCCESS}}
@@ -102,16 +114,16 @@ func (server *UserServer) SearchAge(ctx context.Context, req *pb.SearchAgeReq) (
 
 // SearchName searches a user by a part of its first or last name.
 func (server *UserServer) SearchName(ctx context.Context, req *pb.SearchNameReq) (*pb.SearchResp, error) {
-	txn := server.DB.Txn(false)
-	defer txn.Abort()
+	txn := server.Txn(false)
+	defer server.Rollback(txn)
 
 	users, err := server.Svc.SearchName(txn, req.Query)
 	switch {
 	case err == service.NameQueryEmpty:
 		return &pb.SearchResp{Users: make([]*pb.User, 0), Status: &pb.Status{
 			Code: pb.Status_INVALID_QUERY,
-			Msg:  "name query cannot be empty"},
-		}, nil
+			Msg:  "name query cannot be empty",
+		}}, nil
 	case err != nil:
 		logrus.WithError(err).WithField("query", req.Query).Error("SearchName returned an unexpected error")
 		return nil, fmt.Errorf("something wrong happened while finding users by name, query=" + req.Query)
@@ -122,16 +134,16 @@ func (server *UserServer) SearchName(ctx context.Context, req *pb.SearchNameReq)
 
 // GetByEmail returns a user by its email.
 func (server *UserServer) GetByEmail(ctx context.Context, req *pb.GetByEmailReq) (*pb.GetByEmailResp, error) {
-	txn := server.DB.Txn(false)
-	defer txn.Abort()
+	txn := server.Txn(false)
+	defer server.Rollback(txn)
 
 	user, err := server.Svc.GetByEmail(txn, req.Email)
 	switch {
 	case err == service.EmailNotFound:
 		return &pb.GetByEmailResp{User: &pb.User{}, Status: &pb.Status{
 			Code: pb.Status_INVALID_QUERY,
-			Msg:  "this email cannot be found"},
-		}, nil
+			Msg:  fmt.Sprintf("the email %s cannot be found", req.Email),
+		}}, nil
 	case err != nil:
 		logrus.WithError(err).WithField("email", req.Email).Error("GetByEmail returned an unexpected error")
 		return nil, fmt.Errorf("something wrong happened while getting a user by its email, email=" + req.Email)
