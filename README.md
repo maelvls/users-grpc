@@ -30,8 +30,9 @@
 - [Examples that I read for inspiration](#examples-that-i-read-for-inspiration)
 - [Kubernetes and Helm](#kubernetes-and-helm)
 - [Future work](#future-work)
-  - [Using a on-disk database](#using-a-on-disk-database)
+  - [Using an on-disk database](#using-an-on-disk-database)
   - [Distributed tracing, metrics and logs](#distributed-tracing-metrics-and-logs)
+  - [Publishing Helm chart to Github Pages and publishing to Homebrew](#publishing-helm-chart-to-github-pages-and-publishing-to-homebrew)
 
 ## Stack
 
@@ -195,9 +196,10 @@ go get github.com/maelvls/users-grpc/cmd/...
 
 ### Kubernetes & Helm
 
+I use Helm 3 in this example.
+
 ```sh
-helm install ./ci/helm/users-grpc --name users-grpc --namespace users-grpc --set image.tag=latest
-helm upgrade users-grpc ./ci/helm/users-grpc
+helm upgrade --install users-grpc ./ci/helm/users-grpc --create-namespace --namespace users-grpc --set image.tag=1.1.0
 ```
 
 ## Develop and hack it
@@ -417,8 +419,6 @@ interceptors). One way of doing that is proposed in [go-grpc-middleware][].
 - the Go standard library was also extremely useful for learning how to
   write idiomatic code. The `net` one is a gold mine (on top of that I love
   all the networking bits).
-- I learned how to publish helm charts on Github Pages there:
-  [helm-gh-pages-example][]. Didn't have time to finish that part though.
 
 [medium-grpc-pg]: https://medium.com/@vptech/complexity-is-the-bane-of-every-software-engineer-e2878d0ad45a
 [go-micro-services]: https://github.com/harlow/go-micro-services
@@ -471,10 +471,10 @@ liveness checks can work with this service. What I did:
 [cert-manager]: https://github.com/jetstack/cert-manager
 
 To bootstrap the kubernetes YAML configuration for this service using my
-Helm chart, I used:
+Helm chart, I use:
 
 ```sh
-helm template ./ci/helm/users-grpc --name users-grpc --namespace users-grpc --set image.tag=latest > ci/deployment.yml
+helm template users-grpc ./ci/helm/users-grpc --create-namespace --namespace users-grpc --set image.tag=latest > ci/deployment.yml
 ```
 
 We can now apply the configuration without using Helm. Note that I changed
@@ -511,7 +511,7 @@ Yey!! 🎉🎉🎉
 Here is a small list of things that could be implemented now that a MVP
 microservice is working.
 
-### Using a on-disk database
+### Using an on-disk database
 
 Now that the "service" part can be unit-tested thanks to the transaction
 rollback mechanism, it would be quite easy to move the project from
@@ -531,3 +531,12 @@ PR](https://github.com/maelvls/users-grpc/pull/65).
 These middlewares are listed and available at [go-grpc-middleware][].
 
 [go-grpc-middleware]: https://github.com/grpc-ecosystem/go-grpc-middleware
+
+### Publishing Helm chart to Github Pages and publishing to Homebrew
+
+I could publish the `users-cli` and `users-server` as a Homebrew tag, e.g.
+at <https://github.com/maelvls/homebrew-tap>.
+
+I could as well publish the helm charts on Github Pages (e.g., at
+<https://maelvls.github.io/users-grpc>) following the
+[helm-gh-pages-example][].
