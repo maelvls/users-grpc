@@ -6,9 +6,10 @@ import (
 	"os"
 	"time"
 
+	"github.com/maelvls/users-grpc/pkg/cli/logutil"
+
 	"github.com/maelvls/users-grpc/schema/user"
 	pb "github.com/maelvls/users-grpc/schema/user"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 )
@@ -27,7 +28,7 @@ func init() {
 		Run: func(createCmd *cobra.Command, args []string) {
 			cc, err := grpc.Dial(client.address, grpc.WithInsecure())
 			if err != nil {
-				logrus.Errorf("grpc client: %v\n", err)
+				logutil.Errorf("grpc client: %v", err)
 				os.Exit(1)
 			}
 
@@ -56,12 +57,12 @@ func init() {
 			resp, err := client.Create(ctx, &user.CreateReq{User: usr})
 
 			if err != nil {
-				logrus.Errorf("grpc client: %v\n", err)
+				logutil.Errorf("grpc client: %v", err)
 				os.Exit(1)
 			}
 
 			if resp.GetStatus().GetCode() != user.Status_SUCCESS {
-				logrus.Errorf("grpc client: %v\n", resp.GetStatus())
+				logutil.Errorf("grpc client: %v", resp.GetStatus())
 				os.Exit(1)
 			}
 

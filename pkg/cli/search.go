@@ -6,8 +6,8 @@ import (
 	"os"
 	"time"
 
+	"github.com/maelvls/users-grpc/pkg/cli/logutil"
 	pb "github.com/maelvls/users-grpc/schema/user"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 )
@@ -20,7 +20,7 @@ func init() {
 
 			cc, err := grpc.Dial(client.address, grpc.WithInsecure())
 			if err != nil {
-				logrus.Errorf("grpc client: %v\n", err)
+				logutil.Errorf("grpc client: %v", err)
 				os.Exit(1)
 			}
 
@@ -37,17 +37,17 @@ func init() {
 
 			switch mode {
 			case "":
-				logrus.Errorf("need one of '--name=PARTIALNAME' or '--agefrom=N' + '--ageto=M'")
+				logutil.Errorf("need one of '--name=PARTIALNAME' or '--agefrom=N' + '--ageto=M'")
 			case "SearchAge":
 				var ageFrom, ageTo int32
 				ageFrom, err = searchCmd.Flags().GetInt32("agefrom")
 				if err != nil {
-					logrus.Errorf("--agefrom is not a number")
+					logutil.Errorf("--agefrom is not a number")
 					os.Exit(1)
 				}
 				ageTo, err = searchCmd.Flags().GetInt32("ageto")
 				if err != nil {
-					logrus.Errorf("--ageto is not a number")
+					logutil.Errorf("--ageto is not a number")
 					os.Exit(1)
 				}
 				resp, err := client.SearchAge(ctx, &pb.SearchAgeReq{
@@ -58,12 +58,12 @@ func init() {
 				})
 
 				if err != nil {
-					logrus.Errorf("grpc client: %v\n", err)
+					logutil.Errorf("grpc client: %v", err)
 					os.Exit(1)
 				}
 
 				if resp.GetStatus().GetCode() != pb.Status_SUCCESS {
-					logrus.Errorf("grpc client: %v\n", resp.GetStatus())
+					logutil.Errorf("grpc client: %v", resp.GetStatus())
 					os.Exit(1)
 				}
 
@@ -74,12 +74,12 @@ func init() {
 			case "SearchName":
 				resp, err := client.SearchName(ctx, &pb.SearchNameReq{Query: name})
 				if err != nil {
-					logrus.Errorf("grpc client: %v\n", err)
+					logutil.Errorf("grpc client: %v", err)
 					os.Exit(1)
 				}
 
 				if resp.GetStatus().GetCode() != pb.Status_SUCCESS {
-					logrus.Errorf("grpc client: %v\n", resp.GetStatus())
+					logutil.Errorf("grpc client: %v", resp.GetStatus())
 					os.Exit(1)
 				}
 
