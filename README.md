@@ -49,8 +49,8 @@
 - **Config management**: Helm
 - **Dependency analysis** (the DevSecOps trend): [dependabot][] (updates go
   modules dependencies daily)
-- **Local dev**: Vim, VSCode and Goland, [`gotests`][gotests],
-  `golangci-lint`, `pcg` (pre-commit-go), `protoc`, `prototool`, `grpcurl`:
+- **Local dev**: Vim & VSCode, `golangci-lint`, `protoc`, `prototool`,
+  `grpcurl`, [`gotests`][gotests], [gomock][]
 
   ```sh
   brew install golangci/tap/golangci-lint protobuf prototool grpcurl
@@ -58,6 +58,7 @@
 
 [dependabot]: https://dependabot.com/
 [gotests]: https://github.com/cweill/gotests
+[gomock]: https://github.com/golang/mock
 
 ## Use
 
@@ -155,7 +156,7 @@ example). To run the server on port 8123 locally:
 
 ```sh
 $ docker run -e LOG_FORMAT=text -e PORT=8123 -p 80:8123/tcp --rm -it maelvls/users-grpc:1
-INFO[0000] serving on port 8123 (version 1.0.0)
+INFO[0000] serving on port 8123 (version 1.1.0)
 ```
 
 [moving-tags]: http://plugins.drone.io/drone-plugins/drone-docker/#autotag
@@ -192,7 +193,7 @@ LLVM + way richer and complex language -- see my comparison
 ### Using go-get
 
 ```sh
-go get github.com/maelvls/users-grpc/...
+go get github.com/maelvls/users-grpc/cmd/...
 ```
 
 ### Kubernetes & Helm
@@ -225,8 +226,10 @@ I wrote two kinds of tests:
 - Unit tests to make sure that the database logic works as expected. Tests
   are wrapped in transactions which are rolled back after the test. I use
   [gotests](https://github.com/cweill/gotests) for easing the TDD workflow.
-  Whenever I add a new function, I just have to run `gotests -all -w
-  pkg/service/*`. To run the unit tests:
+  Whenever I add a new function, I just have to run `go run
+  github.com/cweill/gotests/gotests -all -w pkg/service/*`.
+
+  To run the unit tests:
 
   ```sh
   go test ./... -short
@@ -240,7 +243,7 @@ I wrote two kinds of tests:
   go test ./test/e2e
   ```
 
-I used gomock for mocking the behavior of the "user service" when testing
+I used [gomock][] for mocking the behavior of the "user service" when testing
 the GRPC endpoints. I also used Gomega's gexec package just for easing the
 process of creating binaries for the end-to-end tests.
 
@@ -345,14 +348,12 @@ $ prototool grpc --address :8000 --method user.UserService/GetByEmail --data "$(
 
 ### Vendor or not vendor and go 1.11 modules
 
-I use `GO111MODULES=on`. This is definitely debatable: in actual projects that I
-may have to maintain on the long run, a more 'stable' option such as 'dep'
-should be used (as of June 2019 at least). The reason is that I feel many
-tools and libraries do not (yet) work with vgo (go 1.11 modules).
-
-In the first iterations of this project, I was vendoring (using `go mod vendor`) and checked the vendor/ folder in with the code. Then, I realized
-things have evolved and it is not necessary anymore (as of june 2019; see
-[should-i-vendor][] as things may evolve).
+I use `GO111MODULES=on`! (see my [blog
+post](https://dev.to/maelvls/why-is-go111module-everywhere-and-everything-about-go-modules-24k)
+about Go modules) In the first iterations of this project, I was vendoring
+(using `go mod vendor`) and checked the vendor/ folder in with the code.
+Then, I realized things have evolved and it is not necessary anymore (as of
+june 2019; see [should-i-vendor][] as things may evolve).
 
 That said, I often use `go mod vendor` which comes very handy (I can browse the
 dependencies sources easily, everything is at hand).
