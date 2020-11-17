@@ -1,4 +1,4 @@
-package usersvc
+package service
 
 import (
 	"errors"

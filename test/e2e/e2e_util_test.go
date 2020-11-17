@@ -22,10 +22,10 @@ import (
 func withBinaries(t *testing.T) (string, string) {
 	start := time.Now()
 
-	bincli, err := gexec.Build("github.com/maelvls/users-grpc/users-cli")
+	bincli, err := gexec.Build("github.com/maelvls/users-grpc/cmd/users-cli")
 	require.NoError(t, err)
 
-	binsrv, err := gexec.Build("github.com/maelvls/users-grpc/users-server")
+	binsrv, err := gexec.Build("github.com/maelvls/users-grpc/cmd/users-server")
 	require.NoError(t, err)
 
 	t.Cleanup(func() {

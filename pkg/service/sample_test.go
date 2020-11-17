@@ -1,18 +1,18 @@
 // Putting some sample data.
 
-package usersvc_test
+package service_test
 
 import (
 	"testing"
 
-	usersvc "github.com/maelvls/users-grpc/users-server/usersvc"
+	service "github.com/maelvls/users-grpc/pkg/service"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestLoadSampleUsers(t *testing.T) {
 	// Just a quick wiring test.
-	db := usersvc.NewDBOrPanic()
+	db := service.NewDBOrPanic()
 	txn := db.Txn(true)
-	assert.NoError(t, usersvc.LoadSampleUsers(txn))
+	assert.NoError(t, service.LoadSampleUsers(txn))
 	txn.Commit()
 }

@@ -215,8 +215,8 @@ cd users-grpc/
 brew install protobuf # only if .proto files are changed
 go generate ./...     # only if .proto files are changed
 
-go run ./users-server &
-go run ./users-cli
+go run ./cmd/users-server &
+go run ./cmd/users-cli
 ```
 
 ### Testing
@@ -257,7 +257,7 @@ You can test the service is running correctly by using
 checks are easy to do from kubenertes):
 
 ```sh
-$ PORT=8000 go run ./users-server &
+$ PORT=8000 go run ./cmd/users-server &
 $ go get github.com/grpc-ecosystem/grpc-health-probe
 $ grpc-health-probe -addr=:8000
 
@@ -392,11 +392,11 @@ go generate ./...
 
 ### Logs, debug and verbosity
 
-I did not yet implement a way for my server or my client to make the log
-level higher or to set json as the logging format. For now, I use
-[logrus][]. A step further (that I did not implement yet) is to log all
-gRPC handlers activity (through gRPC interceptors). One way of doing that
-is proposed in [go-grpc-middleware][].
+The client outputs human-friendly messages; the server can either output
+[logfmt](https://brandur.org/logfmt) or json for its logs, and has a `-v`
+flag for cranking up the verbosity. A step further (that I did not
+implement yet) is to log all gRPC handlers activity (through gRPC
+interceptors). One way of doing that is proposed in [go-grpc-middleware][].
 
 ## Examples that I read for inspiration
 

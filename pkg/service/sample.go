@@ -1,6 +1,6 @@
 // Putting some sample data.
 
-package usersvc
+package service
 
 import (
 	"encoding/json"

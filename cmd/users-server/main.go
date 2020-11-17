@@ -2,16 +2,10 @@ package main
 
 import (
 	"flag"
-	"fmt"
-	"net"
 	"os"
 
-	grpc_health_v1 "github.com/maelvls/users-grpc/schema/health/v1"
-	"github.com/maelvls/users-grpc/schema/user"
-	grpcsvc "github.com/maelvls/users-grpc/users-server/grpcsvc"
-	usersvc "github.com/maelvls/users-grpc/users-server/usersvc"
+	grpc "github.com/maelvls/users-grpc/pkg/grpc"
 	log "github.com/sirupsen/logrus"
-	"google.golang.org/grpc"
 )
 
 // Set during build, e.g.: go build  -ldflags"-X main.version=$(git
@@ -47,32 +41,8 @@ func main() {
 
 	log.Printf("listening on address %s, version %s (git %s, built on %s)", *addr, version, commit, date)
 
-	if err := Run(*addr); err != nil {
+	if err := grpc.Run(*addr); err != nil {
 		log.Errorf("launching server: %v", err)
 		os.Exit(1)
 	}
-}
-
-// Run starts the server.
-func Run(addr string) error {
-	svc := grpcsvc.NewUserImpl()
-
-	txn := svc.DB.Txn(true)
-	defer txn.Abort()
-
-	err := usersvc.LoadSampleUsers(txn)
-	if err != nil {
-		return fmt.Errorf("while loading sample users: %w", err)
-	}
-	txn.Commit()
-
-	srv := grpc.NewServer()
-	user.RegisterUserServiceServer(srv, svc)
-	grpc_health_v1.RegisterHealthServer(srv, &grpcsvc.HealthImpl{})
-
-	lis, err := net.Listen("tcp", addr)
-	if err != nil {
-		return fmt.Errorf("failed to listen: %v", err)
-	}
-	return srv.Serve(lis)
 }
