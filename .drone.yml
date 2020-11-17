@@ -72,8 +72,7 @@ steps:
     commands:
       - cr package ./ci/helm/users-grpc
       - cr upload --owner maelvls --git-repo users-grpc --token $GITHUB_TOKEN
-      - cr index --push --charts-repo https://github.com/maelvls/helm-charts --git-repo https://github.com/maelvls/users-grpc \
-        --owner maelvls --git-repo users-grpc --token $GITHUB_TOKEN --index-path ./
+      - cr index --push --charts-repo https://github.com/maelvls/helm-charts --git-repo https://github.com/maelvls/users-grpc --owner maelvls --git-repo users-grpc --token $GITHUB_TOKEN --index-path ./
     environment:
       GITHUB_TOKEN: { from_secret: GITHUB_TOKEN }
     when:
