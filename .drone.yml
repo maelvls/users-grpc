@@ -68,7 +68,7 @@ steps:
         - tag
 
   - name: helm-chart
-    image: helmpack/chart-releaser
+    image: quay.io/helmpack/chart-releaser:latest
     commands:
       - helm package -d /tmp/.deploy ./ci/helm/users-grpc
       - cr upload --owner maelvls --git-repo users-grpc --package-path /tmp/.deploy --token $GITHUB_TOKEN
