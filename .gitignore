@@ -1,8 +1,16 @@
+# goreleaser
+/.dist/
+
+# helm-releaser
+/.cr-release-packages/
+/.deploy/
+
 # Editors
 .vscode/
 
 # Go binaries
 /users-grpc
+/users-server
 
 # Created by https://www.gitignore.io/api/go
 # Edit at https://www.gitignore.io/?templates=go
