@@ -5,7 +5,7 @@ import (
 	"os"
 
 	grpc "github.com/maelvls/users-grpc/pkg/grpc"
-	log "github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 )
 
 // Set during build, e.g.: go build  -ldflags"-X main.version=$(git
@@ -26,23 +26,23 @@ func main() {
 	// Set the log format according to the --logfmt flag.
 	switch *logfmt {
 	case "", "text":
-		log.SetFormatter(&log.TextFormatter{})
+		logrus.SetFormatter(&logrus.TextFormatter{})
 	case "json":
-		log.SetFormatter(&log.JSONFormatter{})
+		logrus.SetFormatter(&logrus.JSONFormatter{})
 	default:
-		log.Errorf(`valid values for --logfmt are 'json' or 'text'`)
+		logrus.Errorf(`valid values for --logfmt are 'json' or 'text'`)
 		os.Exit(1)
 	}
 
 	// Set to verbose.
 	if *verbose {
-		log.SetLevel(log.TraceLevel)
+		logrus.SetLevel(logrus.TraceLevel)
 	}
 
-	log.Printf("listening on address %s, version %s (git %s, built on %s)", *addr, version, commit, date)
+	logrus.Printf("listening on address %s, version %s (git %s, built on %s)", *addr, version, commit, date)
 
 	if err := grpc.Run(*addr); err != nil {
-		log.Errorf("launching server: %v", err)
+		logrus.Errorf("launching server: %v", err)
 		os.Exit(1)
 	}
 }
