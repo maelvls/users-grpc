@@ -6,7 +6,7 @@ metadata:
   name: users-grpc
   labels:
     app.kubernetes.io/name: users-grpc
-    helm.sh/chart: users-grpc-0.1.0
+    helm.sh/chart: users-grpc-0.1.1
     app.kubernetes.io/instance: users-grpc
     app.kubernetes.io/managed-by: Helm
 spec:
@@ -27,7 +27,7 @@ metadata:
   name: users-grpc
   labels:
     app.kubernetes.io/name: users-grpc
-    helm.sh/chart: users-grpc-0.1.0
+    helm.sh/chart: users-grpc-0.1.1
     app.kubernetes.io/instance: users-grpc
     app.kubernetes.io/managed-by: Helm
 spec:
@@ -47,7 +47,7 @@ spec:
           image: "maelvls/users-grpc:latest"
           imagePullPolicy: IfNotPresent
           args:
-          - users-server
+            - users-server
             - --reflection
             - --logfmt=json
             - --address=0.0.0.0:8000
@@ -74,7 +74,7 @@ metadata:
   name: "users-grpc-test-connection"
   labels:
     app.kubernetes.io/name: users-grpc
-    helm.sh/chart: users-grpc-0.1.0
+    helm.sh/chart: users-grpc-0.1.1
     app.kubernetes.io/instance: users-grpc
     app.kubernetes.io/managed-by: Helm
   annotations:
