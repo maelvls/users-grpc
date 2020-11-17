@@ -28,7 +28,6 @@
   - [Develop using Docker](#develop-using-docker)
 - [Technical notes](#technical-notes)
   - [Vendor or not vendor and go 1.11 modules](#vendor-or-not-vendor-and-go-111-modules)
-  - [Testing](#testing-1)
   - [`users-cli version`](#users-cli-version)
   - [Protobuf generation](#protobuf-generation)
   - [Logs, debug and verbosity](#logs-debug-and-verbosity)
@@ -224,7 +223,10 @@ go run ./cmd/users-cli
 I wrote two kinds of tests:
 
 - Unit tests to make sure that the database logic works as expected. Tests
-  are wrapped in transactions which are rolled back after the test. To run the unit tests:
+  are wrapped in transactions which are rolled back after the test. I use
+  [gotests](https://github.com/cweill/gotests) for easing the TDD workflow.
+  Whenever I add a new function, I just have to run `gotests -all -w
+  pkg/service/*`. To run the unit tests:
 
   ```sh
   go test ./... -short
@@ -263,6 +265,9 @@ standard (and that's why I used it in the e2e tests), but the go-testdeep is bet
 
 - one caveat with go-testdeep though: it doesn't show which error was
   encountered when running `td.CmpNoError`.
+
+On top of all the current testing, it would be good to add a "deploy"
+end-to-end suite that would test the helm chart.
 
 ### Develop using Docker
 
@@ -353,31 +358,6 @@ That said, I often use `go mod vendor` which comes very handy (I can browse the
 dependencies sources easily, everything is at hand).
 
 [should-i-vendor]: https://www.reddit.com/r/golang/comments/9ai79z/correct_usage_of_go_modules_vendor_still_connects/
-
-### Testing
-
-I use [gotests][] for easing the TDD workflow. Whenever I add a new
-function, I just have to run:
-
-```sh
-gotests -all -w users-server/service/*
-```
-
-so that these functions get generated in the corresponding `test_*.go`
-file. Also, I use [go-testdeep][] in order to display a nice colorful diff
-between 'got' and 'expected' for a friendlier testing experience.
-
-[gotests]: https://github.com/cweill/gotests
-[go-testdeep]: github.com/maxatome/go-testdeep
-
-I mostly focused on TDD on `users-server`. With time, I realized that I had
-many manual tests before each release. Here is a list of this that should
-be added to `.drone.yml`:
-
-1. test the docker image (at least test that the `users-server` is
-   launching using [`grpc-health-probe`][grpc-health-probe])
-2. test the Helm chart
-3. test the CLI `users-cli` (I did not write any test for it yet)
 
 ### `users-cli version`
 
