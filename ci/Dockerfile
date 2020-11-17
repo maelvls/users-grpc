@@ -4,7 +4,7 @@ FROM golang:1.12-alpine as builder
 COPY . /go/src/github.com/maelvls/users-grpc
 WORKDIR /go/src/github.com/maelvls/users-grpc
 
-# Note 1 remember to use multi-line RUN; otherwise it creates many
+# Note: remember to use multi-line RUN; otherwise it creates many
 # unnecessary layers. GO111MODULE=off required in order to avoid messing
 # the go.mod. GO111MODULE=on required in order to enforce fixed versions of
 # go packages.

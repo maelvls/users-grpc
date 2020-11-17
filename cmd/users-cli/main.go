@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/maelvls/users-grpc/users-cli/cmd"
+	"github.com/maelvls/users-grpc/pkg/cli"
 )
 
 // Set during build, e.g.: go build  -ldflags"-X main.version=$(git describe)".
@@ -12,7 +12,7 @@ var (
 )
 
 func main() {
-	cmd.Execute(cmd.Version{
+	cli.Execute(cli.Version{
 		Commit:  commit,
 		Version: version,
 		Date:    date,

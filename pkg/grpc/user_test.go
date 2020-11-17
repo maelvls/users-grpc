@@ -1,10 +1,10 @@
-package grpcsvc
+package grpc
 
 import (
 	"testing"
 
+	service "github.com/maelvls/users-grpc/pkg/service"
 	pb "github.com/maelvls/users-grpc/schema/user"
-	usersvc "github.com/maelvls/users-grpc/users-server/usersvc"
 	"github.com/maxatome/go-testdeep/td"
 	"github.com/stretchr/testify/assert"
 )
@@ -16,13 +16,13 @@ func TestNewUserImpl(t *testing.T) {
 
 func TestFromPB(t *testing.T) {
 	given := pb.User{Name: &pb.Name{First: "Flora", Last: "Hale"}, Age: 38, Id: "a4bcd38", Email: "zikuwcus@awobik.kr"}
-	expect := usersvc.User{FirstName: "Flora", LastName: "Hale", Age: 38, ID: "a4bcd38", Email: "zikuwcus@awobik.kr"}
+	expect := service.User{FirstName: "Flora", LastName: "Hale", Age: 38, ID: "a4bcd38", Email: "zikuwcus@awobik.kr"}
 
 	assert.Equal(t, expect, FromPB(given))
 }
 
 func TestToPB(t *testing.T) {
-	given := usersvc.User{FirstName: "Flora", LastName: "Hale", Age: 38, ID: "a4bcd38", Email: "zikuwcus@awobik.kr"}
+	given := service.User{FirstName: "Flora", LastName: "Hale", Age: 38, ID: "a4bcd38", Email: "zikuwcus@awobik.kr"}
 	expect := &pb.User{Name: &pb.Name{First: "Flora", Last: "Hale"}, Age: 38, Id: "a4bcd38", Email: "zikuwcus@awobik.kr"}
 
 	assert.Equal(t, expect, ToPB(given))
