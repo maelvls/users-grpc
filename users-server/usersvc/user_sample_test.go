@@ -10,6 +10,7 @@ import (
 )
 
 func TestLoadSampleUsers(t *testing.T) {
+	// Just a quick wiring test.
 	db := usersvc.NewDBOrPanic()
 	txn := db.Txn(true)
 	assert.NoError(t, usersvc.LoadSampleUsers(txn))
