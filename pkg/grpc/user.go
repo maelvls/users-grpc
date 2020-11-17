@@ -11,24 +11,34 @@ import (
 	pb "github.com/maelvls/users-grpc/schema/user"
 )
 
-// UserImpl implements the endpoints of the "users" service. If I also
-// wanted to be able to trace my service (e.g. using jaeger), I would also
-// make sure to store opentracing.Tracer there.
-type UserImpl struct {
-	DB *memdb.MemDB
+// For testing purposes.
+type UserService interface {
+	Create(*memdb.Txn, service.User) error
+	List(*memdb.Txn) ([]service.User, error)
+	SearchAge(txn *memdb.Txn, ageFrom, ageTo int32) ([]service.User, error)
+	SearchName(txn *memdb.Txn, query string) ([]service.User, error)
+	GetByEmail(txn *memdb.Txn, email string) (service.User, error)
 }
 
-// NewUserImpl returns a new server.
-func NewUserImpl() *UserImpl {
-	return &UserImpl{DB: service.NewDBOrPanic()}
+// UserServer implements the GRPC endpoints of the "user" service. If I
+// also wanted to be able to trace my service (e.g. using jaeger), I would
+// also make sure to store opentracing.Tracer there.
+type UserServer struct {
+	DB  *memdb.MemDB
+	Svc UserService // For testing purposes.
+}
+
+// NewUserServer returns a new server.
+func NewUserServer() *UserServer {
+	return &UserServer{DB: service.NewDBOrPanic(), Svc: service.UserSvc{}}
 }
 
 // Create a user. If the given user has no id, generate one.
-func (svc *UserImpl) Create(ctx context.Context, req *pb.CreateReq) (*pb.CreateResp, error) {
-	txn := svc.DB.Txn(true)
+func (server *UserServer) Create(ctx context.Context, req *pb.CreateReq) (*pb.CreateResp, error) {
+	txn := server.DB.Txn(true)
 	defer txn.Abort()
 
-	err := service.Create(txn, FromPB(*req.User))
+	err := server.Svc.Create(txn, FromPB(req.User))
 
 	status := &pb.Status{Code: pb.Status_SUCCESS}
 	switch {
@@ -39,7 +49,7 @@ func (svc *UserImpl) Create(ctx context.Context, req *pb.CreateReq) (*pb.CreateR
 		return nil, fmt.Errorf("something wrong happened while creating user, email=" + req.User.Email)
 	}
 
-	user, err := service.GetByEmail(txn, req.User.Email)
+	user, err := server.Svc.GetByEmail(txn, req.User.Email)
 	if err != nil {
 		logrus.Error("GetByEmail returned an unexpected error")
 		return nil, fmt.Errorf("something wrong happened while finding the user, email=" + req.User.Email)
@@ -50,11 +60,11 @@ func (svc *UserImpl) Create(ctx context.Context, req *pb.CreateReq) (*pb.CreateR
 }
 
 // List all users.
-func (svc *UserImpl) List(ctx context.Context, req *pb.ListReq) (*pb.SearchResp, error) {
-	txn := svc.DB.Txn(false) // read-only transaction
+func (server *UserServer) List(ctx context.Context, req *pb.ListReq) (*pb.SearchResp, error) {
+	txn := server.DB.Txn(false) // read-only transaction
 	defer txn.Abort()
 
-	users, err := service.List(txn)
+	users, err := server.Svc.List(txn)
 	if err != nil {
 		logrus.WithError(err).Error("List returned an unexpected error")
 		return nil, fmt.Errorf("something wrong happened while listing")
@@ -65,7 +75,7 @@ func (svc *UserImpl) List(ctx context.Context, req *pb.ListReq) (*pb.SearchResp,
 }
 
 // SearchAge searches all users in the range [from, to_included].
-func (svc *UserImpl) SearchAge(ctx context.Context, req *pb.SearchAgeReq) (*pb.SearchResp, error) {
+func (server *UserServer) SearchAge(ctx context.Context, req *pb.SearchAgeReq) (*pb.SearchResp, error) {
 	if req.AgeRange == nil {
 		return &pb.SearchResp{Users: make([]*pb.User, 0), Status: &pb.Status{
 			Code: pb.Status_INVALID_QUERY,
@@ -73,10 +83,10 @@ func (svc *UserImpl) SearchAge(ctx context.Context, req *pb.SearchAgeReq) (*pb.S
 		}, nil
 	}
 
-	txn := svc.DB.Txn(false)
+	txn := server.DB.Txn(false)
 	defer txn.Abort()
 
-	users, err := service.SearchAge(txn, req.AgeRange.From, req.AgeRange.ToIncluded)
+	users, err := server.Svc.SearchAge(txn, req.AgeRange.From, req.AgeRange.ToIncluded)
 
 	switch {
 	case err == service.AgeFromIsGreaterThanAgeTo:
@@ -91,11 +101,11 @@ func (svc *UserImpl) SearchAge(ctx context.Context, req *pb.SearchAgeReq) (*pb.S
 }
 
 // SearchName searches a user by a part of its first or last name.
-func (svc *UserImpl) SearchName(ctx context.Context, req *pb.SearchNameReq) (*pb.SearchResp, error) {
-	txn := svc.DB.Txn(false)
+func (server *UserServer) SearchName(ctx context.Context, req *pb.SearchNameReq) (*pb.SearchResp, error) {
+	txn := server.DB.Txn(false)
 	defer txn.Abort()
 
-	users, err := service.SearchName(txn, req.Query)
+	users, err := server.Svc.SearchName(txn, req.Query)
 	switch {
 	case err == service.NameQueryEmpty:
 		return &pb.SearchResp{Users: make([]*pb.User, 0), Status: &pb.Status{
@@ -111,11 +121,11 @@ func (svc *UserImpl) SearchName(ctx context.Context, req *pb.SearchNameReq) (*pb
 }
 
 // GetByEmail returns a user by its email.
-func (svc *UserImpl) GetByEmail(ctx context.Context, req *pb.GetByEmailReq) (*pb.GetByEmailResp, error) {
-	txn := svc.DB.Txn(false)
+func (server *UserServer) GetByEmail(ctx context.Context, req *pb.GetByEmailReq) (*pb.GetByEmailResp, error) {
+	txn := server.DB.Txn(false)
 	defer txn.Abort()
 
-	user, err := service.GetByEmail(txn, req.Email)
+	user, err := server.Svc.GetByEmail(txn, req.Email)
 	switch {
 	case err == service.EmailNotFound:
 		return &pb.GetByEmailResp{User: &pb.User{}, Status: &pb.Status{
@@ -131,7 +141,7 @@ func (svc *UserImpl) GetByEmail(ctx context.Context, req *pb.GetByEmailReq) (*pb
 	return resp, nil
 }
 
-func FromPB(u pb.User) service.User {
+func FromPB(u *pb.User) service.User {
 	return service.User{
 		ID:        u.Id,
 		Age:       u.Age,
