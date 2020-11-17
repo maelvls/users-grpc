@@ -196,10 +196,12 @@ go get github.com/maelvls/users-grpc/cmd/...
 
 ### Kubernetes & Helm
 
-I use Helm 3 in this example.
+I use Helm 3 in this example. See [below](#kubernetes--helm) for an example
+with a Trafik ingress and cert-manager.
 
 ```sh
-helm upgrade --install users-grpc ./ci/helm/users-grpc --create-namespace --namespace users-grpc --set image.tag=1.1.0
+helm repo add maelvls https://maelvls.dev/helm-charts && helm repo update
+helm upgrade --install maelvls/users-grpc --create-namespace --namespace users-grpc --set image.tag=1.1.1
 ```
 
 ## Develop and hack it
