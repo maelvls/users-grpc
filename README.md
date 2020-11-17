@@ -34,6 +34,7 @@
 - [Examples that I read for inspiration](#examples-that-i-read-for-inspiration)
 - [Kubernetes and Helm](#kubernetes-and-helm)
 - [Future work](#future-work)
+  - [Using a on-disk database](#using-a-on-disk-database)
   - [Distributed tracing, metrics and logs](#distributed-tracing-metrics-and-logs)
 
 ## Stack
@@ -513,6 +514,14 @@ Yey!! 🎉🎉🎉
 
 Here is a small list of things that could be implemented now that a MVP
 microservice is working.
+
+### Using a on-disk database
+
+Now that the "service" part can be unit-tested thanks to the transaction
+rollback mechanism, it would be quite easy to move the project from
+[go-memdb](https://github.com/hashicorp/go-memdb) (in-memory database) to
+postgres. I started doing just that in [this
+PR](https://github.com/maelvls/users-grpc/pull/65).
 
 ### Distributed tracing, metrics and logs
 
