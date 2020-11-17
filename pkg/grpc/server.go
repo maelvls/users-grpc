@@ -29,7 +29,9 @@ func Run(addr string, enableReflection bool) error {
 
 	srv := grpc.NewServer()
 	user.RegisterUserServiceServer(srv, userServer)
-	grpc_health_v1.RegisterHealthServer(srv, &health.Server{})
+	health := health.NewServer()
+	health.SetServingStatus("user", grpc_health_v1.HealthCheckResponse_SERVING)
+	grpc_health_v1.RegisterHealthServer(srv, health)
 
 	if enableReflection {
 		logrus.Info("reflection enabled, you can now use tools like grpcurl")

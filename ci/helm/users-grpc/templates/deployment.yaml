@@ -25,20 +25,21 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           args:
           - users-server
-          - --logfmt=json
-          - --address=0.0.0.0:8000
-          - -v
+            - --reflection
+            - --logfmt=json
+            - --address=0.0.0.0:8000
+            - -v
           ports:
             - name: grpc
               containerPort: 8000
               protocol: TCP
           livenessProbe:
             exec:
-              command: ["/bin/grpc-health-probe", "-addr=:8000"]
+              command: ["grpc-health-probe", "-addr=:8000"]
             initialDelaySeconds: 10
           readinessProbe:
             exec:
-              command: ["/bin/grpc-health-probe", "-addr=:8000"]
+              command: ["grpc-health-probe", "-addr=:8000"]
             initialDelaySeconds: 5
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
