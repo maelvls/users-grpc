@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package user;
 
+option go_package = ".;user";
+
 message Name {
   string first = 1; // "Brianna"
   string last = 2;  // "Shelton"
@@ -18,12 +20,12 @@ message User {
 
 // User service creates and searches users.
 service UserService {
-  rpc Create(CreateReq) returns (CreateResp);
-  rpc List(ListReq) returns (SearchResp);
-  rpc GetByEmail(GetByEmailReq) returns (GetByEmailResp);
+  rpc Create(CreateReq) returns(CreateResp);
+  rpc List(ListReq) returns(SearchResp);
+  rpc GetByEmail(GetByEmailReq) returns(GetByEmailResp);
   // Searches in a wildcard-way in first-name and last-name.
-  rpc SearchName(SearchNameReq) returns (SearchResp);
-  rpc SearchAge(SearchAgeReq) returns (SearchResp);
+  rpc SearchName(SearchNameReq) returns(SearchResp);
+  rpc SearchAge(SearchAgeReq) returns(SearchResp);
 }
 
 message ListReq {}
@@ -58,10 +60,7 @@ message SearchResp {
 // A status message that is included to each response.
 message Status {
   enum StatusCode {
-    FAILED = 0;
-    NO_IMPL_YET = 1;
-    INVALID_QUERY = 2;
-    PARTIAL_SUCCESS = 3;
+    FAILED = 0; NO_IMPL_YET = 1; INVALID_QUERY = 2; PARTIAL_SUCCESS = 3;
     SUCCESS = 4;
     READMSG = 5;
   }
