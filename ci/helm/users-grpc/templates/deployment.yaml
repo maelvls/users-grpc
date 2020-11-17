@@ -24,8 +24,10 @@ spec:
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           args:
+          - users-server
           - --logfmt=json
           - --address=0.0.0.0:8000
+          - -v
           ports:
             - name: grpc
               containerPort: 8000

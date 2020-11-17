@@ -339,6 +339,16 @@ $ prototool grpc --address :8000 --method user.UserService/GetByEmail --data "$(
 }
 ```
 
+Or you can use grpcurl:
+
+```sh
+# Oneliner when you are stuck execing in some container...
+curl -L https://github.com/fullstorydev/grpcurl/releases/download/v1.7.0/grpcurl_1.7.0_$(uname -s | tr '[:upper:]' '[:lower:]')_x86_64.tar.gz | tar xz && install grpcurl /usr/local/bin
+
+# Or inside your cluster:
+kubectl run foo -it --rm --image=fullstorydev/grpcurl
+```
+
 [grpc-health-probe]: https://github.com/grpc-ecosystem/grpc-health-probe
 [prototool]: https://github.com/uber/prototool
 [jo]: https://github.com/jpmens/jo

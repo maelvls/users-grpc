@@ -19,6 +19,9 @@ var (
 	addr    = flag.String("address", ":8000", "Address used by the server to start listening. Default is ':8000' (equivalent to 0.0.0.0:8000).")
 	logfmt  = flag.String("logfmt", "text", "Log format ('text', 'json'). Default is 'text'.")
 	verbose = flag.Bool("v", false, "Make the server more verbose.")
+
+	// https://github.com/grpc/grpc-go/blob/master/Documentation/server-reflection-tutorial.md
+	reflection = flag.Bool("reflection", false, "Enable reflection, useful for using grpcurl or related tools.")
 )
 
 func main() {
@@ -41,7 +44,7 @@ func main() {
 
 	logrus.Printf("listening on address %s, version %s (git %s, built on %s)", *addr, version, commit, date)
 
-	if err := grpc.Run(*addr); err != nil {
+	if err := grpc.Run(*addr, *reflection); err != nil {
 		logrus.Errorf("launching server: %v", err)
 		os.Exit(1)
 	}
