@@ -67,7 +67,7 @@ func TestCreate(t *testing.T) {
 				{FirstName: "Wayne", LastName: "Keller", Age: 42, ID: "c7dca0a", Email: "le@rec.gb"},
 			}),
 			createUser:  User{FirstName: "Elnora", LastName: "Morales", Age: 38, Email: "eza@pod.ru"},
-			wantErr:     fmt.Errorf("email already exists"),
+			wantErr:     EmailAlreadyExists,
 			fieldChecks: td.StructFields{},
 		},
 	}
@@ -78,7 +78,7 @@ func TestCreate(t *testing.T) {
 
 			tt.init(txn)
 
-			gotErr := Create(txn, tt.createUser)
+			gotErr := UserSvc{}.Create(txn, tt.createUser)
 
 			if tt.wantErr != nil {
 				td.Cmp(t, gotErr, tt.wantErr)
@@ -127,7 +127,7 @@ func TestList(t *testing.T) {
 
 			tt.init(txn)
 
-			got, gotErr := List(txn)
+			got, gotErr := UserSvc{}.List(txn)
 
 			if tt.wantErr != nil {
 				td.Cmp(t, gotErr, tt.wantErr)
@@ -178,7 +178,7 @@ func TestSearchAge(t *testing.T) {
 
 			tt.init(txn)
 
-			got, gotErr := SearchAge(txn, tt.ageFrom, tt.ageTo)
+			got, gotErr := UserSvc{}.SearchAge(txn, tt.ageFrom, tt.ageTo)
 			if tt.wantErr != nil {
 				td.Cmp(t, gotErr, tt.wantErr)
 				return
@@ -234,7 +234,7 @@ func TestSearchName(t *testing.T) {
 
 			tt.init(txn)
 
-			got, gotErr := SearchName(txn, tt.searchName)
+			got, gotErr := UserSvc{}.SearchName(txn, tt.searchName)
 			if tt.wantErr != nil {
 				td.Cmp(t, gotErr, tt.wantErr)
 				return
@@ -288,7 +288,7 @@ func TestGetByEmail(t *testing.T) {
 
 			tt.init(txn)
 
-			got, gotErr := GetByEmail(txn, tt.getEmail)
+			got, gotErr := UserSvc{}.GetByEmail(txn, tt.getEmail)
 			if tt.wantErr != nil {
 				td.Cmp(t, gotErr, tt.wantErr)
 				return

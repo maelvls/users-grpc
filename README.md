@@ -238,6 +238,32 @@ I wrote two kinds of tests:
   go test ./test/e2e
   ```
 
+I used gomock for mocking the behavior of the "user service" when testing
+the GRPC endpoints. I also used Gomega's gexec package just for easing the
+process of creating binaries for the end-to-end tests.
+
+You might notice two different testing libraries being used:
+[testify](https://github.com/stretchr/testify) and
+[go-testdeep](https://github.com/maxatome/go-testdeep). Testify is quite
+standard (and that's why I used it in the e2e tests), but the go-testdeep is better is some ways:
+
+- go-testdeep has colors (including with the diffs), testify doesn't,
+- go-testdeep "expected" and "got" parameters are in the correct order:
+
+  ```go
+  // testify is confusing:
+  assert.Equal(t, expected, got)
+  assert.Contains(t, got, expected) // Inverted?
+  assert.NoError(t, got) // Inverted too?
+
+  // go-testdeep is more consistent:
+  td.Cmd(t, got, expected)
+  td.CmpNoError(t, got)
+  ```
+
+- one caveat with go-testdeep though: it doesn't show which error was
+  encountered when running `td.CmpNoError`.
+
 ### Develop using Docker
 
 ```sh

@@ -19,7 +19,9 @@ var (
 )
 
 // MemDB is a simple in-memory DB by Hashicorp. As I wanted to keep things
-// simple, I did not go with Postgres.
+// simple, I did not go with Postgres. I have a branch open with the
+// Postgres implementation though:
+// https://github.com/maelvls/users-grpc/pull/65
 
 // NewDBOrPanic initializes the DB.
 func NewDBOrPanic() *memdb.MemDB {
@@ -57,13 +59,17 @@ type User struct {
 	Address   string `json:"address,omitempty"`
 }
 
+// This struct is meant to make the service mockable for testing purposes.
+// If I didn't need to test this, I would go with plain functions.
+type UserSvc struct{}
+
 // Create a user. The transaction must be created with write mode. If the
 // given user has no ID, one will be generated randomly using the Mongo
 // Object ID algorithm, see:
 // https://docs.mongodb.com/manual/reference/method/ObjectId/
 //
 // The possible error is EmailAlreadyExists.
-func Create(txn *memdb.Txn, user User) error {
+func (UserSvc) Create(txn *memdb.Txn, user User) error {
 	if user.ID == "" {
 		user.ID = xid.New().String()
 	}
@@ -86,7 +92,7 @@ func Create(txn *memdb.Txn, user User) error {
 }
 
 // List all users.
-func List(txn *memdb.Txn) ([]User, error) {
+func (UserSvc) List(txn *memdb.Txn) ([]User, error) {
 	it, err := txn.Get("user", "email")
 	if err != nil {
 		return nil, fmt.Errorf("list users: %w", err)
@@ -103,7 +109,7 @@ func List(txn *memdb.Txn) ([]User, error) {
 
 // SearchAge searches all users in the range [from, to_included]. The
 // possible error is AgeFromIsGreaterThanAgeTo.
-func SearchAge(txn *memdb.Txn, ageFrom, ageTo int32) ([]User, error) {
+func (UserSvc) SearchAge(txn *memdb.Txn, ageFrom, ageTo int32) ([]User, error) {
 	if ageFrom > ageTo {
 		return nil, AgeFromIsGreaterThanAgeTo
 	}
@@ -129,7 +135,7 @@ func SearchAge(txn *memdb.Txn, ageFrom, ageTo int32) ([]User, error) {
 
 // SearchName searches a user by a part of its first or last name.
 // The possible error is NameQueryEmpty.
-func SearchName(txn *memdb.Txn, query string) ([]User, error) {
+func (UserSvc) SearchName(txn *memdb.Txn, query string) ([]User, error) {
 	if query == "" {
 		return nil, NameQueryEmpty
 	}
@@ -169,7 +175,7 @@ func SearchName(txn *memdb.Txn, query string) ([]User, error) {
 }
 
 // GetByEmail returns a user by its email. May return EmailNotFound.
-func GetByEmail(txn *memdb.Txn, email string) (User, error) {
+func (UserSvc) GetByEmail(txn *memdb.Txn, email string) (User, error) {
 	raw, err := txn.First("user", "email", email)
 
 	if err != nil {

@@ -7,25 +7,26 @@ import (
 	service "github.com/maelvls/users-grpc/pkg/service"
 	"github.com/maelvls/users-grpc/schema/user"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/health"
 	"google.golang.org/grpc/health/grpc_health_v1"
 )
 
 // Run starts the server.
 func Run(addr string) error {
-	svc := NewUserImpl()
+	server := NewUserServer()
 
-	txn := svc.DB.Txn(true)
-	defer txn.Abort()
+	txn := server.Txn(true)
+	defer server.Rollback(txn)
 
 	err := service.LoadSampleUsers(txn)
 	if err != nil {
 		return fmt.Errorf("while loading sample users: %w", err)
 	}
-	txn.Commit()
+	server.Commit(txn)
 
 	srv := grpc.NewServer()
-	user.RegisterUserServiceServer(srv, svc)
-	grpc_health_v1.RegisterHealthServer(srv, &HealthImpl{})
+	user.RegisterUserServiceServer(srv, server)
+	grpc_health_v1.RegisterHealthServer(srv, &health.Server{})
 
 	lis, err := net.Listen("tcp", addr)
 	if err != nil {

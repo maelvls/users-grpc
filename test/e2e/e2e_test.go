@@ -96,7 +96,7 @@ func Test_CLI(t *testing.T) {
 
 			cli := startWith(t, exec.Command(bincli, "--color=never", "--address", addr, "get", "impossible.name@email.com")).Wait()
 			assert.Equal(t, 1, cli.ProcessState.ExitCode())
-			assert.Contains(t, contents(cli.Output), "email cannot be found")
+			assert.Contains(t, contents(cli.Output), "the email impossible.name@email.com cannot be found")
 		})
 	})
 
