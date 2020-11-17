@@ -67,20 +67,13 @@ steps:
       event:
         - tag
 
-  - name: alpine/helm
-    image: quay.io/helmpack/chart-releaser:latest
-    commands:
-      - helm package -d /tmp/.deploy ./ci/helm/users-grpc
-    when:
-      event:
-        - tag
-
   - name: helm-chart
     image: quay.io/helmpack/chart-releaser:latest
     commands:
-      - cr upload --owner maelvls --git-repo users-grpc --package-path /tmp/.deploy --token $GITHUB_TOKEN
+      - cr package ./ci/helm/users-grpc
+      - cr upload --owner maelvls --git-repo users-grpc --token $GITHUB_TOKEN
       - cr index --push --charts-repo https://github.com/maelvls/helm-charts --git-repo https://github.com/maelvls/users-grpc \
-        --owner maelvls --git-repo users-grpc --package-path /tmp/.deploy --token $GITHUB_TOKEN --index-path ./
+        --owner maelvls --git-repo users-grpc --token $GITHUB_TOKEN --index-path ./
     environment:
       GITHUB_TOKEN: { from_secret: GITHUB_TOKEN }
     when:
