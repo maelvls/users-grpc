@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/lithammer/dedent"
+	"github.com/maelvls/users-grpc/pkg/cli/logutil"
 	"github.com/mattn/go-isatty"
 	"github.com/mgutz/ansi"
 	homedir "github.com/mitchellh/go-homedir"
@@ -29,7 +30,7 @@ var rootCmd = &cobra.Command{
 		client = grpcClient{
 			address: viper.GetString("address"),
 		}
-		logrus.Debugf("using address: %s", client.address)
+		logutil.Debugf("using address: %s", client.address)
 		switch viper.GetString("color") {
 		case "auto":
 			ansi.DisableColors(!isatty.IsTerminal(os.Stdout.Fd()))
@@ -87,7 +88,7 @@ type grpcClient struct {
 // initConfig reads in config file and ENV variables if set.
 func initConfig() {
 	if verbose {
-		logrus.SetLevel(logrus.TraceLevel)
+		logutil.EnableDebug = true
 	}
 	if cfgFile != "" {
 		// Use config file from the flag.
@@ -107,6 +108,6 @@ func initConfig() {
 
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err == nil {
-		logrus.Debugf("using config file: %v", viper.ConfigFileUsed())
+		logutil.Debugf("using config file: %v", viper.ConfigFileUsed())
 	}
 }
