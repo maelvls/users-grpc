@@ -94,8 +94,9 @@ steps:
       - cr index --owner maelvls --git-repo helm-charts --push --charts-repo https://maelvls.dev/helm-charts --token $GITHUB_TOKEN --index-path .
     environment:
       GITHUB_TOKEN: { from_secret: GITHUB_TOKEN }
-    when:
-      event:
-        - promote
-      target:
-        - production
+
+trigger:
+  event:
+    - promote
+  target:
+    - production
