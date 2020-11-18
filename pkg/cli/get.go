@@ -10,7 +10,6 @@ import (
 	"github.com/maelvls/users-grpc/pkg/cli/logutil"
 	"github.com/maelvls/users-grpc/schema/user"
 	"github.com/spf13/cobra"
-	"google.golang.org/grpc"
 )
 
 func init() {
@@ -26,33 +25,31 @@ func init() {
 		Run: func(getCmd *cobra.Command, args []string) {
 			givenEmail := args[0]
 
-			cc, err := grpc.Dial(client.address, grpc.WithInsecure())
+			client, err := createClient(cfg)
 			if err != nil {
 				logutil.Errorf("grpc client: %v", err)
 				os.Exit(1)
 			}
 
-			client := user.NewUserServiceClient(cc)
 			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 			defer cancel()
 
 			resp, err := client.GetByEmail(ctx, &user.GetByEmailReq{Email: givenEmail})
-
-			if err != nil {
-				logutil.Errorf("grpc client: %v", err)
+			switch {
+			case err != nil:
+				logutil.Errorf("get by email: %v", err)
 				os.Exit(1)
+			case resp.GetStatus().GetCode() == user.Status_FAILED:
+				logutil.Errorf(resp.Status.Msg)
+				os.Exit(1)
+			case resp.GetStatus().GetCode() != user.Status_SUCCESS:
+				logutil.Errorf("%#+v", resp.GetStatus())
+				os.Exit(1)
+			default:
+				// Happy path continuing below.
 			}
 
-			if resp.GetStatus().GetCode() == user.Status_FAILED {
-				logutil.Errorf("email not found")
-				os.Exit(1)
-			}
-
-			if resp.GetStatus().GetCode() != user.Status_SUCCESS {
-				logutil.Errorf("grpc client: %#+v", resp.GetStatus())
-				os.Exit(1)
-			}
-
+			// Finally, let's display the found user.
 			fmt.Println(Spprint(resp.User))
 		},
 	}

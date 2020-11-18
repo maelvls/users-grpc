@@ -9,7 +9,6 @@ import (
 	"github.com/maelvls/users-grpc/pkg/cli/logutil"
 	pb "github.com/maelvls/users-grpc/schema/user"
 	"github.com/spf13/cobra"
-	"google.golang.org/grpc"
 )
 
 func init() {
@@ -17,14 +16,12 @@ func init() {
 		Use:   "search (--name=PARTIALNAME | --agefrom=N --ageto=M)",
 		Short: "Search users from the remote users-server",
 		Run: func(searchCmd *cobra.Command, args []string) {
-
-			cc, err := grpc.Dial(client.address, grpc.WithInsecure())
+			client, err := createClient(cfg)
 			if err != nil {
 				logutil.Errorf("grpc client: %v", err)
 				os.Exit(1)
 			}
 
-			client := pb.NewUserServiceClient(cc)
 			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 			defer cancel()
 
@@ -54,21 +51,18 @@ func init() {
 			case !searchAge && !searchName:
 				logutil.Errorf("need one of '--name=PARTIALNAME' or '--agefrom=N' + '--ageto=M'")
 			case searchAge:
-				resp, err := client.SearchAge(ctx, &pb.SearchAgeReq{
-					AgeRange: &pb.SearchAgeReq_AgeRange{
-						From:       int32(ageFrom),
-						ToIncluded: int32(ageTo),
-					},
-				})
+				req := &pb.SearchAgeReq{AgeRange: &pb.SearchAgeReq_AgeRange{From: int32(ageFrom), ToIncluded: int32(ageTo)}}
 
-				if err != nil {
+				resp, err := client.SearchAge(ctx, req)
+				switch {
+				case err != nil:
 					logutil.Errorf("grpc client: %v", err)
 					os.Exit(1)
-				}
-
-				if resp.GetStatus().GetCode() != pb.Status_SUCCESS {
+				case resp.GetStatus().GetCode() != pb.Status_SUCCESS:
 					logutil.Errorf("grpc client: %v", resp.GetStatus())
 					os.Exit(1)
+				default:
+					// Happy path continuing below.
 				}
 
 				for _, u := range resp.GetUsers() {
@@ -76,14 +70,15 @@ func init() {
 				}
 			case searchName:
 				resp, err := client.SearchName(ctx, &pb.SearchNameReq{Query: name})
-				if err != nil {
+				switch {
+				case err != nil:
 					logutil.Errorf("grpc client: %v", err)
 					os.Exit(1)
-				}
-
-				if resp.GetStatus().GetCode() != pb.Status_SUCCESS {
+				case resp.GetStatus().GetCode() != pb.Status_SUCCESS:
 					logutil.Errorf("grpc client: %v", resp.GetStatus())
 					os.Exit(1)
+				default:
+					// Happy path continuing below.
 				}
 
 				for _, u := range resp.GetUsers() {

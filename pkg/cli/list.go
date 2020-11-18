@@ -10,7 +10,6 @@ import (
 	"github.com/maelvls/users-grpc/schema/user"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"google.golang.org/grpc"
 )
 
 func init() {
@@ -18,24 +17,24 @@ func init() {
 		Use:   "list",
 		Short: "List all users",
 		Run: func(listCmd *cobra.Command, args []string) {
-			cc, err := grpc.Dial(client.address, grpc.WithInsecure())
+			client, err := createClient(cfg)
 			if err != nil {
 				logutil.Errorf("grpc client: %v", err)
 				os.Exit(1)
 			}
 
-			client := user.NewUserServiceClient(cc)
 			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+
 			resp, err := client.List(ctx, &user.ListReq{})
-
-			if err != nil {
-				logutil.Errorf("grpc client: %v", err)
+			switch {
+			case err != nil:
+				logutil.Errorf("listing users: %v", err)
 				os.Exit(1)
-			}
-
-			if resp.GetStatus().GetCode() != user.Status_SUCCESS {
-				logutil.Errorf("grpc client: %v", resp.GetStatus())
+			case resp.GetStatus().GetCode() != user.Status_SUCCESS:
+				logutil.Errorf("%v", resp.GetStatus())
 				os.Exit(1)
+			default:
+				// Happy path continuing below.
 			}
 
 			logrus.Debugf("number of users received: %v", len(resp.GetUsers()))

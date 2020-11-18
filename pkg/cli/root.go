@@ -6,18 +6,21 @@ import (
 
 	"github.com/lithammer/dedent"
 	"github.com/maelvls/users-grpc/pkg/cli/logutil"
+	"github.com/maelvls/users-grpc/schema/user"
 	"github.com/mattn/go-isatty"
 	"github.com/mgutz/ansi"
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 )
 
 var cfgFile string
 var verbose bool
 var version Version
-var client grpcClient
+var cfg clientCfg
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -27,10 +30,13 @@ var rootCmd = &cobra.Command{
 	// https://github.com/spf13/cobra#prerun-and-postrun-hooks
 	// This hook is also executed when subcommands are run.
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		client = grpcClient{
-			address: viper.GetString("address"),
+		cfg = clientCfg{
+			address:    viper.GetString("address"),
+			cacert:     viper.GetString("cacert"),
+			cleartext:  viper.GetBool("cleartext"),
+			servername: viper.GetString("servername"),
 		}
-		logutil.Debugf("using address: %s", client.address)
+		logutil.Debugf("config: %v", cfg)
 		switch viper.GetString("color") {
 		case "auto":
 			ansi.DisableColors(!isatty.IsTerminal(os.Stdout.Fd()))
@@ -44,10 +50,8 @@ var rootCmd = &cobra.Command{
 		}
 	},
 	Long: dedent.Dedent(`
-	For setting the address of the form HOST:PORT, you can
-	* use the flag --address=:8000
-	* or use the env var ADDRESS
-	* or you can set 'address: localhost:8000' in $HOME/.users-cli.yml
+	Note: I could not add an '--insecure' flag that would disable TLS verification
+	due to the lack of support in the go-grpc lib.
 	`),
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
@@ -69,8 +73,11 @@ func init() {
 	logrus.SetFormatter(&logrus.TextFormatter{})
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.users-cli.yml)")
 	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "verbose output")
-	rootCmd.PersistentFlags().String("address", ":8000", "'host:port' to bind to")
+	rootCmd.PersistentFlags().String("address", ":8000", "The host:port to bind to. Alternatively, you can set ADDRESS or add 'address: localhost:8000' in $HOME/.users-cli.yml")
 	rootCmd.PersistentFlags().String("color", "auto", "Supported are 'auto', 'always' and 'never'. In 'auto' mode, colors are enabled when stdout is a tty.")
+	rootCmd.PersistentFlags().String("cacert", "", "CA certificate to verify the server's TLS certificate against.")
+	rootCmd.PersistentFlags().Bool("cleartext", false, "Use HTTP/2 in cleartext mode (h2c).")
+	rootCmd.PersistentFlags().String("servername", "", "Override server name when validating TLS certificate. Useful when testing locally.")
 	err := viper.BindPFlag("address", rootCmd.PersistentFlags().Lookup("address"))
 	if err != nil {
 		panic(err)
@@ -79,10 +86,25 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
+	err = viper.BindPFlag("cacert", rootCmd.PersistentFlags().Lookup("cacert"))
+	if err != nil {
+		panic(err)
+	}
+	err = viper.BindPFlag("cleartext", rootCmd.PersistentFlags().Lookup("cleartext"))
+	if err != nil {
+		panic(err)
+	}
+	err = viper.BindPFlag("servername", rootCmd.PersistentFlags().Lookup("servername"))
+	if err != nil {
+		panic(err)
+	}
 }
 
-type grpcClient struct {
-	address string
+type clientCfg struct {
+	address    string
+	cacert     string
+	servername string // Often used while testing.
+	cleartext  bool
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -110,4 +132,31 @@ func initConfig() {
 	if err := viper.ReadInConfig(); err == nil {
 		logutil.Debugf("using config file: %v", viper.ConfigFileUsed())
 	}
+}
+
+func createClient(config clientCfg) (user.UserServiceClient, error) {
+	// if config.cleartext && config.servername != "" {
+	// 	return nil, fmt.Errorf("can't use both --cleartext and --servername")
+	// }
+	var opts []grpc.DialOption
+	if config.cacert != "" {
+		c, err := credentials.NewClientTLSFromFile(config.cacert, config.servername)
+		if err != nil {
+			return nil, fmt.Errorf("loading CA certificates: %w", err)
+		}
+		opts = append(opts, grpc.WithTransportCredentials(c))
+	}
+	if config.cleartext {
+		opts = append(opts, grpc.WithInsecure())
+	}
+
+	cc, err := grpc.Dial(config.address, opts...)
+	if err != nil {
+		logutil.Errorf("grpc client: %s", err)
+		os.Exit(1)
+	}
+
+	client := user.NewUserServiceClient(cc)
+
+	return client, err
 }

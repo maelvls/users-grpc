@@ -16,14 +16,13 @@ var (
 	commit  = "none"
 	date    = "unknown"
 
-	addr    = flag.String("address", ":8000", "Address used by the server to start listening. Default is ':8000' (equivalent to 0.0.0.0:8000).")
-	logfmt  = flag.String("logfmt", "text", "Log format ('text', 'json'). Default is 'text'.")
-	verbose = flag.Bool("v", false, "Make the server more verbose.")
-
-	cleartext = flag.Bool("cleartext", false, "If set, the connection is established in cleartext (h2c, HTTP/2 clear text)")
-	certFile  = flag.String("--tls-cert-file", "", "The TLS cert file, required if --cleartext is not set")
-	keyFile   = flag.String("--tls-key-file", "", "The TLS key file, required if --cleartext is not set")
-
+	addr     = flag.String("address", ":8000", "Address used by the server to start listening. Default is ':8000' (equivalent to 0.0.0.0:8000).")
+	logfmt   = flag.String("logfmt", "text", "Log format ('text', 'json'). Default is 'text'.")
+	verbose  = flag.Bool("v", false, "Make the server more verbose.")
+	tls      = flag.Bool("tls", false, "If set, the connection is established with TLS; otherwise, connection is in clear text mode (h2c, HTTP/2 clear text).")
+	certFile = flag.String("tls-cert-file", "", "The TLS cert file, required if --tls is set.")
+	keyFile  = flag.String("tls-key-file", "", "The TLS key file, required if --tls is set.")
+	samples  = flag.Bool("samples", false, "Load some user samples on startup.")
 	// https://github.com/grpc/grpc-go/blob/master/Documentation/server-reflection-tutorial.md
 	reflection = flag.Bool("reflection", false, "Enable reflection, useful for using grpcurl or related tools.")
 )
@@ -48,7 +47,7 @@ func main() {
 
 	logrus.Printf("listening on address %s, version %s (git %s, built on %s)", *addr, version, commit, date)
 
-	if err := grpc.Run(*addr, *reflection, *cleartext, *certFile, *keyFile); err != nil {
+	if err := grpc.Run(*addr, *reflection, *tls, *samples, *certFile, *keyFile); err != nil {
 		logrus.Errorf("launching server: %v", err)
 		os.Exit(1)
 	}

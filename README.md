@@ -459,15 +459,25 @@ liveness checks can work with this service. What I did:
    # users-grpc.yaml
    image:
      tag: 1.1.1
+
+   service:
+     annotations:
+       # Traffic between Traefik and the users-server pod will be left
+       # unencrypted (h2c mode, i.e., HTTP/2 cleartext). This annotation tells
+       # Traefik to try to connect to the upstream users-server using h2c.
+       # https://doc.traefik.io/traefik/master/routing/providers/kubernetes-ingress/
+       traefik.ingress.kubernetes.io/service.serversscheme: h2c
+
    ingress:
      enabled: true
-     hosts: [users-grpc.kube.maelvls.dev]
+     hosts: [users-server.k.maelvls.dev]
      annotations:
        kubernetes.io/ingress.class: traefik
-       certmanager.k8s.io/cluster-issuer: letsencrypt-prod
+       cert-manager.io/cluster-issuer: letsencrypt-prod
+
      tls:
-       - hosts: [users-grpc.kube.maelvls.dev]
-         secretName: users-grpc-tls
+       - hosts: [users-server.k.maelvls.dev]
+         secretName: tls
    ```
 
    We can then have the service from the internet through Traefik (Ingress
@@ -480,7 +490,7 @@ liveness checks can work with this service. What I did:
 
    ```sh
    helm repo add maelvls https://maelvls.dev/helm-charts && helm repo update
-   helm install maelvls/grpc-users --name users-grpc --create-namespace --namespace users-grpc --values users-grpc.yaml
+   helm upgrade --install maelvls/grpc-users --name users-grpc --create-namespace --namespace users-grpc --values users-grpc.yaml
    ```
 
 [k.maelvls.dev]: https://github.com/maelvls/k.maelvls.dev

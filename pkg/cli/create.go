@@ -11,7 +11,6 @@ import (
 	"github.com/maelvls/users-grpc/schema/user"
 	pb "github.com/maelvls/users-grpc/schema/user"
 	"github.com/spf13/cobra"
-	"google.golang.org/grpc"
 )
 
 func init() {
@@ -26,13 +25,12 @@ func init() {
 			return nil
 		},
 		Run: func(createCmd *cobra.Command, args []string) {
-			cc, err := grpc.Dial(client.address, grpc.WithInsecure())
+			client, err := createClient(cfg)
 			if err != nil {
 				logutil.Errorf("grpc client: %v", err)
 				os.Exit(1)
 			}
 
-			client := user.NewUserServiceClient(cc)
 			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 			defer cancel()
 
@@ -55,18 +53,16 @@ func init() {
 
 			// Create the user.
 			resp, err := client.Create(ctx, &user.CreateReq{User: usr})
-
-			if err != nil {
-				logutil.Errorf("grpc client: %v", err)
+			switch {
+			case err != nil:
+				logutil.Errorf("%v", err)
 				os.Exit(1)
-			}
-
-			if resp.GetStatus().GetCode() != user.Status_SUCCESS {
-				logutil.Errorf("grpc client: %v", resp.GetStatus())
+			case resp.GetStatus().GetCode() != user.Status_SUCCESS:
+				logutil.Errorf("%v", resp.GetStatus())
 				os.Exit(1)
+			default:
+				// Nothing.
 			}
-
-			// fmt.Println(Spprint(resp.GetUser()))
 		},
 	}
 
