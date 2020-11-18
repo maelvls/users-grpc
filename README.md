@@ -28,7 +28,8 @@
   - [Protobuf generation](#protobuf-generation)
   - [Logs, debug and verbosity](#logs-debug-and-verbosity)
 - [Examples that I read for inspiration](#examples-that-i-read-for-inspiration)
-- [Kubernetes and Helm](#kubernetes-and-helm)
+- [Using the Helm chart](#using-the-helm-chart)
+- [Updating & uploading the Helm charts](#updating--uploading-the-helm-charts)
 - [Future work](#future-work)
   - [Using an on-disk database](#using-an-on-disk-database)
   - [Distributed tracing, metrics and logs](#distributed-tracing-metrics-and-logs)
@@ -196,8 +197,8 @@ go get github.com/maelvls/users-grpc/cmd/...
 
 ### Kubernetes & Helm
 
-I use Helm 3 in this example. See [below](#kubernetes--helm) for an example
-with a Trafik ingress and cert-manager.
+I use Helm 3 in this example. See [below](#using-the-helm-chart) for an
+example with a Trafik ingress and cert-manager.
 
 ```sh
 helm repo add maelvls https://maelvls.dev/helm-charts && helm repo update
@@ -440,7 +441,7 @@ interceptors). One way of doing that is proposed in [go-grpc-middleware][].
 [helm-gh-pages-example]: https://github.com/int128/helm-github-pages
 [linkerd2]: https://github.com/linkerd/linkerd2
 
-## Kubernetes and Helm
+## Using the Helm chart
 
 In order to test the deployment of my service, I create a Helm chart (as
 well as a static `kubernetes.yml` -- which is way less flexible) and used
@@ -524,6 +525,25 @@ status: SERVING
 
 Yey!! 🎉🎉🎉
 
+## Updating & uploading the Helm charts
+
+To update the helm chart served at <https://maelvls.dev/helm-charts>, I use
+the drone.io's "build promoting" feature with
+[chart-releaser](https://github.com/helm/chart-releaser). Make sure to
+update the chart version at `ci/helm/users-grpc/Chart.yaml`, push the
+changes, wait until the CI build is done and then either (1) go to the
+Drone UI and click "Deploy" and use the target "production", or use the
+CLI:
+
+```sh
+brew install drone
+drone build ls maelvls/users-grpc --event push --limit 1
+# Copy the build ID, e.g., "305".
+export DRONE_TOKEN=...
+drone build promote maelvls/users-grpc 305 production
+```
+
+
 ## Future work
 
 Here is a small list of things that could be implemented now that a MVP
@@ -555,6 +575,4 @@ These middlewares are listed and available at [go-grpc-middleware][].
 I could publish the `users-cli` and `users-server` as a Homebrew tag, e.g.
 at <https://github.com/maelvls/homebrew-tap>.
 
-I could as well publish the helm charts on Github Pages (e.g., at
-<https://maelvls.github.io/users-grpc>) following the
-[helm-gh-pages-example][].
+
