@@ -67,6 +67,11 @@ steps:
       event:
         - tag
 
+trigger:
+  event:
+    exclude:
+      - promote
+
 ---
 # Secrets that must be set in drone.io:
 # GITHUB_TOKEN (scope required: repo/public_repo)
