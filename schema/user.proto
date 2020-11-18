@@ -23,7 +23,9 @@ service UserService {
   rpc Create(CreateReq) returns(CreateResp);
   rpc List(ListReq) returns(SearchResp);
   rpc GetByEmail(GetByEmailReq) returns(GetByEmailResp);
-  // Searches in a wildcard-way in first-name and last-name.
+  // Searches in a wildcard-way in first-name and last-name. It is case and
+  // special-character insensitive: for example, searching "mael" will
+  // return "Maël".
   rpc SearchName(SearchNameReq) returns(SearchResp);
   rpc SearchAge(SearchAgeReq) returns(SearchResp);
 }

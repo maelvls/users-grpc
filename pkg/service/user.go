@@ -4,8 +4,12 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"unicode"
 
 	"github.com/sirupsen/logrus"
+	"golang.org/x/text/runes"
+	"golang.org/x/text/transform"
+	"golang.org/x/text/unicode/norm"
 
 	memdb "github.com/hashicorp/go-memdb"
 	"github.com/rs/xid"
@@ -133,12 +137,25 @@ func (UserSvc) SearchAge(txn *memdb.Txn, ageFrom, ageTo int32) ([]User, error) {
 	return users, nil
 }
 
-// SearchName searches a user by a part of its first or last name.
-// The possible error is NameQueryEmpty.
+// SearchName searches a user by a part of its first or last name. The
+// search is case-insensitive and diacritics are normalised into ASCII
+// characters. For example, 'mael' will return 'Maël' if the record exists.
+//
+// Possible errors: NameQueryEmpty.
 func (UserSvc) SearchName(txn *memdb.Txn, query string) ([]User, error) {
 	if query == "" {
 		return nil, NameQueryEmpty
 	}
+
+	// Let's convert diacritics into ASCII characters. We simply remove the
+	// unicode runes that belong to the "Mn" set (Mark, nonspacing).
+	// https://stackoverflow.com/questions/26722450/remove-diacritics-using-go
+	t := transform.Chain(norm.NFD, runes.Remove(runes.In(unicode.Mn)), norm.NFC)
+
+	logrus.Debugf("searching the substring '%s'", query)
+	query, _, _ = transform.String(t, strings.ToLower(query))
+	logrus.Debugf("normalized substring: '%s'", query)
+
 	// This function filters out all users that do not contain the given
 	// substr. Elmts are filtered/skipped when this function returns true.
 	// This function should return false when an element should be kept.
@@ -150,8 +167,10 @@ func (UserSvc) SearchName(txn *memdb.Txn, query string) ([]User, error) {
 				return true // Skip this element.
 			}
 
-			hasSubstr := strings.Contains(u.FirstName, query) ||
-				strings.Contains(u.LastName, query)
+			first, _, _ := transform.String(t, strings.ToLower(u.FirstName))
+			last, _, _ := transform.String(t, strings.ToLower(u.LastName))
+
+			hasSubstr := strings.Contains(first, query) || strings.Contains(last, query)
 			// We skip the element whenever the substr has not been matched.
 			pleaseSkipIt := !hasSubstr
 			return pleaseSkipIt

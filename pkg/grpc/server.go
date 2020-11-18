@@ -15,7 +15,7 @@ import (
 
 // Run starts the server. Set reflexion to true if you want to be able to
 // use grpcurl or prototool to discover the proto files.
-func Run(addr string, enableReflection bool) error {
+func Run(addr string, enableReflection, cleartext bool, certFile, keyFile string) error {
 	userServer := NewUserServer()
 
 	txn := userServer.Txn(true)

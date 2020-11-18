@@ -28,28 +28,32 @@ func init() {
 			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 			defer cancel()
 
-			var mode = "SearchAge"
-
+			var searchAge, searchName bool
 			name, _ := searchCmd.Flags().GetString("name")
 			if name != "" {
-				mode = "SearchName"
+				searchName = true
 			}
 
-			switch mode {
-			case "":
+			ageFrom, err := searchCmd.Flags().GetInt32("agefrom")
+			if err != nil {
+				logutil.Errorf("--agefrom is not a number")
+				os.Exit(1)
+			}
+			ageTo, err := searchCmd.Flags().GetInt32("ageto")
+			if err != nil {
+				logutil.Errorf("--ageto is not a number")
+				os.Exit(1)
+			}
+			if ageTo != 0 || ageFrom != 0 {
+				searchAge = true
+			}
+
+			switch {
+			case searchAge && searchName:
+				logutil.Errorf("cannot search by age and by name at the same time")
+			case !searchAge && !searchName:
 				logutil.Errorf("need one of '--name=PARTIALNAME' or '--agefrom=N' + '--ageto=M'")
-			case "SearchAge":
-				var ageFrom, ageTo int32
-				ageFrom, err = searchCmd.Flags().GetInt32("agefrom")
-				if err != nil {
-					logutil.Errorf("--agefrom is not a number")
-					os.Exit(1)
-				}
-				ageTo, err = searchCmd.Flags().GetInt32("ageto")
-				if err != nil {
-					logutil.Errorf("--ageto is not a number")
-					os.Exit(1)
-				}
+			case searchAge:
 				resp, err := client.SearchAge(ctx, &pb.SearchAgeReq{
 					AgeRange: &pb.SearchAgeReq_AgeRange{
 						From:       int32(ageFrom),
@@ -70,8 +74,7 @@ func init() {
 				for _, u := range resp.GetUsers() {
 					fmt.Println(Spprint(u))
 				}
-
-			case "SearchName":
+			case searchName:
 				resp, err := client.SearchName(ctx, &pb.SearchNameReq{Query: name})
 				if err != nil {
 					logutil.Errorf("grpc client: %v", err)
@@ -87,13 +90,12 @@ func init() {
 					fmt.Println(Spprint(u))
 				}
 			}
-
 		},
 	}
 
-	searchCmd.Flags().String("name", "", "Search with a substring of first and last name") // brianna.shelton@email.org
-	searchCmd.Flags().Int32("agefrom", 18, "Search in [agefrom, ageto]")
-	searchCmd.Flags().Int32("ageto", 18, "")
+	searchCmd.Flags().String("name", "", "Search with a substring of first or last name; search is case-insensitive and special characters insensitive (e.g., searching 'mael' will return 'Maël') // brianna.shelton@email.org")
+	searchCmd.Flags().Int32("agefrom", 0, "Search in [agefrom, ageto]")
+	searchCmd.Flags().Int32("ageto", 0, "")
 
 	rootCmd.AddCommand(searchCmd)
 }
