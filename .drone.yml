@@ -67,6 +67,19 @@ steps:
       event:
         - tag
 
+---
+# Secrets that must be set in drone.io:
+# GITHUB_TOKEN (scope required: repo/public_repo)
+
+type: docker
+kind: pipeline
+name: helm-release
+
+platform:
+  os: linux
+  arch: amd64
+
+steps:
   - name: helm-chart
     image: quay.io/helmpack/chart-releaser:latest
     commands:
