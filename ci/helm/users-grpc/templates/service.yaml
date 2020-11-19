@@ -18,6 +18,10 @@ spec:
       targetPort: grpc
       protocol: TCP
       name: grpc
+    - port: {{ .Values.service.port }}
+      targetPort: metrics
+      protocol: TCP
+      name: metrics
   selector:
     app.kubernetes.io/name: {{ include "users-grpc.name" . }}
     app.kubernetes.io/instance: {{ .Release.Name }}

@@ -15,6 +15,7 @@ fullnameOverride: ""
 service:
   type: ClusterIP
   port: 8000
+  portMetrics: 9402
   annotations: {}
 
 ingress:

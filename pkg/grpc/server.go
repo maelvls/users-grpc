@@ -1,12 +1,17 @@
 package grpc
 
 import (
+	"context"
 	"fmt"
 	"net"
+	"net/http"
 
+	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
 	service "github.com/maelvls/users-grpc/pkg/service"
 	"github.com/maelvls/users-grpc/schema/user"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sirupsen/logrus"
+	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/health"
@@ -16,7 +21,7 @@ import (
 
 // Run starts the server. Set reflexion to true if you want to be able to
 // use grpcurl or prototool to discover the proto files.
-func Run(addr string, enableReflection, tls, samples bool, certFile, keyFile string) error {
+func Run(addr, addrMetrics string, enableReflection, tls, samples bool, certFile, keyFile string) error {
 	userServer := NewUserServer()
 
 	txn := userServer.Txn(true)
@@ -50,11 +55,14 @@ func Run(addr string, enableReflection, tls, samples bool, certFile, keyFile str
 		logrus.Printf("TLS is disabled by default, use --tls, --tls-cert-file and --tls-key-file to enable TLS")
 	}
 
+	opts = append(opts, grpc.UnaryInterceptor(grpc_prometheus.UnaryServerInterceptor))
+
 	srv := grpc.NewServer(opts...)
 	user.RegisterUserServiceServer(srv, userServer)
 	health := health.NewServer()
 	health.SetServingStatus("user", grpc_health_v1.HealthCheckResponse_SERVING)
 	grpc_health_v1.RegisterHealthServer(srv, health)
+	grpc_prometheus.Register(srv)
 
 	if enableReflection {
 		logrus.Info("reflection enabled, you can now use tools like grpcurl")
@@ -67,5 +75,27 @@ func Run(addr string, enableReflection, tls, samples bool, certFile, keyFile str
 	if err != nil {
 		return fmt.Errorf("failed to listen: %w", err)
 	}
-	return srv.Serve(lis)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	group, _ := errgroup.WithContext(ctx)
+
+	metrics := &http.Server{Addr: addrMetrics, Handler: promhttp.Handler()}
+	group.Go(func() error {
+		defer cancel()
+		return metrics.ListenAndServe()
+	})
+
+	group.Go(func() error {
+		defer cancel()
+		return srv.Serve(lis)
+	})
+
+	group.Go(func() error {
+		// Cleanup goroutine.
+		<-ctx.Done()
+		srv.GracefulStop()
+		return metrics.Shutdown(context.Background())
+	})
+
+	return group.Wait()
 }

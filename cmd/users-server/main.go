@@ -24,7 +24,8 @@ var (
 	keyFile  = flag.String("tls-key-file", "", "The TLS key file, required if --tls is set.")
 	samples  = flag.Bool("samples", false, "Load some user samples on startup.")
 	// https://github.com/grpc/grpc-go/blob/master/Documentation/server-reflection-tutorial.md
-	reflection = flag.Bool("reflection", false, "Enable reflection, useful for using grpcurl or related tools.")
+	reflection  = flag.Bool("reflection", true, "Enable reflection, useful for using grpcurl or related tools.")
+	addrMetrics = flag.String("address-metrics", ":9402", "Address used by the prometheus server to start listening.")
 )
 
 func main() {
@@ -45,9 +46,9 @@ func main() {
 		logrus.SetLevel(logrus.TraceLevel)
 	}
 
-	logrus.Printf("listening on address %s, version %s (git %s, built on %s)", *addr, version, commit, date)
+	logrus.Printf("listening on address %s, metrics on %s (version %s, git %s, built on %s)", *addr, *addrMetrics, version, commit, date)
 
-	if err := grpc.Run(*addr, *reflection, *tls, *samples, *certFile, *keyFile); err != nil {
+	if err := grpc.Run(*addr, *addrMetrics, *reflection, *tls, *samples, *certFile, *keyFile); err != nil {
 		logrus.Errorf("launching server: %v", err)
 		os.Exit(1)
 	}

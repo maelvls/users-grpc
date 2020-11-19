@@ -5,6 +5,7 @@
 [![Coverage Status](https://coveralls.io/repos/github/maelvls/users-grpc/badge.svg?branch=master)](https://coveralls.io/github/maelvls/users-grpc?branch=master)
 [![codecov](https://codecov.io/gh/maelvls/users-grpc/branch/master/graph/badge.svg)](https://codecov.io/gh/maelvls/users-grpc)
 [![Go Report Card](https://goreportcard.com/badge/github.com/maelvls/users-grpc)](https://goreportcard.com/report/github.com/maelvls/users-grpc)
+[![Artifact HUB](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/maelvls)](https://artifacthub.io/packages/search?repo=maelvls)
 
 > So many shiny badges, I guess it doesn't mean anything anymore! I have
 > been testing many services in order to select the good ones. Badges is a

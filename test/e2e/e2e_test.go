@@ -31,8 +31,8 @@ func Test_CLI(t *testing.T) {
 	t.Run("users-cli list", func(t *testing.T) {
 
 		t.Run("should return all 30 lines of sample data", func(t *testing.T) {
-			addr := "127.0.0.1:" + freePort()
-			srv := startWith(t, exec.Command(binsrv, "--address", addr, "--samples"))
+			addr, addrMetrics := "127.0.0.1:"+freePort(), "127.0.0.1:"+freePort()
+			srv := startWith(t, exec.Command(binsrv, "--address", addr, "--address-metrics", addrMetrics, "--samples"))
 			eventuallyEqual(t, "listening", srv.Output) // Wait until listening.
 
 			cli := startWith(t, exec.Command(bincli, "--color=never", "--cleartext", "--address", addr, "list")).Wait()
@@ -48,8 +48,8 @@ func Test_CLI(t *testing.T) {
 
 	t.Run("users-cli create", func(t *testing.T) {
 		t.Run("should allow creating a user with just an email", func(t *testing.T) {
-			addr := "127.0.0.1:" + freePort()
-			srv := startWith(t, exec.Command(binsrv, "--address", addr, "--samples"))
+			addr, addrMetrics := "127.0.0.1:"+freePort(), "127.0.0.1:"+freePort()
+			srv := startWith(t, exec.Command(binsrv, "--address", addr, "--address-metrics", addrMetrics, "--samples"))
 			eventuallyEqual(t, "listening", srv.Output) // Wait until listening.
 
 			cli := startWith(t, exec.Command(bincli, "--color=never", "--cleartext", "--address", addr, "create", "--email=foo@bar.com")).Wait()
@@ -63,8 +63,8 @@ func Test_CLI(t *testing.T) {
 		})
 
 		t.Run("should allow creating a user with all information", func(t *testing.T) {
-			addr := "127.0.0.1:" + freePort()
-			srv := startWith(t, exec.Command(binsrv, "--address", addr, "--samples"))
+			addr, addrMetrics := "127.0.0.1:"+freePort(), "127.0.0.1:"+freePort()
+			srv := startWith(t, exec.Command(binsrv, "--address", addr, "--address-metrics", addrMetrics, "--samples"))
 			eventuallyEqual(t, "listening", srv.Output) // Wait until listening.
 
 			cli := startWith(t, exec.Command(bincli, "--color=never", "--cleartext", "--address", addr,
@@ -79,8 +79,8 @@ func Test_CLI(t *testing.T) {
 		})
 
 		t.Run("should exit with 1 when creating with an existing email", func(t *testing.T) {
-			addr := "127.0.0.1:" + freePort()
-			srv := startWith(t, exec.Command(binsrv, "--address", addr, "--samples"))
+			addr, addrMetrics := "127.0.0.1:"+freePort(), "127.0.0.1:"+freePort()
+			srv := startWith(t, exec.Command(binsrv, "--address", addr, "--address-metrics", addrMetrics, "--samples"))
 			eventuallyEqual(t, "listening", srv.Output) // Wait until listening.
 
 			cli := startWith(t, exec.Command(bincli, "--color=never", "--cleartext", "--address", addr, "create", "--email=wilkerson.mosley@email.biz")).Wait()
@@ -92,8 +92,8 @@ func Test_CLI(t *testing.T) {
 	t.Run("users-cli get", func(t *testing.T) {
 
 		t.Run("should print the user associated with a given email", func(t *testing.T) {
-			addr := "127.0.0.1:" + freePort()
-			srv := startWith(t, exec.Command(binsrv, "--address", addr, "--samples"))
+			addr, addrMetrics := "127.0.0.1:"+freePort(), "127.0.0.1:"+freePort()
+			srv := startWith(t, exec.Command(binsrv, "--address", addr, "--address-metrics", addrMetrics, "--samples"))
 			eventuallyEqual(t, "listening", srv.Output) // Wait until listening.
 
 			cli := startWith(t, exec.Command(bincli, "--color=never", "--cleartext", "--address", addr, "get", "rice.pierce@email.com")).Wait()
@@ -102,8 +102,8 @@ func Test_CLI(t *testing.T) {
 		})
 
 		t.Run("should exit with 1 when the email is not found", func(t *testing.T) {
-			addr := "127.0.0.1:" + freePort()
-			srv := startWith(t, exec.Command(binsrv, "--address", addr, "--samples"))
+			addr, addrMetrics := "127.0.0.1:"+freePort(), "127.0.0.1:"+freePort()
+			srv := startWith(t, exec.Command(binsrv, "--address", addr, "--address-metrics", addrMetrics, "--samples"))
 			eventuallyEqual(t, "listening", srv.Output) // Wait until listening.
 
 			cli := startWith(t, exec.Command(bincli, "--color=never", "--cleartext", "--address", addr, "get", "impossible.name@email.com")).Wait()
@@ -114,8 +114,8 @@ func Test_CLI(t *testing.T) {
 
 	t.Run("users-cli search", func(t *testing.T) {
 		t.Run("should print users using a part of their name", func(t *testing.T) {
-			addr := "127.0.0.1:" + freePort()
-			srv := startWith(t, exec.Command(binsrv, "--address", addr, "--samples"))
+			addr, addrMetrics := "127.0.0.1:"+freePort(), "127.0.0.1:"+freePort()
+			srv := startWith(t, exec.Command(binsrv, "--address", addr, "--address-metrics", addrMetrics, "--samples"))
 			eventuallyEqual(t, "listening", srv.Output) // Wait until listening.
 
 			cli := startWith(t, exec.Command(bincli, "--color=never", "--cleartext", "--address", addr, "search", "--name", "Pierce")).Wait()
@@ -124,8 +124,8 @@ func Test_CLI(t *testing.T) {
 		})
 
 		t.Run("should print users that are between two ages", func(t *testing.T) {
-			addr := "127.0.0.1:" + freePort()
-			srv := startWith(t, exec.Command(binsrv, "--address", addr, "--samples"))
+			addr, addrMetrics := "127.0.0.1:"+freePort(), "127.0.0.1:"+freePort()
+			srv := startWith(t, exec.Command(binsrv, "--address", addr, "--address-metrics", addrMetrics, "--samples"))
 			eventuallyEqual(t, "listening", srv.Output) // Wait until listening.
 
 			cli := startWith(t, exec.Command(bincli, "--color=never", "--cleartext", "--address", addr, "search", "--agefrom=46", "--ageto=48")).Wait()
@@ -139,8 +139,8 @@ func Test_CLI(t *testing.T) {
 		})
 
 		t.Run("should print nothing and exit with 0 when no user is found", func(t *testing.T) {
-			addr := "127.0.0.1:" + freePort()
-			srv := startWith(t, exec.Command(binsrv, "--address", addr, "--samples"))
+			addr, addrMetrics := "127.0.0.1:"+freePort(), "127.0.0.1:"+freePort()
+			srv := startWith(t, exec.Command(binsrv, "--address", addr, "--address-metrics", addrMetrics, "--samples"))
 			eventuallyEqual(t, "listening", srv.Output) // Wait until listening.
 
 			cli := startWith(t, exec.Command(bincli, "--color=never", "--cleartext", "--address", addr, "search", "--name=Foo")).Wait()
@@ -152,8 +152,8 @@ func Test_CLI(t *testing.T) {
 	t.Run("TLS works in both the client and server", func(t *testing.T) {
 		caFile, certFile, keyFile := generateCerts(t)
 		t.Logf("tls.crt and tls.key are in the same dir as: %s", caFile)
-		addr := "127.0.0.1:" + freePort()
-		srv := startWith(t, exec.Command(binsrv, "--address", addr, "--tls", "--tls-cert-file", certFile, "--tls-key-file", keyFile))
+		addr, addrMetrics := "127.0.0.1:"+freePort(), "127.0.0.1:"+freePort()
+		srv := startWith(t, exec.Command(binsrv, "--address", addr, "--address-metrics", addrMetrics, "--tls", "--tls-cert-file", certFile, "--tls-key-file", keyFile))
 		eventuallyEqual(t, "listening", srv.Output) // Wait until listening.
 
 		cli := startWith(t, exec.Command(bincli, "--color=never", "--address", addr, "--servername", "example.com", "--cacert", caFile, "list")).Wait()
