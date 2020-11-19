@@ -35,4 +35,9 @@ spec:
               serviceName: {{ $serviceName }}
               servicePort: grpc
   {{- end -}}
-{{- end }}
+{{- if .Values.ingress.defaultBackend }}
+  backend:
+    serviceName: {{ $serviceName }}
+    servicePort: grpc
+{{- end -}}
+{{- end -}}

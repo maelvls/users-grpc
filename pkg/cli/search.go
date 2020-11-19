@@ -18,7 +18,7 @@ func init() {
 		Run: func(searchCmd *cobra.Command, args []string) {
 			client, err := createClient(cfg)
 			if err != nil {
-				logutil.Errorf("grpc client: %v", err)
+				logutil.Errorf("%v", err)
 				os.Exit(1)
 			}
 
@@ -56,10 +56,10 @@ func init() {
 				resp, err := client.SearchAge(ctx, req)
 				switch {
 				case err != nil:
-					logutil.Errorf("grpc client: %v", err)
+					logutil.Errorf("searching age: %v", err)
 					os.Exit(1)
 				case resp.GetStatus().GetCode() != pb.Status_SUCCESS:
-					logutil.Errorf("grpc client: %v", resp.GetStatus())
+					logutil.Errorf("%s: %s", resp.Status.Code, resp.Status.Msg)
 					os.Exit(1)
 				default:
 					// Happy path continuing below.
@@ -72,10 +72,10 @@ func init() {
 				resp, err := client.SearchName(ctx, &pb.SearchNameReq{Query: name})
 				switch {
 				case err != nil:
-					logutil.Errorf("grpc client: %v", err)
+					logutil.Errorf("searching by name: %v", err)
 					os.Exit(1)
 				case resp.GetStatus().GetCode() != pb.Status_SUCCESS:
-					logutil.Errorf("grpc client: %v", resp.GetStatus())
+					logutil.Errorf("%s: %s", resp.Status.Code, resp.Status.Msg)
 					os.Exit(1)
 				default:
 					// Happy path continuing below.

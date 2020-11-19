@@ -1,8 +1,10 @@
 package cli
 
 import (
+	"crypto/tls"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/lithammer/dedent"
 	"github.com/maelvls/users-grpc/pkg/cli/logutil"
@@ -135,24 +137,39 @@ func initConfig() {
 }
 
 func createClient(config clientCfg) (user.UserServiceClient, error) {
-	// if config.cleartext && config.servername != "" {
-	// 	return nil, fmt.Errorf("can't use both --cleartext and --servername")
-	// }
-	var opts []grpc.DialOption
+	var err error
+
+	split := strings.SplitN(config.address, ":", 2)
+	if len(split) != 2 {
+		return nil, fmt.Errorf("address should be of the form host:port or :port")
+	}
+	servername := split[0]
+	if servername == "" {
+		servername = "127.0.0.1"
+	}
+	if config.servername != "" {
+		servername = config.servername
+	}
+	creds := credentials.NewTLS(&tls.Config{ServerName: servername})
 	if config.cacert != "" {
-		c, err := credentials.NewClientTLSFromFile(config.cacert, config.servername)
+		creds, err = credentials.NewClientTLSFromFile(config.cacert, config.servername)
 		if err != nil {
 			return nil, fmt.Errorf("loading CA certificates: %w", err)
 		}
-		opts = append(opts, grpc.WithTransportCredentials(c))
 	}
+
+	var opts []grpc.DialOption
+
 	if config.cleartext {
 		opts = append(opts, grpc.WithInsecure())
+	} else {
+		opts = append(opts, grpc.WithTransportCredentials(creds))
 	}
+	// c := credentials.CommonAuthInfo{SecurityLevel: credentials.NoSecurity}}
 
 	cc, err := grpc.Dial(config.address, opts...)
 	if err != nil {
-		logutil.Errorf("grpc client: %s", err)
+		logutil.Errorf("%s", err)
 		os.Exit(1)
 	}
 

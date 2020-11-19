@@ -27,6 +27,7 @@
   - [`users-cli version`](#users-cli-version)
   - [Protobuf generation](#protobuf-generation)
   - [Logs, debug and verbosity](#logs-debug-and-verbosity)
+  - [Moved from Traefik to Nginx](#moved-from-traefik-to-nginx)
 - [Examples that I read for inspiration](#examples-that-i-read-for-inspiration)
 - [Using the Helm chart](#using-the-helm-chart)
 - [Updating & uploading the Helm charts](#updating--uploading-the-helm-charts)
@@ -417,6 +418,95 @@ flag for cranking up the verbosity. A step further (that I did not
 implement yet) is to log all gRPC handlers activity (through gRPC
 interceptors). One way of doing that is proposed in [go-grpc-middleware][].
 
+### Moved from Traefik to Nginx
+
+Initially, I used Traefik pretty much
+[everywhere](https://maelvls.dev/avoid-gke-lb-with-hostport/). The reason I
+chose Traefik is its ease of use and the fact that it embeds an Ingress
+controller, which means the support for the Ingress objets is first-class.
+
+While trying to use TLS passthrough using the SNI as the routing
+information for both gRPC and Websockets, I realized that Traefik (both v1
+and v2) are just too limited in many ways.
+
+1. Traefik v1 did not support TCP connections; it was only
+   [added](https://github.com/traefik/traefik/pull/4587) in late 2019 in
+   Traefik v2. Unfortunately, Traefik v2 totally changed the ingress
+   annotations API.
+2. Traefik v2 brings support to TLS passthrough; the KubernetesCRD (the
+   name given to its Kubernetes provider) makes it available through the
+   IngressRouteTCP kind. For example:
+
+   ```yaml
+   apiVersion: traefik.containo.us/v1alpha1
+   kind: IngressRouteTCP
+   metadata:
+     name: users-grpc
+     namespace: users-grpc
+   spec:
+     entryPoints:
+       - websecure
+     routes:
+     - match: HostSNI(`users-server.k.maelvls.dev`)
+       services:
+       - name: grpc
+         port: 8000
+       passthrough: true
+   ```
+
+   One major problem is that these new CRDs are not supported by other
+   tools like cert-manager. Usually, cert-manager creates a secret named
+   `mytls` when I have an ingress of the form:
+
+   ```yaml
+   kind: Ingress
+   spec:
+     # skipped some fields
+     tls:
+     - hosts:
+       - some.k.maelvls.dev
+       secretName: mytls
+   ```
+
+   The work around is to create the cert-manager's certificate manually.
+
+   The major issue is that I
+   [use](https://github.com/maelvls/k.maelvls.dev)
+   [k8s_gateway](https://coredns.io/explugins/k8s_gateway/) to get names
+   for each of my ingresses. I have a secondary CoreDNS; I delegate the
+   zone `k.maelvls.dev` to it and it watches the ingresses `hosts` field to
+   create `A` records.
+
+   So I decided to skip Traefik altogether. CRDs isn't a good option when
+   most tools don't integrate with them.
+
+   > Note that ExternalDNS also [does not
+   > support](https://github.com/traefik/traefik/issues/4655) these new
+   > CRDs as of November 2020. But since I only use ExternalDNS for my
+   > ingress (Traefik), this does not impact me.
+
+   I thought about using Caddy v2 but its ingress controller is still a
+   [work in progress](https://github.com/caddyserver/ingress) as of
+   November 2020. So I just went with the widely used Nginx. Its ingress
+   controller have a ton of useful annotations such as `ssl-passthrough`.
+   [Not
+   perfect](https://kubernetes.github.io/ingress-nginx/user-guide/tls/#ssl-passthrough),
+   but at least it does what I need:
+
+   > This feature is implemented by intercepting all traffic on the
+   > configured HTTPS port (default: 443) and handing it over to a local
+   > TCP proxy. This bypasses NGINX completely and introduces a
+   > non-negligible performance penalty.
+
+   To be honest, I wish Traefik v2 was supporting a "legacy" mode where
+   each IngressRoute would be mirrored with an Ingress object (see
+   [5865](https://github.com/traefik/traefik/issues/5865)). The Ingress
+   object would be created with a special ingress class such as
+
+   ```yaml
+   kubernetes.io/ingress.class: dummy
+   ```
+
 ## Examples that I read for inspiration
 
 - [go-micro-services][] (lacks tests but excellent geographic-related
@@ -553,7 +643,6 @@ export DRONE_TOKEN=...
 drone build promote maelvls/users-grpc 305 production
 ```
 
-
 ## Future work
 
 Here is a small list of things that could be implemented now that a MVP
@@ -584,5 +673,4 @@ These middlewares are listed and available at [go-grpc-middleware][].
 
 I could publish the `users-cli` and `users-server` as a Homebrew tag, e.g.
 at <https://github.com/maelvls/homebrew-tap>.
-
 

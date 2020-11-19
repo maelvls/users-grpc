@@ -27,7 +27,7 @@ func init() {
 
 			client, err := createClient(cfg)
 			if err != nil {
-				logutil.Errorf("grpc client: %v", err)
+				logutil.Errorf("%v", err)
 				os.Exit(1)
 			}
 
