@@ -88,15 +88,15 @@ steps:
   - name: helm-chart
     image: quay.io/helmpack/chart-releaser:latest
     commands:
-      - cr package ./ci/helm/users-grpc
-      - cr upload --owner maelvls --git-repo helm-charts --token $GITHUB_TOKEN
+      - cr package --package-path /tmp/package ./ci/helm/users-grpc
+      - cr upload --package-path /tmp/package --owner maelvls --git-repo helm-charts --token $GITHUB_TOKEN
       - apk add git
       - git config --global user.name "Maël Valais"
       - git config --global user.email "mael.valais@gmail.com"
       - git config --global url."https://foo:${GITHUB_TOKEN}@github.com/maelvls".insteadOf "https://github.com/maelvls"
       - git clone https://github.com/maelvls/helm-charts.git /tmp/helm-charts --branch gh-pages
       - cd /tmp/helm-charts
-      - cr index --owner maelvls --git-repo helm-charts --push --charts-repo https://maelvls.dev/helm-charts --token $GITHUB_TOKEN --index-path .
+      - cr index --package-path /tmp/package --owner maelvls --git-repo helm-charts --push --charts-repo https://maelvls.dev/helm-charts --token $GITHUB_TOKEN --index-path .
     environment:
       GITHUB_TOKEN: { from_secret: GITHUB_TOKEN }
 
