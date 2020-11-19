@@ -29,6 +29,11 @@ spec:
             - --logfmt=json
             - --address=0.0.0.0:8000
             - -v
+            {{- if .Values.tls.enabled }}
+            - --tls
+            - --tls-cert-file=/cert/tls.crt
+            - --tls-key-file=/cert/tls.cert
+            {{- end }}
           ports:
             - name: grpc
               containerPort: 8000
@@ -43,6 +48,12 @@ spec:
             initialDelaySeconds: 5
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
+          {{- if .Values.tls.enabled }}
+          volumeMounts:
+            - name: tls
+              mountPath: /cert
+              readOnly: true
+          {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
@@ -54,4 +65,16 @@ spec:
     {{- with .Values.tolerations }}
       tolerations:
         {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- if .Values.tls.enabled }}
+      volumes:
+        - name: tls
+          secret:
+            secretName: {{ .Values.tls.secretName | quote }}
+            defaultMode: 0400
+            items:
+              - key: tls.crt
+                path: tls.crt
+              - key: tls.key
+                path: tls.key
     {{- end }}

@@ -32,6 +32,11 @@ ingress:
   #      - chart-example.local
   defaultBackend: false
 
+tls:
+  enabled: false
+  # The secret must contain the fields 'tls.key' and 'tls.crt'.
+  secretName: ""
+
 resources:
   {}
   # We usually recommend not to specify default resources and to leave this as a conscious
