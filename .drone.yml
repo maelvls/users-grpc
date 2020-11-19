@@ -103,5 +103,3 @@ steps:
 trigger:
   event:
     - promote
-  target:
-    - production
