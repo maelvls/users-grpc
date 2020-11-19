@@ -6,7 +6,7 @@ metadata:
   name: users-grpc
   labels:
     app.kubernetes.io/name: users-grpc
-    helm.sh/chart: users-grpc-0.1.1
+    helm.sh/chart: users-grpc-0.1.3
     app.kubernetes.io/instance: users-grpc
     app.kubernetes.io/managed-by: Helm
 spec:
@@ -27,7 +27,7 @@ metadata:
   name: users-grpc
   labels:
     app.kubernetes.io/name: users-grpc
-    helm.sh/chart: users-grpc-0.1.1
+    helm.sh/chart: users-grpc-0.1.3
     app.kubernetes.io/instance: users-grpc
     app.kubernetes.io/managed-by: Helm
 spec:
@@ -44,7 +44,7 @@ spec:
     spec:
       containers:
         - name: users-grpc
-          image: "maelvls/users-grpc:latest"
+          image: "maelvls/users-grpc:1.1.1"
           imagePullPolicy: IfNotPresent
           args:
             - users-server
@@ -56,13 +56,11 @@ spec:
             - name: grpc
               containerPort: 8000
               protocol: TCP
-          livenessProbe:
-            exec:
-              command: ["grpc-health-probe", "-addr=:8000"]
-            initialDelaySeconds: 10
           readinessProbe:
             exec:
-              command: ["grpc-health-probe", "-addr=:8000"]
+              command:
+              - grpc-health-probe
+              - -addr=:8000
             initialDelaySeconds: 5
           resources:
             {}
@@ -74,7 +72,7 @@ metadata:
   name: "users-grpc-test-connection"
   labels:
     app.kubernetes.io/name: users-grpc
-    helm.sh/chart: users-grpc-0.1.1
+    helm.sh/chart: users-grpc-0.1.3
     app.kubernetes.io/instance: users-grpc
     app.kubernetes.io/managed-by: Helm
   annotations:

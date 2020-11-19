@@ -38,13 +38,17 @@ spec:
             - name: grpc
               containerPort: 8000
               protocol: TCP
-          livenessProbe:
-            exec:
-              command: ["grpc-health-probe", "-addr=:8000"]
-            initialDelaySeconds: 10
           readinessProbe:
             exec:
-              command: ["grpc-health-probe", "-addr=:8000"]
+              command:
+              - grpc-health-probe
+              - -addr=:8000
+              {{- if .Values.tls.enabled }}
+              # -tls-no-verify is due to the fact that we reach the server
+              # from an address that isn't in the cert's SANs.
+              - -tls
+              - -tls-no-verify
+              {{- end }}
             initialDelaySeconds: 5
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
