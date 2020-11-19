@@ -32,7 +32,7 @@ spec:
             {{- if .Values.tls.enabled }}
             - --tls
             - --tls-cert-file=/cert/tls.crt
-            - --tls-key-file=/cert/tls.cert
+            - --tls-key-file=/cert/tls.key
             {{- end }}
           ports:
             - name: grpc

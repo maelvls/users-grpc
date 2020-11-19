@@ -1,6 +1,6 @@
 # This is a multi-stage Dockerfile and requires >= Docker 17.05
 # https://docs.docker.com/engine/userguide/eng-image/multistage-build/
-FROM golang:1.12-alpine as builder
+FROM golang:alpine as builder
 COPY . /go/src/github.com/maelvls/users-grpc
 WORKDIR /go/src/github.com/maelvls/users-grpc
 

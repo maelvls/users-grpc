@@ -65,7 +65,7 @@ func Run(addr string, enableReflection, tls, samples bool, certFile, keyFile str
 
 	lis, err := net.Listen("tcp", addr)
 	if err != nil {
-		return fmt.Errorf("failed to listen: %v", err)
+		return fmt.Errorf("failed to listen: %w", err)
 	}
 	return srv.Serve(lis)
 }
