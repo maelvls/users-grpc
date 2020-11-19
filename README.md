@@ -79,7 +79,17 @@ Then, we can query it using the CLI client. The possible actions are
 - search users by a string that matches their names
 - search users by a age range
 
-Examples:
+To test the CLI, you can also try the `users-server` I have running on my
+cluster (see the users-grpc Helm config files in
+[maelvls/k.maelvls.dev](https://github.com/maelvls/k.maelvls.dev/tree/master/helm)).
+You can reach the server at <users-server.k.maelvls.dev:443> by running:
+
+```sh
+echo "address: users-server.k.maelvls.dev:443" >> ~/.users-cli.yml
+users-cli list
+```
+
+Examples with `users-cli`:
 
 ```sh
 $ users-cli create --email=mael.valais@gmail.com --firstname="Maël" --lastname="Valais" --postaladdress="Toulouse"
