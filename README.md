@@ -642,7 +642,7 @@ the drone.io's "build promoting" feature with
 [chart-releaser](https://github.com/helm/chart-releaser). Make sure to
 update the chart version at `ci/helm/users-grpc/Chart.yaml`, push the
 changes, wait until the CI build is done and then either (1) go to the
-Drone UI and click "Deploy" and use the target "production", or use the
+Drone UI and click "Deploy" and use the target "helm", or use the
 CLI:
 
 ```sh
@@ -650,7 +650,7 @@ brew install drone
 drone build ls maelvls/users-grpc --event push --limit 1
 # Copy the build ID, e.g., "305".
 export DRONE_TOKEN=...
-drone build promote maelvls/users-grpc 305 production
+drone build promote maelvls/users-grpc 305 helm
 ```
 
 ## Future work

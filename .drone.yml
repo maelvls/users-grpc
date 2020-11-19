@@ -103,3 +103,5 @@ steps:
 trigger:
   event:
     - promote
+  target:
+    - helm
