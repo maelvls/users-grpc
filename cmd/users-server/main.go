@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"os"
 
@@ -48,8 +49,8 @@ func main() {
 
 	logrus.Printf("listening on address %s, metrics on %s (version %s, git %s, built on %s)", *addr, *addrMetrics, version, commit, date)
 
-	if err := grpc.Run(*addr, *addrMetrics, *reflection, *tls, *samples, *certFile, *keyFile); err != nil {
-		logrus.Errorf("launching server: %v", err)
+	if err := grpc.Run(context.Background(), *addr, *addrMetrics, *reflection, *tls, *samples, *certFile, *keyFile); err != nil {
+		logrus.Errorf("running: %v", err)
 		os.Exit(1)
 	}
 }

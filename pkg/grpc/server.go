@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
 
 	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
 	service "github.com/maelvls/users-grpc/pkg/service"
@@ -21,7 +24,7 @@ import (
 
 // Run starts the server. Set reflexion to true if you want to be able to
 // use grpcurl or prototool to discover the proto files.
-func Run(addr, addrMetrics string, enableReflection, tls, samples bool, certFile, keyFile string) error {
+func Run(ctx context.Context, addr, addrMetrics string, enableReflection, tls, samples bool, certFile, keyFile string) error {
 	userServer := NewUserServer()
 
 	txn := userServer.Txn(true)
@@ -76,7 +79,9 @@ func Run(addr, addrMetrics string, enableReflection, tls, samples bool, certFile
 		return fmt.Errorf("failed to listen: %w", err)
 	}
 
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancel(ctx)
+	setupSignalHandler(cancel)
+
 	group, _ := errgroup.WithContext(ctx)
 
 	metrics := &http.Server{Addr: addrMetrics, Handler: promhttp.Handler()}
@@ -94,8 +99,29 @@ func Run(addr, addrMetrics string, enableReflection, tls, samples bool, certFile
 		// Cleanup goroutine.
 		<-ctx.Done()
 		srv.GracefulStop()
-		return metrics.Shutdown(context.Background())
+		_ = metrics.Shutdown(context.Background())
+		return nil
 	})
 
 	return group.Wait()
+}
+
+// setupSignalHandler will call handleShutdown as soon as SIGINT or SIGTERM
+// is caught. If a second signal is received afterwards, the program exits
+// immediatly.
+//
+// It must only be called once.
+func setupSignalHandler(handleShutdown func()) {
+	var shutdownSignals = []os.Signal{os.Interrupt, syscall.SIGTERM}
+
+	c := make(chan os.Signal, 2)
+	signal.Notify(c, shutdownSignals...)
+	go func() {
+		s := <-c
+		logrus.Infof("Signal %s received, shutting down gracefully...", s.String())
+		handleShutdown()
+		s = <-c
+		logrus.Infof("Signal %s received again: aborting graceful shutdown", s.String())
+		os.Exit(1)
+	}()
 }
