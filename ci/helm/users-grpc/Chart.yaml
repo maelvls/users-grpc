@@ -8,4 +8,4 @@ description: |
   The source code for this helm repository is at
   https://github.com/maelvls/helm-charts.
 name: users-grpc
-version: 0.1.3
+version: 0.1.4
