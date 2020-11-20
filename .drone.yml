@@ -43,7 +43,8 @@ steps:
       - go test ./test/e2e
 
       - curl -s https://codecov.io/bash | bash
-      - go run github.com/mattn/goveralls -coverprofile=coverage.txt -service=drone.io
+      - (cd && go get github.com/mattn/goveralls)
+      - goveralls -coverprofile=coverage.txt -service=drone.io
 
   # Produces 'latest' and '1.2.3' + '1.2' + '1' tags
   - name: docker
