@@ -34,7 +34,7 @@
 - [Updating & uploading the Helm charts](#updating--uploading-the-helm-charts)
 - [Future work](#future-work)
   - [Using an on-disk database](#using-an-on-disk-database)
-  - [Distributed tracing, metrics and logs](#distributed-tracing-metrics-and-logs)
+  - [Distributed tracing and logs](#distributed-tracing-and-logs)
   - [Publishing Helm chart to Github Pages and publishing to Homebrew](#publishing-helm-chart-to-github-pages-and-publishing-to-homebrew)
 
 ## Stack
@@ -518,6 +518,60 @@ and v2) are just too limited in many ways.
    kubernetes.io/ingress.class: dummy
    ```
 
+   Anyway, I found a workaround. I create both the Ingress (so that's going
+   to be listening for https and redirecting http to https) and the
+   IngressRouteTCP. My understanding is that the TCP routing happens before
+   the HTTP routing.
+
+   As a recap, here is the config to use:
+
+   ```yaml
+   # users-grpc-extras.yaml
+   apiVersion: traefik.containo.us/v1alpha1
+   kind: IngressRouteTCP
+   metadata:
+     name: users-grpc
+     namespace: users-grpc
+     annotations:
+       fake-ingress: "true"
+   spec:
+     entryPoints:
+       - websecure
+     routes:
+       - match: HostSNI(`users-server.k.maelvls.dev`)
+         services:
+           - name: users-grpc
+             port: 8000
+     tls:
+       passthrough: true
+   ```
+
+   ```yaml
+   # users-grpc-helm.yaml
+   image:
+    tag: "1.2.1"
+   ingress:
+     enabled: true
+     annotations:
+       kubernetes.io/ingress.class: traefik
+       cert-manager.io/cluster-issuer: letsencrypt-prod
+     hosts: [users-server.k.maelvls.dev]
+     tls:
+       - hosts: [users-server.k.maelvls.dev]
+         secretName: tls
+   tls:
+     enabled: true
+     # The secret must contain the fields 'tls.key' and 'tls.crt'.
+     secretName: tls
+   ```
+
+   and then (using Helm 3):
+
+   ```sh
+   kubectl apply -f users-grpc-extras.yaml
+   helm upgrade --install users-grpc maelvls/users-grpc --create-namespace --namespace users-grpc --values helm/users-grpc-helm.yaml
+   ```
+
 ## Examples that I read for inspiration
 
 - [go-micro-services][] (lacks tests but excellent geographic-related
@@ -667,10 +721,8 @@ rollback mechanism, it would be quite easy to move the project from
 postgres. I started doing just that in [this
 PR](https://github.com/maelvls/users-grpc/pull/65).
 
-### Distributed tracing, metrics and logs
+### Distributed tracing and logs
 
-- Prometheus: one way would be to use a grpc interceptor that would send
-  metrics to prometheus
 - Jaeger: very nice for debugging a cascade of gRPC calls. It requires a
   gRPC interceptor compatible with Opentracing.
 - Logs: [logrus][] can log every request or only failing requests, and this can
