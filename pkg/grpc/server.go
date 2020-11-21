@@ -9,6 +9,10 @@ import (
 	"os/signal"
 	"syscall"
 
+	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
+
+	grpc_logrus "github.com/grpc-ecosystem/go-grpc-middleware/logging/logrus"
+
 	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
 	service "github.com/maelvls/users-grpc/pkg/service"
 	"github.com/maelvls/users-grpc/schema/user"
@@ -27,11 +31,11 @@ import (
 func Run(ctx context.Context, addr, addrMetrics string, enableReflection, tls, samples bool, certFile, keyFile string) error {
 	userServer := NewUserServer()
 
-	txn := userServer.Txn(true)
-	defer userServer.Rollback(txn)
-
 	if samples {
 		logrus.Info("loading sample users, disable with --samples=false")
+
+		txn := userServer.Txn(true)
+		defer userServer.Rollback(txn)
 		err := service.LoadSampleUsers(txn)
 		if err != nil {
 			return fmt.Errorf("while loading sample users: %w", err)
@@ -58,7 +62,10 @@ func Run(ctx context.Context, addr, addrMetrics string, enableReflection, tls, s
 		logrus.Printf("TLS is disabled by default, use --tls, --tls-cert-file and --tls-key-file to enable TLS")
 	}
 
-	opts = append(opts, grpc.UnaryInterceptor(grpc_prometheus.UnaryServerInterceptor))
+	opts = append(opts, grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
+		grpc_prometheus.UnaryServerInterceptor,
+		grpc_logrus.UnaryServerInterceptor(logrus.NewEntry(logrus.New()), grpc_logrus.WithLevels(grpc_logrus.DefaultCodeToLevel)),
+	)))
 
 	srv := grpc.NewServer(opts...)
 	user.RegisterUserServiceServer(srv, userServer)

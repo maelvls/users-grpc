@@ -1056,7 +1056,9 @@ type UserServiceClient interface {
 	Create(ctx context.Context, in *CreateReq, opts ...grpc.CallOption) (*CreateResp, error)
 	List(ctx context.Context, in *ListReq, opts ...grpc.CallOption) (*SearchResp, error)
 	GetByEmail(ctx context.Context, in *GetByEmailReq, opts ...grpc.CallOption) (*GetByEmailResp, error)
-	// Searches in a wildcard-way in first-name and last-name.
+	// Searches in a wildcard-way in first-name and last-name. It is case and
+	// special-character insensitive: for example, searching "mael" will
+	// return "Maël".
 	SearchName(ctx context.Context, in *SearchNameReq, opts ...grpc.CallOption) (*SearchResp, error)
 	SearchAge(ctx context.Context, in *SearchAgeReq, opts ...grpc.CallOption) (*SearchResp, error)
 }
@@ -1119,7 +1121,9 @@ type UserServiceServer interface {
 	Create(context.Context, *CreateReq) (*CreateResp, error)
 	List(context.Context, *ListReq) (*SearchResp, error)
 	GetByEmail(context.Context, *GetByEmailReq) (*GetByEmailResp, error)
-	// Searches in a wildcard-way in first-name and last-name.
+	// Searches in a wildcard-way in first-name and last-name. It is case and
+	// special-character insensitive: for example, searching "mael" will
+	// return "Maël".
 	SearchName(context.Context, *SearchNameReq) (*SearchResp, error)
 	SearchAge(context.Context, *SearchAgeReq) (*SearchResp, error)
 }

@@ -46,6 +46,7 @@ func NewUserServer() *UserServer {
 
 // Create a user. If the given user has no id, generate one.
 func (server *UserServer) Create(ctx context.Context, req *pb.CreateReq) (*pb.CreateResp, error) {
+	logrus.WithField("email", req.User.Email).Info("create request received")
 	txn := server.Txn(true)
 	defer server.Rollback(txn)
 
@@ -65,6 +66,7 @@ func (server *UserServer) Create(ctx context.Context, req *pb.CreateReq) (*pb.Cr
 	}
 
 	server.Commit(txn)
+
 	return &pb.CreateResp{User: ToPB(user), Status: &pb.Status{Code: pb.Status_SUCCESS}}, nil
 }
 

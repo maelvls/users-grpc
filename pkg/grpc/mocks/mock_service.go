@@ -6,7 +6,7 @@ package mocks
 
 import (
 	gomock "github.com/golang/mock/gomock"
-	go_memdb "github.com/hashicorp/go-memdb"
+	memdb "github.com/hashicorp/go-memdb"
 	service "github.com/maelvls/users-grpc/pkg/service"
 	reflect "reflect"
 )
@@ -35,7 +35,7 @@ func (m *MockUserService) EXPECT() *MockUserServiceMockRecorder {
 }
 
 // Create mocks base method
-func (m *MockUserService) Create(arg0 *go_memdb.Txn, arg1 service.User) error {
+func (m *MockUserService) Create(arg0 *memdb.Txn, arg1 service.User) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Create", arg0, arg1)
 	ret0, _ := ret[0].(error)
@@ -49,7 +49,7 @@ func (mr *MockUserServiceMockRecorder) Create(arg0, arg1 interface{}) *gomock.Ca
 }
 
 // List mocks base method
-func (m *MockUserService) List(arg0 *go_memdb.Txn) ([]service.User, error) {
+func (m *MockUserService) List(arg0 *memdb.Txn) ([]service.User, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "List", arg0)
 	ret0, _ := ret[0].([]service.User)
@@ -64,7 +64,7 @@ func (mr *MockUserServiceMockRecorder) List(arg0 interface{}) *gomock.Call {
 }
 
 // SearchAge mocks base method
-func (m *MockUserService) SearchAge(txn *go_memdb.Txn, ageFrom, ageTo int32) ([]service.User, error) {
+func (m *MockUserService) SearchAge(txn *memdb.Txn, ageFrom, ageTo int32) ([]service.User, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SearchAge", txn, ageFrom, ageTo)
 	ret0, _ := ret[0].([]service.User)
@@ -79,7 +79,7 @@ func (mr *MockUserServiceMockRecorder) SearchAge(txn, ageFrom, ageTo interface{}
 }
 
 // SearchName mocks base method
-func (m *MockUserService) SearchName(txn *go_memdb.Txn, query string) ([]service.User, error) {
+func (m *MockUserService) SearchName(txn *memdb.Txn, query string) ([]service.User, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SearchName", txn, query)
 	ret0, _ := ret[0].([]service.User)
@@ -94,7 +94,7 @@ func (mr *MockUserServiceMockRecorder) SearchName(txn, query interface{}) *gomoc
 }
 
 // GetByEmail mocks base method
-func (m *MockUserService) GetByEmail(txn *go_memdb.Txn, email string) (service.User, error) {
+func (m *MockUserService) GetByEmail(txn *memdb.Txn, email string) (service.User, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetByEmail", txn, email)
 	ret0, _ := ret[0].(service.User)
