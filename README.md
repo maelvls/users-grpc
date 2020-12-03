@@ -36,6 +36,7 @@
   - [Using an on-disk database](#using-an-on-disk-database)
   - [Distributed tracing and logs](#distributed-tracing-and-logs)
   - [Publishing Helm chart to Github Pages and publishing to Homebrew](#publishing-helm-chart-to-github-pages-and-publishing-to-homebrew)
+- [Design discussion](#design-discussion)
 
 ## Stack
 
@@ -737,3 +738,49 @@ These middlewares are listed and available at [go-grpc-middleware][].
 I could publish the `users-cli` and `users-server` as a Homebrew tag, e.g.
 at <https://github.com/maelvls/homebrew-tap>.
 
+## Design discussion
+
+> Why use gRPC versus a simple REST API?
+
+Initially, this project was the result of a tech test that required
+candidates to rely on gRPC. And after playing with a real deployment of the
+`users-server`, I think that there was no good reason to go with gRPC: I
+don't have any performance requirement, which means I only get the "cons"
+of gRPC (hard to debug on the wire), and not much benefit (except for the
+fact that the API spec is formally describe thanks to the protobuf spec and
+the client and server implementations are auto-generated). Next time, I'll
+probably go with a simple REST API (or JSON-RPC if this service isn't
+really a web service; e.g. like gopls which is exposed using a UNIX or TCP
+socket).
+
+> Why use an in-memory database (go-memdb) over an on-disk database like
+> Postgres?
+
+I guess I needed a quick way of storing things and using Postgres would
+have made the unit-testing part harder to implement (since I unit test
+using a real DB instance).
+
+That said, I made sure that I could still use Postgres in my unit tests by
+making sure that I can pass my own transaction to the "service" functions
+(e.g., `AddUser`) in order to make them testable with a rollback mechanism.
+Each unit test would:
+
+1. Start a transaction,
+2. Insert some sample data,
+3. Run the unit test, e.g. `Test_AddUser`,
+4. Rollback.
+
+This way, I need a single database and the unit tests do not "taint" each
+other.
+
+I started working on moving from go-memdb to postgres [in this
+PR](https://github.com/maelvls/users-grpc/pull/65).
+
+> Why are unit tests using a real database implementation?
+
+The only "hard" requirement I have for unit tests are that they should be
+fast, really fast. I don't mind if they depend on running a `docker run
+postgres`; I just want them to be fast, and using a transaction-rollback
+per unit test feels quite fast. And in the case of the "service" layer
+(e.g., `AddUser`), I think that the SQL queries and the ORM calls should be
+tested instead of being mocked.
