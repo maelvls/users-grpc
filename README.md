@@ -756,14 +756,14 @@ socket).
 > Why use an in-memory database (go-memdb) over an on-disk database like
 > Postgres?
 
-I guess I needed a quick way of storing things and using Postgres would
-have made the unit-testing part harder to implement (since I unit test
-using a real DB instance).
-
-That said, I made sure that I could still use Postgres in my unit tests by
-making sure that I can pass my own transaction to the "service" functions
-(e.g., `AddUser`) in order to make them testable with a rollback mechanism.
-Each unit test would:
+Since I initially had less than a week to learn Go and finish this tech
+test, I needed a quick way of storing things. Integrating with Postgres
+felt like a burden, I had to make sure everything was well tested and that
+the app would be deployable. I would also have made the unit-testing part
+harder since I unit test using a real DB instance (see below). But I made
+sure I could still use Postgres in my unit tests using transactions passed
+to the "service" functions (e.g., `AddUser`) in order to make them testable
+with a rollback mechanism. Each unit test would:
 
 1. Start a transaction,
 2. Insert some sample data,
@@ -771,16 +771,23 @@ Each unit test would:
 4. Rollback.
 
 This way, I need a single database and the unit tests do not "taint" each
-other.
-
-I started working on moving from go-memdb to postgres [in this
+other. I started working on moving from go-memdb to postgres [in this
 PR](https://github.com/maelvls/users-grpc/pull/65).
 
 > Why are unit tests using a real database implementation?
 
-The only "hard" requirement I have for unit tests are that they should be
-fast, really fast. I don't mind if they depend on running a `docker run
-postgres`; I just want them to be fast, and using a transaction-rollback
-per unit test feels quite fast. And in the case of the "service" layer
-(e.g., `AddUser`), I think that the SQL queries and the ORM calls should be
-tested instead of being mocked.
+As Kent Beck and Ian Cooper often say, the only important requirement on
+unit tests are their speed and reproduciability:
+
+> [Ian Cooper,
+> 2017](https://www.youtube.com/watch?v=EZ05e7EMOLM&feature=youtu.be&t=2100)
+> — We avoid file system, database, simply because these shared fixtures
+> elements prevent us running in isolation from other tests, or cause our
+> tests to be slow. [...] If there is no shared fixture problem, it is
+> perfectly fine in a unit test to talk to a database or a file system.
+
+I don't really mind if my unit tests depend on running a `docker run
+postgres`; I just want them to be fast and each test case isolated from
+each other using a transaction-rollback. And in the case of the "service"
+layer (e.g., `AddUser`), I think that the SQL queries should be tested
+instead of being mocked.
