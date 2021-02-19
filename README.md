@@ -281,8 +281,7 @@ standard (and that's why I used it in the e2e tests), but the go-testdeep is bet
   td.CmpNoError(t, got)
   ```
 
-- one caveat with go-testdeep though: it doesn't show which error was
-  encountered when running `td.CmpNoError`.
+- ~~one caveat with go-testdeep though: it doesn't show which error was encountered when running `td.CmpNoError`~~. The issue seems to be gone; the type of the expected error is shown. The author of go-testdeep was [very helpful](https://github.com/maelvls/users-grpc/issues/71#issue-757762725) with this, thanks to him!
 
 On top of all the current testing, it would be good to add a "deploy"
 end-to-end suite that would test the helm chart.
