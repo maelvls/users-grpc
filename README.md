@@ -1,7 +1,6 @@
 # Simple gRPC user service and its CLI client
 
 [![Build Status](https://cloud.drone.io/api/badges/maelvls/users-grpc/status.svg)](https://cloud.drone.io/maelvls/users-grpc)
-[![Docker layers](https://images.microbadger.com/badges/image/maelvls/users-grpc.svg)](https://microbadger.com/images/maelvls/users-grpc)
 [![Coverage Status](https://coveralls.io/repos/github/maelvls/users-grpc/badge.svg?branch=master)](https://coveralls.io/github/maelvls/users-grpc?branch=master)
 [![codecov](https://codecov.io/gh/maelvls/users-grpc/branch/master/graph/badge.svg)](https://codecov.io/gh/maelvls/users-grpc)
 [![Go Report Card](https://goreportcard.com/badge/github.com/maelvls/users-grpc)](https://goreportcard.com/report/github.com/maelvls/users-grpc)
